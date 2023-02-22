@@ -53,20 +53,24 @@ public static class StartupTasks
         Logger.Info($"You are running version {VersionHelper.FullVersion}", LogArea.Startup);
 
         Logger.Info("Connecting to the database...", LogArea.Startup);
-        bool dbConnected = ServerStatics.DbConnected;
-        if (!dbConnected)
+        if (!ServerStatics.DbConnected)
         {
             Logger.Error("Database unavailable! Exiting.", LogArea.Startup);
+            Environment.Exit(1);
         }
-        else
-        {
-            Logger.Success("Connected to the database!", LogArea.Startup);
-        }
+                                                                          
+        Logger.Success("Connected to the database!", LogArea.Startup);
 
-        if (!dbConnected) Environment.Exit(1);
         using DatabaseContext database = new();
         
         migrateDatabase(database).Wait();
+
+        Logger.Info("Connecting to redis...", LogArea.Startup);
+        if (!ServerStatics.RedisConnected)
+        {
+            Logger.Error("Redis unavailable! Exiting.", LogArea.Startup);
+            Environment.Exit(1);
+        }
 
         Logger.Debug
         (
@@ -89,12 +93,6 @@ public static class StartupTasks
         {
             FileHelper.ConvertAllTexturesToPng();
         }
-
-        Logger.Info("Initializing Redis...", LogArea.Startup);
-        RedisDatabase.Initialize().Wait();
-
-        Logger.Info("Initializing repeating tasks...", LogArea.Startup);
-        RepeatingTaskHandler.Initialize();
 
         // Create admin user if no users exist
         if (serverType == ServerType.Website && database.Users.CountAsync().Result == 0)
@@ -165,6 +163,8 @@ public static class StartupTasks
             stopwatch.Stop();
             Logger.Success($"Acquiring migration lock took {stopwatch.ElapsedMilliseconds}ms", LogArea.Database);
 
+            IEnumerable<string> pendingMigrations = await database.Database.GetPendingMigrationsAsync();
+            Logger.Info($"There are ${pendingMigrations.Count()} pending structure migrations.", LogArea.Database);
             stopwatch.Restart();
             await database.Database.MigrateAsync();
             stopwatch.Stop();

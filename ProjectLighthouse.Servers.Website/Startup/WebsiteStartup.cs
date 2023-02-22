@@ -1,4 +1,5 @@
 using System.Globalization;
+using LBPUnion.ProjectLighthouse.Administration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Localization;
 using LBPUnion.ProjectLighthouse.Middlewares;
@@ -42,6 +43,8 @@ public class WebsiteStartup
         #endif
 
         services.AddDbContext<DatabaseContext>();
+
+        services.AddHostedService<RepeatingTaskService>();
 
         services.Configure<ForwardedHeadersOptions>
         (
