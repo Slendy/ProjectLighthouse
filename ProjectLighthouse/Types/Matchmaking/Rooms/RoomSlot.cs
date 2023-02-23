@@ -14,13 +14,4 @@ public class RoomSlot
         SlotId = 0,
     };
 
-    public static RoomSlot Deserialize(List<List<int>> serializedSlot)
-    {
-        RoomSlot slot = new()
-        {
-            SlotType = (SlotType)serializedSlot[0][0],
-            SlotId = serializedSlot[0][1],
-        };
-        return slot;
-    }
 }
