@@ -56,7 +56,7 @@ public class MatchController : ControllerBase
         if (room == null)
         {
             long location = BinaryPrimitives.ReadUInt32BigEndian(IPAddress.Parse(token.UserLocation).GetAddressBytes());
-            Logger.Debug($"Creating room for {user.Username}, location={location}", LogArea.Match);
+            Logger.Info($"Creating room for {user.Username}, location={location}", LogArea.Match);
             room = new RedisRoom
             {
                 RoomHostId = token.UserId,
@@ -69,6 +69,7 @@ public class MatchController : ControllerBase
                 MemberLocations = new Dictionary<int, long> {{token.UserId, location},},
             };
             await this.rooms.AddRoomAsync(room);
+            Logger.Info($"Added room for {user.Username}, roomId={room.Id}", LogArea.Match);
         }
 
         await this.rooms.ExtendRoomSessionAsync(room);
