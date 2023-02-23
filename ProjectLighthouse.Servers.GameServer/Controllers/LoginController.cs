@@ -5,13 +5,16 @@ using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
+using LBPUnion.ProjectLighthouse.Redis;
 using LBPUnion.ProjectLighthouse.Tickets;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Logging;
+using LBPUnion.ProjectLighthouse.Types.Redis;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Redis.OM;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers;
 
@@ -21,10 +24,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers;
 public class LoginController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly UserRepository userRepository;
 
-    public LoginController(DatabaseContext database)
+    public LoginController(DatabaseContext database, RedisConnectionProvider redis)
     {
         this.database = database;
+        this.userRepository = new UserRepository(redis);
     }
 
     [HttpPost]
@@ -191,8 +196,16 @@ public class LoginController : ControllerBase
 
         await this.database.SaveChangesAsync();
 
-        // Create a new room on LBP2/3/Vita
-        if (token.GameVersion != GameVersion.LittleBigPlanet1) RoomHelper.CreateRoom(user.UserId, token.GameVersion, token.Platform);
+        RedisUser? redisUser = await this.userRepository.GetUser(token.UserId);
+
+        if (redisUser != null)
+        {
+            redisUser.GameTokens = redisUser.GameTokens.Append(token.TokenId).ToArray();
+        }
+        else
+        {
+            await this.userRepository.CreateUser(token, user.Username);
+        }
 
         return this.Ok
         (

@@ -164,7 +164,7 @@ public static class StartupTasks
             Logger.Success($"Acquiring migration lock took {stopwatch.ElapsedMilliseconds}ms", LogArea.Database);
 
             IEnumerable<string> pendingMigrations = await database.Database.GetPendingMigrationsAsync();
-            Logger.Info($"There are ${pendingMigrations.Count()} pending structure migrations.", LogArea.Database);
+            Logger.Info($"There are {pendingMigrations.Count()} pending structure migrations.", LogArea.Database);
             stopwatch.Restart();
             await database.Database.MigrateAsync();
             stopwatch.Stop();

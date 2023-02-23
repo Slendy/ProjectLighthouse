@@ -1,15 +1,16 @@
 using System;
-using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
+using System.Linq;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Redis.OM.Modeling;
 
 namespace LBPUnion.ProjectLighthouse.Types.Redis;
 
-[Document(StorageType = StorageType.Json, Prefixes = new[] {"User",})]
+[Document(StorageType = StorageType.Json, Prefixes = new[] {"Room",})]
 public class RedisRoom
 {
-    [Key]
+    [RedisIdField]
     public Ulid Id { get; set; }
 
     [Indexed]
@@ -54,5 +55,10 @@ public class RedisRoom
     /// </summary>
     [Indexed]
     public int[] RoomMembers { get; set; }
+
+    [Indexed]
+    public Dictionary<int, long> MemberLocations { get; set; }
+
+    public bool IsUserInRoom(int userId) => this.RoomMembers.Contains(userId);
 
 }

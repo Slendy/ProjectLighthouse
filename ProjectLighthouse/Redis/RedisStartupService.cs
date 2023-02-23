@@ -23,6 +23,7 @@ public class RedisStartupService : IHostedService
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await this.provider.Connection.RecreateIndexAsync(typeof(RedisUser));
+        await this.provider.Connection.RecreateIndexAsync(typeof(RedisRoom));
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

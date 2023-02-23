@@ -40,8 +40,9 @@ public static class ServerStatics
                 provider.Connection.Dispose();
                 return reply == "PONG";
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
+                Logger.Error(e.ToString(), LogArea.Redis);
                 return false;
             }
         }

@@ -21,9 +21,7 @@ public class SetLastContactMiddleware : MiddlewareDBContext
             GameToken? gameToken = await database.GameTokenFromRequest(context.Request);
 
             if (gameToken?.GameVersion == GameVersion.LittleBigPlanet1)
-                // Ignore UserFromGameToken null because user must exist for a token to exist
-                await LastContactHelper.SetLastContact
-                    (database, (await database.UserFromGameToken(gameToken))!, GameVersion.LittleBigPlanet1, gameToken.Platform);
+                await LastContactHelper.SetLastContact(database, gameToken, GameVersion.LittleBigPlanet1, gameToken.Platform);
         }
         #nullable disable
 

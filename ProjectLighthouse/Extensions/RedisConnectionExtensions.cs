@@ -16,7 +16,7 @@ public static class RedisConnectionExtensions
         // TODO: use `await connection.DropIndexAndAssociatedRecordsAsync(type);` here instead when that becomes a thing
         bool dropped = await connection.DropIndexAsync(type);
         Logger.Debug("Dropped index: " + dropped, LogArea.Redis);
-        
+
         bool created = await connection.CreateIndexAsync(type);
         Logger.Debug("Created index: " + created, LogArea.Redis);
     }

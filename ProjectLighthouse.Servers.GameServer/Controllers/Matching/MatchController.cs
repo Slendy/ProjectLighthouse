@@ -1,18 +1,19 @@
 #nullable enable
-using System.Text.Json;
+using System.Buffers.Binary;
+using System.Net;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
-using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
+using LBPUnion.ProjectLighthouse.Redis;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Logging;
-using LBPUnion.ProjectLighthouse.Types.Matchmaking;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.MatchCommands;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
+using LBPUnion.ProjectLighthouse.Types.Redis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Redis.OM;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Matching;
 
@@ -23,10 +24,14 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Matching;
 public class MatchController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly RoomRepository rooms;
+    private readonly UserRepository users;
 
-    public MatchController(DatabaseContext database)
+    public MatchController(DatabaseContext database, RedisConnectionProvider redis)
     {
         this.database = database;
+        this.rooms = new RoomRepository(redis);
+        this.users = new UserRepository(redis);
     }
 
     [HttpPost("gameState")]
@@ -39,8 +44,34 @@ public class MatchController : ControllerBase
     {
         GameToken token = this.GetToken();
 
-        User? user = await this.database.UserFromGameToken(token);
-        if (user == null) return this.StatusCode(403, "");
+        RedisUser user = await this.users.GetUser(token.UserId) ??
+                         await this.users.CreateUser(token, await this.database.UsernameFromGameToken(token));
+
+        await this.users.ExtendUserSession(user);
+
+        RedisRoom? room = await this.rooms.GetRoomForToken(token);
+
+        // If we can't find a room for the user, then create one
+        // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
+        if (room == null)
+        {
+            long location = BinaryPrimitives.ReadUInt32BigEndian(IPAddress.Parse(token.UserLocation).GetAddressBytes());
+            Logger.Debug($"Creating room for {user.Username}, location={location}", LogArea.Match);
+            room = new RedisRoom
+            {
+                RoomHostId = token.UserId,
+                RoomMembers = new[]{token.UserId,},
+                RoomBuildVersion = -1, // unknown
+                RoomSlot = RoomSlot.PodSlot,
+                RoomVersion = token.GameVersion,
+                RoomState = RoomState.Unknown,
+                RoomPlatform = token.Platform,
+                MemberLocations = new Dictionary<int, long> {{token.UserId, location},},
+            };
+            await this.rooms.AddRoomAsync(room);
+        }
+
+        await this.rooms.ExtendRoomSessionAsync(room);
 
         #region Parse match data
 
@@ -75,79 +106,83 @@ public class MatchController : ControllerBase
 
         #endregion
 
-        await LastContactHelper.SetLastContact(this.database, user, token.GameVersion, token.Platform);
+        await LastContactHelper.SetLastContact(this.database, token, token.GameVersion, token.Platform);
 
-        #region Process match data
+        string? response = await matchData.ProcessCommand(user, room, this.rooms, this.users);
 
-        switch (matchData)
-        {
-            case UpdateMyPlayerData playerData:
-            {
-                MatchHelper.SetUserLocation(user.UserId, token.UserLocation);
-                Room? room = RoomHelper.FindRoomByUser(user.UserId, token.GameVersion, token.Platform, true);
+        if (response == null) return this.BadRequest();
 
-                if (playerData.RoomState != null)
-                    if (room != null && Equals(room.HostId, user.UserId))
-                        room.State = (RoomState)playerData.RoomState;
-                break;
-            }
-            // Check how many people are online in release builds, disabled for debug for ..well debugging.
-            #if DEBUG
-            case FindBestRoom diveInData:
-            #else
-            case FindBestRoom diveInData when MatchHelper.UserLocations.Count > 1:
-            #endif
-            {
-                FindBestRoomResponse? response = RoomHelper.FindBestRoom
-                    (user, token.GameVersion, diveInData.RoomSlot, token.Platform, token.UserLocation);
+        return this.Ok(response);
 
-                if (response == null) return this.NotFound();
-
-                string serialized = JsonSerializer.Serialize(response, typeof(FindBestRoomResponse));
-                foreach (Player player in response.Players) MatchHelper.AddUserRecentlyDivedIn(user.UserId, player.User.UserId);
-
-                return this.Ok($"[{{\"StatusCode\":200}},{serialized}]");
-            }
-            case CreateRoom createRoom when MatchHelper.UserLocations.Count >= 1:
-            {
-                List<int> users = new();
-                foreach (string playerUsername in createRoom.Players)
-                {
-                    User? player = await this.database.Users.FirstOrDefaultAsync(u => u.Username == playerUsername);
-                    // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                    if (player != null) users.Add(player.UserId);
-                    else return this.BadRequest();
-                }
-
-                // Create a new one as requested
-                RoomHelper.CreateRoom(users, token.GameVersion, token.Platform, createRoom.RoomSlot);
-                break;
-            }
-            case UpdatePlayersInRoom updatePlayersInRoom:
-            {
-                Room? room = RoomHelper.Rooms.FirstOrDefault(r => r.HostId == user.UserId);
-
-                if (room != null)
-                {
-                    List<User> users = new();
-                    foreach (string playerUsername in updatePlayersInRoom.Players)
-                    {
-                        User? player = await this.database.Users.FirstOrDefaultAsync(u => u.Username == playerUsername);
-                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                        if (player != null) users.Add(player);
-                        else return this.BadRequest();
-                    }
-
-                    room.PlayerIds = users.Select(u => u.UserId).ToList();
-                    await RoomHelper.CleanupRooms(null, room);
-                }
-
-                break;
-            }
-        }
-
-        #endregion
-
-        return this.Ok("[{\"StatusCode\":200}]");
+        // #region Process match data
+        //
+        // switch (matchData)
+        // {
+        //     case UpdateMyPlayerData playerData:
+        //     {
+        //         MatchHelper.SetUserLocation(user.UserId, token.UserLocation);
+        //         Room? room = RoomHelper.FindRoomByUser(user.UserId, token.GameVersion, token.Platform, true);
+        //
+        //         if (playerData.RoomState != null)
+        //             if (room != null && Equals(room.HostId, user.UserId))
+        //                 room.State = (RoomState)playerData.RoomState;
+        //         break;
+        //     }
+        //     // Check how many people are online in release builds, disabled for debug for ..well debugging.
+        //     #if DEBUG
+        //     case FindBestRoom diveInData:
+        //     #else
+        //     case FindBestRoom diveInData when MatchHelper.UserLocations.Count > 1:
+        //     #endif
+        //     {
+        //         FindBestRoomResponse? response = RoomHelper.FindBestRoom
+        //             (user, token.GameVersion, diveInData.RoomSlot, token.Platform, token.UserLocation);
+        //
+        //         if (response == null) return this.NotFound();
+        //
+        //         string serialized = JsonSerializer.Serialize(response, typeof(FindBestRoomResponse));
+        //         foreach (Player player in response.Players) MatchHelper.AddUserRecentlyDivedIn(user.UserId, player.User.UserId);
+        //
+        //         return this.Ok($"[{{\"StatusCode\":200}},{serialized}]");
+        //     }
+        //     case CreateRoom createRoom when MatchHelper.UserLocations.Count >= 1:
+        //     {
+        //         List<int> users = new();
+        //         foreach (string playerUsername in createRoom.Players)
+        //         {
+        //             User? player = await this.database.Users.FirstOrDefaultAsync(u => u.Username == playerUsername);
+        //             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        //             if (player != null) users.Add(player.UserId);
+        //             else return this.BadRequest();
+        //         }
+        //
+        //         // Create a new one as requested
+        //         RoomHelper.CreateRoom(users, token.GameVersion, token.Platform, createRoom.RoomSlot);
+        //         break;
+        //     }
+        //     case UpdatePlayersInRoom updatePlayersInRoom:
+        //     {
+        //         Room? room = RoomHelper.Rooms.FirstOrDefault(r => r.HostId == user.UserId);
+        //
+        //         if (room != null)
+        //         {
+        //             List<User> users = new();
+        //             foreach (string playerUsername in updatePlayersInRoom.Players)
+        //             {
+        //                 User? player = await this.database.Users.FirstOrDefaultAsync(u => u.Username == playerUsername);
+        //                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+        //                 if (player != null) users.Add(player);
+        //                 else return this.BadRequest();
+        //             }
+        //
+        //             room.PlayerIds = users.Select(u => u.UserId).ToList();
+        //             await RoomHelper.CleanupRooms(null, room);
+        //         }
+        //
+        //         break;
+        //     }
+        // }
+        //
+        // #endregion
     }
 }

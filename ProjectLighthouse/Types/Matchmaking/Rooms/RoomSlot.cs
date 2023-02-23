@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 
 namespace LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
@@ -12,4 +13,14 @@ public class RoomSlot
         SlotType = SlotType.Pod,
         SlotId = 0,
     };
+
+    public static RoomSlot Deserialize(List<List<int>> serializedSlot)
+    {
+        RoomSlot slot = new()
+        {
+            SlotType = (SlotType)serializedSlot[0][0],
+            SlotId = serializedSlot[0][1],
+        };
+        return slot;
+    }
 }

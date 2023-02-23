@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Redis.OM.Modeling;
 
 namespace LBPUnion.ProjectLighthouse.Types.Redis;
@@ -6,7 +5,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Redis;
 [Document(StorageType = StorageType.Json, Prefixes = new[] {"User",})]
 public class RedisUser
 {
-    [Key]
+    [RedisIdField]
     public int UserId { get; set; }
 
     /// <summary>

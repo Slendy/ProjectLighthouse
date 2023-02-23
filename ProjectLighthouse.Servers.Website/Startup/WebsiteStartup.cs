@@ -1,12 +1,15 @@
 using System.Globalization;
 using LBPUnion.ProjectLighthouse.Administration;
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Localization;
 using LBPUnion.ProjectLighthouse.Middlewares;
+using LBPUnion.ProjectLighthouse.Redis;
 using LBPUnion.ProjectLighthouse.Servers.Website.Middlewares;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.FileProviders;
+using Redis.OM;
 
 #if !DEBUG
 using Microsoft.Extensions.Hosting.Internal;
@@ -43,6 +46,10 @@ public class WebsiteStartup
         #endif
 
         services.AddDbContext<DatabaseContext>();
+
+        services.AddSingleton(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
+
+        services.AddHostedService<RedisStartupService>();
 
         services.AddHostedService<RepeatingTaskService>();
 

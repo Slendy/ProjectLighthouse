@@ -3,6 +3,7 @@
 @using LBPUnion.ProjectLighthouse.Helpers
 @using LBPUnion.ProjectLighthouse.Types.Entities.Profile
 @using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms
+@using LBPUnion.ProjectLighthouse.Types.Redis
 @using LBPUnion.ProjectLighthouse.Types.Users
 @model LBPUnion.ProjectLighthouse.Servers.Website.Pages.Debug.RoomVisualizerPage
 
@@ -67,23 +68,28 @@
 
 <h2>Room display</h2>
 
-@foreach (Room room in RoomHelper.Rooms)
+@foreach (RedisRoom room in Model.Rooms)
 {
-    bool userInRoom = room.PlayerIds.Contains(Model.User?.UserId ?? -1);
+    Console.WriteLine(room.Id);
+    bool userInRoom = room.IsUserInRoom(Model.User?.UserId ?? -1);
     string color = userInRoom ? "green" : "blue";
     <div class="ui @color inverted segment">
-        <h3>Room @room.RoomId</h3>
+        <h3>Room @room.Id</h3>
         @if (userInRoom)
         {
             <p>
                 <b>You are currently in this room.</b>
             </p>
         }
-        <p>@room.PlayerIds.Count players, state is @room.State, version is @room.RoomVersion.ToPrettyString() on platform @room.RoomPlatform</p>
-        <p>Slot type: @room.Slot.SlotType, slot id: @room.Slot.SlotId</p>
-        @foreach (User player in room.GetPlayers(Model.Database))
+        <p>@(room.RoomMembers.Length+1) players, state is @room.RoomState, version is @room.RoomVersion.ToPrettyString() on platform @room.RoomPlatform</p>
+        <p>Slot type: @room.RoomSlot.SlotType, slot id: @room.RoomSlot.SlotId</p>
+        <p>Room host: @room.RoomHostId</p>
+        <p>Room version: @room.RoomVersion</p>
+        <p>Room buildVersion: @room.RoomBuildVersion</p>
+        <p>Room members:</p>
+        @foreach (int userId in room.RoomMembers)
         {
-            <div class="ui segment">@player.Username</div>
+            <div class="ui segment">@userId</div>
         }
     </div>
 }

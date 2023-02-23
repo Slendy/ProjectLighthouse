@@ -1,8 +1,12 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using LBPUnion.ProjectLighthouse.Redis;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
+using LBPUnion.ProjectLighthouse.Types.Redis;
 
 namespace LBPUnion.ProjectLighthouse.Types.Matchmaking.MatchCommands;
 
@@ -40,4 +44,6 @@ public class CreateRoom : IMatchCommand
             SlotType = (SlotType)this.Slots[0][0],
             SlotId = this.Slots[0][1],
         };
+
+    public async Task<string?> ProcessCommand(RedisUser user, RedisRoom room, RoomRepository roomRepository, UserRepository userRepository) => null;
 }

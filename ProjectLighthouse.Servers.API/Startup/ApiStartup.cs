@@ -1,7 +1,10 @@
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Middlewares;
+using LBPUnion.ProjectLighthouse.Redis;
 using LBPUnion.ProjectLighthouse.Serialization;
 using Microsoft.OpenApi.Models;
+using Redis.OM;
 
 namespace LBPUnion.ProjectLighthouse.Servers.API.Startup;
 
@@ -27,6 +30,10 @@ public class ApiStartup
         );
 
         services.AddDbContext<DatabaseContext>();
+
+        services.AddSingleton(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
+
+        services.AddHostedService<RedisStartupService>();
 
         services.AddSwaggerGen
         (
