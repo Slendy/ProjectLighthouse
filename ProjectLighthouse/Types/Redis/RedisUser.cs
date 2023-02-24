@@ -1,3 +1,4 @@
+using System;
 using Redis.OM.Modeling;
 
 namespace LBPUnion.ProjectLighthouse.Types.Redis;
@@ -25,7 +26,7 @@ public class RedisUser
     /// i.e. they can be in multiple rooms at the same time.
     /// </summary>
     [Indexed]
-    public int[] Rooms { get; set; }
+    public Ulid[] Rooms { get; set; }
 
     /// <summary>
     /// A list of the users friends, updated when the user first logs in

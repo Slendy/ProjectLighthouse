@@ -32,6 +32,8 @@ public class RoomRepository
         await this.provider.Connection.ExecuteAsync("EXPIRE", $"Room:{room.Id}", "300");
     }
 
+    public Task RemoveAsync(RedisRoom room) => this.rooms.DeleteAsync(room);
+
     public ValueTask SaveAsync() => this.rooms.SaveAsync();
 
     /// <summary>

@@ -35,13 +35,17 @@ public class UserRepository
             {
                 token.TokenId,
             },
-            Rooms = Array.Empty<int>(),
+            Rooms = Array.Empty<Ulid>(),
             UserId = token.UserId,
             Username = username,
         }; 
         await this.AddUser(redisUser);
         return redisUser;
     }
+
+    public Task DeleteUser(RedisUser user) => this.users.DeleteAsync(user);
+
+    public ValueTask SaveAsync() => this.users.SaveAsync();
 
     public async Task ExtendUserSession(RedisUser user)
     {

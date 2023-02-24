@@ -15,7 +15,7 @@ public class UpdateMyPlayerData : IMatchCommand
     public RoomState? RoomState { get; set; }
     public int? Mood { get; set; }
     public List<int>? Slot { get; set; }
-    public bool? PassedNoJoinPoint { get; set; }
+    public int? PassedNoJoinPoint { get; set; }
     public int? BuildVersion { get; set; }
 
     public async Task<string?> ProcessCommand(RedisUser user, RedisRoom room, RoomRepository roomRepository, UserRepository userRepository)
