@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Redis;
+using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Redis;
@@ -18,7 +19,14 @@ public class UpdateMyPlayerData : IMatchCommand
     public int? PassedNoJoinPoint { get; set; }
     public int? BuildVersion { get; set; }
 
-    public async Task<string?> ProcessCommand(RedisUser user, RedisRoom room, RoomRepository roomRepository, UserRepository userRepository)
+    public async Task<string?> ProcessCommand
+    (
+        GameToken token,
+        RedisUser user,
+        RedisRoom room,
+        RoomRepository roomRepository,
+        UserRepository userRepository
+    )
     {
         if (this.Player != user.Username) return null;
         if (room.RoomHostId != user.UserId) return null;

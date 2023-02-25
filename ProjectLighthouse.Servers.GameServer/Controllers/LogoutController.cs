@@ -47,22 +47,7 @@ public class LogoutController : ControllerBase
         RedisUser? redisUser = await this.userRepository.GetUser(token.UserId);
         if (redisUser == null) return this.Ok();
 
-        RedisRoom? room = await this.roomRepository.GetRoomForToken(token);
-        if (room != null)
-        {
-            // delete room if user was host
-            if (room.RoomHostId == redisUser.UserId) await this.roomRepository.RemoveAsync(room);
-            // remove room from user
-            redisUser.Rooms = redisUser.Rooms.Where(rid => rid != room.Id).ToArray();
-        }
-
-        redisUser.GameTokens = redisUser.GameTokens.Where(id => id != token.TokenId).ToArray();
-        if(redisUser.GameTokens.Length == 0)
-            await this.userRepository.DeleteUser(redisUser);
-        else
-            await this.userRepository.SaveAsync();
-
-        await this.roomRepository.SaveAsync();
+        await this.roomRepository.CleanupRoomsForUser(token);
 
         return this.Ok();
     }

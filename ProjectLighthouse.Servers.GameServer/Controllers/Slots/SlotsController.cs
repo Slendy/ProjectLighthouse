@@ -95,7 +95,7 @@ public class SlotsController : ControllerBase
     [HttpGet("slots/developer")]
     public async Task<IActionResult> StoryPlayers()
     {
-        List<int> activeSlotIds = RoomHelper.Rooms.Where(r => r.Slot.SlotType == SlotType.Developer).Select(r => r.Slot.SlotId).ToList();
+        List<int> activeSlotIds = RoomHelperOld.Rooms.Where(r => r.Slot.SlotType == SlotType.Developer).Select(r => r.Slot.SlotId).ToList();
 
         List<string> serializedSlots = new();
 
@@ -427,7 +427,7 @@ public class SlotsController : ControllerBase
 
         Dictionary<int, int> playersBySlotId = new();
 
-        foreach (Room room in RoomHelper.Rooms)
+        foreach (Room room in RoomHelperOld.Rooms)
         {
             // TODO: support developer slotTypes?
             if (room.Slot.SlotType != SlotType.User) continue;

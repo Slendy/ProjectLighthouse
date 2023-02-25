@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
@@ -6,7 +7,8 @@ namespace LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 
 public class FindBestRoomResponse
 {
-    public int RoomId;
+    [JsonIgnore]
+    public Ulid RoomId;
 
     public List<Player> Players { get; set; }
 

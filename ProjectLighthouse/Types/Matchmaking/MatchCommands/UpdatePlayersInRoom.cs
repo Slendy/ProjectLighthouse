@@ -1,10 +1,10 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Redis;
+using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Redis;
 
@@ -16,7 +16,14 @@ public class UpdatePlayersInRoom : IMatchCommand
     public List<string>? Players { get; set; }
     public List<string>? Reservations { get; set; }
 
-    public async Task<string?> ProcessCommand(RedisUser user, RedisRoom room, RoomRepository roomRepository, UserRepository userRepository)
+    public async Task<string?> ProcessCommand
+    (
+        GameToken token,
+        RedisUser user,
+        RedisRoom room,
+        RoomRepository roomRepository,
+        UserRepository userRepository
+    )
     {
         if (this.Players == null) return null;
         if (this.Reservations == null) return null;

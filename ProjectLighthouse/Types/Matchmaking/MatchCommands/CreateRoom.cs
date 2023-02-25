@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Redis;
-using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Redis;
 
@@ -38,12 +38,15 @@ public class CreateRoom : IMatchCommand
     [JsonIgnore]
     public IEnumerable<int>? FirstSlot => this.Slots?[0];
 
-    public RoomSlot RoomSlot
-        => new()
+    public async Task<string?> ProcessCommand(GameToken token, RedisUser user, RedisRoom room, RoomRepository roomRepository, UserRepository userRepository)
+    {
+        RedisRoom newRoom = await roomRepository.CreateRoom(token, token.UserLocation);
+        newRoom.RoomState = this.RoomState;
+        newRoom.RoomBuildVersion = this.BuildVersion;
+        return await new UpdatePlayersInRoom
         {
-            SlotType = (SlotType)this.Slots[0][0],
-            SlotId = this.Slots[0][1],
-        };
-
-    public async Task<string?> ProcessCommand(RedisUser user, RedisRoom room, RoomRepository roomRepository, UserRepository userRepository) => null;
+            Players = this.Players,
+            Reservations = this.Reservations,
+        }.ProcessCommand(token, user, room, roomRepository, userRepository);
+    }
 }

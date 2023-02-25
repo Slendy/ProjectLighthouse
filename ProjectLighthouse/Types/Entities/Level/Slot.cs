@@ -276,7 +276,7 @@ public class Slot
     {
         int comments = this.Comments;
         int photos = this.Photos;
-        int players = RoomHelper.Rooms
+        int players = RoomHelperOld.Rooms
             .Where(r => r.Slot.SlotType == SlotType.Developer && r.Slot.SlotId == this.InternalSlotId)
             .Sum(r => r.PlayerIds.Count);
 
@@ -302,7 +302,7 @@ public class Slot
     {
         if (this.Type == SlotType.Developer) return this.SerializeDevSlot();
 
-        int playerCount = RoomHelper.Rooms.Count(r => r.Slot.SlotType == SlotType.User && r.Slot.SlotId == this.SlotId);
+        int playerCount = RoomHelperOld.Rooms.Count(r => r.Slot.SlotType == SlotType.User && r.Slot.SlotId == this.SlotId);
 
         string slotData = LbpSerializer.StringElement("id", this.SlotId) +
                           LbpSerializer.StringElement("npHandle", this.Creator?.Username) +

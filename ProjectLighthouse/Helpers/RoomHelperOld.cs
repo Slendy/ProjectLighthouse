@@ -19,7 +19,7 @@ using LBPUnion.ProjectLighthouse.Types.Users;
 
 namespace LBPUnion.ProjectLighthouse.Helpers;
 
-public class RoomHelper
+public class RoomHelperOld
 {
     public static readonly object RoomLock = new();
     public static StorableList<Room> Rooms => RoomStore.GetRooms();
@@ -81,7 +81,7 @@ public class RoomHelper
             // If we got here then it should be a valid room.
 
             FindBestRoomResponse response = new();
-            response.RoomId = room.RoomId;
+            response.RoomId = Ulid.NewUlid();
 
             response.Players = new List<Player>();
             response.Locations = new List<string>();
@@ -92,7 +92,7 @@ public class RoomHelper
                     new Player
                     {
                         MatchingRes = 0,
-                        User = player,
+                        Username = player.Username,
                     }
                 );
 
@@ -105,7 +105,7 @@ public class RoomHelper
                     new Player
                     {
                         MatchingRes = 1,
-                        User = user,
+                        Username = user.Username,
                     }
                 );
 

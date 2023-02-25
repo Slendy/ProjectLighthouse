@@ -168,8 +168,7 @@ public class LoginController : ControllerBase
             await this.database.SaveChangesAsync();
         }
 
-        GameToken? token = await this.database.GameTokens.Include(t => t.User)
-            .FirstOrDefaultAsync(t => t.UserLocation == ipAddress && t.User.Username == npTicket.Username && t.TicketHash == npTicket.TicketHash);
+        GameToken? token = await this.database.GameTokens.FirstOrDefaultAsync(t => t.UserLocation == ipAddress && t.UserId == user.UserId && t.TicketHash == npTicket.TicketHash);
 
         if (token != null)
         {
@@ -180,7 +179,7 @@ public class LoginController : ControllerBase
         token = await this.database.AuthenticateUser(user, npTicket, ipAddress);
         if (token == null)
         {
-            Logger.Warn($"Unable to find/generate a token for username {npTicket.Username}", LogArea.Login);
+            Logger.Warn($"Unable to generate a token for username {npTicket.Username}", LogArea.Login);
             return this.StatusCode(403, "");
         }
 
@@ -192,20 +191,19 @@ public class LoginController : ControllerBase
 
         Logger.Success($"Successfully logged in user {user.Username} as {token.GameVersion} client", LogArea.Login);
 
+        // Invalidate user's old GameTokens for same platform/game version 
+        this.database.GameTokens.RemoveWhere(t =>
+            t.UserId == user.UserId &&
+            t.GameVersion == npTicket.GameVersion &&
+            t.Platform == npTicket.Platform &&
+            t.TicketHash != npTicket.TicketHash);
+
         user.LastLogin = TimeHelper.TimestampMillis;
 
         await this.database.SaveChangesAsync();
 
-        RedisUser? redisUser = await this.userRepository.GetUser(token.UserId);
-
-        if (redisUser != null)
-        {
-            redisUser.GameTokens = redisUser.GameTokens.Append(token.TokenId).ToArray();
-        }
-        else
-        {
+        if (!await this.userRepository.UserExists(token.UserId))
             await this.userRepository.CreateUser(token, user.Username);
-        }
 
         return this.Ok
         (

@@ -16,12 +16,6 @@ public class RedisUser
     public string Username { get; set; }
 
     /// <summary>
-    /// Used to track user sessions
-    /// </summary>
-    [Indexed]
-    public int[] GameTokens { get; set; }
-
-    /// <summary>
     /// A user can be signed in on multiple platforms at the same time
     /// i.e. they can be in multiple rooms at the same time.
     /// </summary>

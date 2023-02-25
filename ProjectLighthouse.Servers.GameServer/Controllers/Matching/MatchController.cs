@@ -9,8 +9,8 @@ using LBPUnion.ProjectLighthouse.Redis;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.MatchCommands;
-using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Redis;
+using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Redis.OM;
@@ -44,31 +44,21 @@ public class MatchController : ControllerBase
     {
         GameToken token = this.GetToken();
 
+        if (token.GameVersion is GameVersion.LittleBigPlanet1 or GameVersion.LittleBigPlanetPSP) return this.NotFound();
+
         RedisUser user = await this.users.GetUser(token.UserId) ??
                          await this.users.CreateUser(token, await this.database.UsernameFromGameToken(token));
 
         await this.users.ExtendUserSession(user);
 
-        RedisRoom? room = await this.rooms.GetRoomForToken(token);
+        RedisRoom? room = await this.rooms.GetRoomByToken(token);
 
         // If we can't find a room for the user, then create one
         // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
         if (room == null)
         {
-            long location = BinaryPrimitives.ReadUInt32BigEndian(IPAddress.Parse(token.UserLocation).GetAddressBytes());
-            Logger.Info($"Creating room for {user.Username}, location={location}", LogArea.Match);
-            room = new RedisRoom
-            {
-                RoomHostId = token.UserId,
-                RoomMembers = new[]{token.UserId,},
-                RoomBuildVersion = -1, // unknown
-                RoomSlot = RoomSlot.PodSlot,
-                RoomVersion = token.GameVersion,
-                RoomState = RoomState.Unknown,
-                RoomPlatform = token.Platform,
-                MemberLocations = new Dictionary<int, long> {{token.UserId, location},},
-            };
-            await this.rooms.AddRoomAsync(room);
+            Logger.Info($"Creating room for {user.Username}, location={token.UserLocation}", LogArea.Match);
+            room = await this.rooms.CreateRoom(token, token.UserLocation);
             Logger.Info($"Added room for {user.Username}, roomId={room.Id}", LogArea.Match);
         }
 
@@ -109,7 +99,7 @@ public class MatchController : ControllerBase
 
         await LastContactHelper.SetLastContact(this.database, token, token.GameVersion, token.Platform);
 
-        string? response = await matchData.ProcessCommand(user, room, this.rooms, this.users);
+        string? response = await matchData.ProcessCommand(token, user, room, this.rooms, this.users);
 
         if (response == null) return this.BadRequest();
 

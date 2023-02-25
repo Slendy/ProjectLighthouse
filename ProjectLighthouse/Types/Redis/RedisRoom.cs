@@ -13,6 +13,9 @@ public class RedisRoom
     [RedisIdField]
     public Ulid Id { get; set; }
 
+    /// <summary>
+    /// The user ID of the host
+    /// </summary>
     [Indexed]
     public int RoomHostId { get; set; }
 
@@ -30,14 +33,14 @@ public class RedisRoom
 
     /// <summary>
     /// Tracks the current activity of the room, i.e. are they in the pod,
-    /// playing a community level, actively diving in.
+    /// playing a community level, or actively diving in.
     /// </summary>
     [Indexed]
     public RoomState RoomState { get; set; }
 
     /// <summary>
-    /// Tracks the current level that the room is playing
-    /// Can be a story level, the pod, level on the moon, community level
+    /// Tracks the current level that the room is playing.
+    /// Can be a story level, the pod, a level on the moon, or a community level.
     /// Potentially used by the client to preload resources when diving in.
     /// </summary>
     [Indexed(CascadeDepth = 1)]
@@ -56,8 +59,11 @@ public class RedisRoom
     [Indexed]
     public int[] RoomMembers { get; set; }
 
+    /// <summary>
+    /// A map of user ids to their IP address in number form
+    /// </summary>
     [Indexed]
-    public Dictionary<int, long> MemberLocations { get; set; }
+    public Dictionary<int, string> MemberLocations { get; set; }
 
     public bool IsUserInRoom(int userId) => this.RoomMembers.Contains(userId);
 

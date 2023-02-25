@@ -52,7 +52,7 @@ public class UserStatus
         this.LastLogin = loginTimestamps?.LastLogin ?? 0;
         this.LastLogout = loginTimestamps?.LastLogout ?? 0;
 
-       this.CurrentRoom = RoomHelper.FindRoomByUserId(userId);
+       this.CurrentRoom = RoomHelperOld.FindRoomByUserId(userId);
     }
 
     private string FormatOfflineTimestamp(string language, string timeZone)

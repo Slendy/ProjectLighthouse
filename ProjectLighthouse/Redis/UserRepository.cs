@@ -31,10 +31,6 @@ public class UserRepository
         {
             BlockedList = Array.Empty<string>(),
             FriendList = Array.Empty<string>(),
-            GameTokens = new[]
-            {
-                token.TokenId,
-            },
             Rooms = Array.Empty<Ulid>(),
             UserId = token.UserId,
             Username = username,
@@ -51,6 +47,8 @@ public class UserRepository
     {
         await this.provider.Connection.ExecuteAsync("EXPIRE", $"User:{user.UserId}", "3600");
     }
+
+    public Task<bool> UserExists(int userId) => this.users.AnyAsync(u => u.UserId == userId);
 
     public Task<RedisUser?> GetUser(int userId) => this.users.FindByIdAsync(userId.ToString());
 
