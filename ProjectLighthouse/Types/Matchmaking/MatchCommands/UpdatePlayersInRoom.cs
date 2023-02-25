@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Redis;
@@ -48,7 +49,7 @@ public class UpdatePlayersInRoom : IMatchCommand
             roomMembers.Add(roomMember.UserId);
         }
 
-        room.RoomMembers = roomMembers.ToArray();
+        room.RoomMembers = roomMembers.ToList();
         Logger.Debug($"UpdatePlayersInRoom: Updated players for room {room.Id}: {string.Join(",", room.RoomMembers)}", LogArea.Match);
         await roomRepository.SaveAsync();
 

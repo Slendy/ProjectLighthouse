@@ -3,10 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Levels;
-using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Redis;
 using Redis.OM;
@@ -30,7 +28,7 @@ public class RoomRepository
         RedisRoom room = new()
         {
             RoomHostId = token.UserId,
-            RoomMembers = new[]
+            RoomMembers = new List<int>
             {
                 token.UserId,
             },
@@ -60,7 +58,7 @@ public class RoomRepository
             if (r.RoomHostId == token.UserId) await this.RemoveAsync(r);
 
             // If they are only a member then delete them from the member list and remove their location
-            r.RoomMembers = r.RoomMembers.Where(rm => rm != token.UserId).ToArray();
+            r.RoomMembers = r.RoomMembers.Where(rm => rm != token.UserId).ToList();
             r.MemberLocations.Remove(token.UserId);
             await this.rooms.UpdateAsync(r);
         }
@@ -98,7 +96,7 @@ public class RoomRepository
     public ValueTask SaveAsync() => this.rooms.SaveAsync();
 
     private IRedisCollection<RedisRoom> GetRoomsByToken(GameToken token) =>
-        this.rooms
+        this.rooms.Where(r => r.RoomMembers.Contains(token.UserId))
             .Where(r => r.RoomPlatform == token.Platform)
             .Where(r => r.RoomVersion == token.GameVersion);
     //.Where(r => r.RoomMembers.Contains(token.UserId))

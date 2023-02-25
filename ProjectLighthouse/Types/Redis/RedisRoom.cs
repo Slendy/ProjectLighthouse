@@ -58,7 +58,8 @@ public class RedisRoom
     /// Tracks other members of the room that are not the host.
     /// </summary>
     [Indexed]
-    public int[] RoomMembers { get; set; }
+    [Searchable]
+    public List<int> RoomMembers { get; set; }
 
     /// <summary>
     /// A map of user ids to their IP address in number form
