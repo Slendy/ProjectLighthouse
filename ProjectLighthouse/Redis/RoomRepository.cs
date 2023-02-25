@@ -95,10 +95,14 @@ public class RoomRepository
 
     public ValueTask SaveAsync() => this.rooms.SaveAsync();
 
-    private IRedisCollection<RedisRoom> GetRoomsByToken(GameToken token) =>
-        this.rooms.Where(r => r.RoomMembers.Contains(token.UserId.ToString()))
+    private IRedisCollection<RedisRoom> GetRoomsByToken(GameToken token)
+    {
+        string userId = token.UserId.ToString();
+        return this.rooms.Where(r => r.RoomMembers.Contains(userId))
             .Where(r => r.RoomPlatform == token.Platform)
             .Where(r => r.RoomVersion == token.GameVersion);
+    }
+        
     //.Where(r => r.RoomMembers.Contains(token.UserId))
 
     /// <summary>

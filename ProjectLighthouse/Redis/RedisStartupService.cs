@@ -1,6 +1,9 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Extensions;
+using LBPUnion.ProjectLighthouse.Logging;
+using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Redis;
 using Microsoft.Extensions.Hosting;
 using Redis.OM;
@@ -16,14 +19,17 @@ public class RedisStartupService : IHostedService
         this.provider = provider;
     }
 
-    // public async Task StartAsync(CancellationToken cancellationToken)
-    // {
-    //     await _provider.Connection.CreateIndexAsync(typeof(Person));
-    // }
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await this.provider.Connection.RecreateIndexAsync(typeof(RedisUser));
-        await this.provider.Connection.RecreateIndexAsync(typeof(RedisRoom));
+        try
+        {
+            await this.provider.Connection.RecreateIndexAsync(typeof(RedisUser));
+            await this.provider.Connection.RecreateIndexAsync(typeof(RedisRoom));
+        }
+        catch (Exception e)
+        {
+            Logger.Error($"Failed to create redis index: {e.ToDetailedException()}", LogArea.Redis);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
