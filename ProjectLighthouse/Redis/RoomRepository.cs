@@ -3,8 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Redis;
 using Redis.OM;
@@ -55,7 +57,7 @@ public class RoomRepository
         foreach (RedisRoom r in userRooms)
         {
             // If they are the host of the room then delete the entire room
-            if (r.RoomHostId == token.UserId) await this.rooms.DeleteAsync(r);
+            if (r.RoomHostId == token.UserId) await this.RemoveAsync(r);
 
             // If they are only a member then delete them from the member list and remove their location
             r.RoomMembers = r.RoomMembers.Where(rm => rm != token.UserId).ToArray();
@@ -99,6 +101,14 @@ public class RoomRepository
         this.rooms.Where(r => r.RoomMembers.Contains(token.UserId))
             .Where(r => r.RoomPlatform == token.Platform)
             .Where(r => r.RoomVersion == token.GameVersion);
+
+    public async Task<RedisRoom?> Bruh(GameToken token)
+    {
+        Logger.Info(
+            $"GameToken: Id: '{token.UserId}', platform:'{token.Platform}', ver: '{token.GameVersion}', loc: '{token.UserLocation}'",
+            LogArea.Match);
+        return await this.GetRoomsByToken(token).FirstOrDefaultAsync();
+    }
 
     /// <summary>
     /// Finds the room that the given token is in 

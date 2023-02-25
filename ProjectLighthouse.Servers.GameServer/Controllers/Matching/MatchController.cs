@@ -51,10 +51,9 @@ public class MatchController : ControllerBase
 
         await this.users.ExtendUserSession(user);
 
-        RedisRoom? room = await this.rooms.GetRoomByToken(token);
+        RedisRoom? room = await this.rooms.Bruh(token);
 
         // If we can't find a room for the user, then create one
-        // ReSharper disable once ConvertIfStatementToNullCoalescingExpression
         if (room == null)
         {
             Logger.Info($"Creating room for {user.Username}, location={token.UserLocation}", LogArea.Match);
