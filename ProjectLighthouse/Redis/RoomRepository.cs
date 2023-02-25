@@ -98,9 +98,10 @@ public class RoomRepository
     public ValueTask SaveAsync() => this.rooms.SaveAsync();
 
     private IRedisCollection<RedisRoom> GetRoomsByToken(GameToken token) =>
-        this.rooms.Where(r => r.RoomMembers.Contains(token.UserId))
-            .Where(r => (int)r.RoomPlatform == (int)token.Platform)
-            .Where(r => (int)r.RoomVersion == (int)token.GameVersion);
+        this.rooms
+            .Where(r => r.RoomPlatform == token.Platform)
+            .Where(r => r.RoomVersion == token.GameVersion);
+    //.Where(r => r.RoomMembers.Contains(token.UserId))
 
     /// <summary>
     /// Finds the room that the given token is in 
