@@ -56,9 +56,9 @@ public class RedisRoom
 
     /// <summary>
     /// Tracks other members of the room that are not the host.
+    /// Has to be strings because otherwise redis cannot 
     /// </summary>
     [Indexed]
-    [Searchable]
     public string[] RoomMembers { get; set; }
 
     /// <summary>
