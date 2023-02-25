@@ -99,16 +99,8 @@ public class RoomRepository
 
     private IRedisCollection<RedisRoom> GetRoomsByToken(GameToken token) =>
         this.rooms.Where(r => r.RoomMembers.Contains(token.UserId))
-            .Where(r => r.RoomPlatform == token.Platform)
-            .Where(r => r.RoomVersion == token.GameVersion);
-
-    public async Task<RedisRoom?> Bruh(GameToken token)
-    {
-        Logger.Info(
-            $"GameToken: Id: '{token.UserId}', platform:'{token.Platform}', ver: '{token.GameVersion}', loc: '{token.UserLocation}'",
-            LogArea.Match);
-        return await this.GetRoomsByToken(token).FirstOrDefaultAsync();
-    }
+            .Where(r => (int)r.RoomPlatform == (int)token.Platform)
+            .Where(r => (int)r.RoomVersion == (int)token.GameVersion);
 
     /// <summary>
     /// Finds the room that the given token is in 

@@ -51,7 +51,7 @@ public class MatchController : ControllerBase
 
         await this.users.ExtendUserSession(user);
 
-        RedisRoom? room = await this.rooms.Bruh(token);
+        RedisRoom? room = await this.rooms.GetRoomByToken(token);
 
         // If we can't find a room for the user, then create one
         if (room == null)
