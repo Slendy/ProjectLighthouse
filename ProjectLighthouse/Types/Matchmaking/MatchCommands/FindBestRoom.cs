@@ -75,8 +75,9 @@ public class FindBestRoom : IMatchCommand
                 Players = new List<Player>(),
                 Locations = new List<string>(),
             };
-            foreach (int uid in r.RoomMembers)
+            foreach (string uid in r.RoomMembers)
             {
+
                 Player player = new()
                 {
                     Username = (await userRepository.GetUser(uid))?.Username,

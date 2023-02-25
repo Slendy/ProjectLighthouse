@@ -28,19 +28,19 @@ public class RoomRepository
         RedisRoom room = new()
         {
             RoomHostId = token.UserId,
-            RoomMembers = new List<int>
+            RoomMembers = new[]
             {
-                token.UserId,
+                token.UserId.ToString(),
             },
             RoomBuildVersion = -1, // unknown
             RoomSlot = RoomSlot.PodSlot,
             RoomVersion = token.GameVersion,
             RoomState = RoomState.Idle,
             RoomPlatform = token.Platform,
-            MemberLocations = new Dictionary<int, string>
+            MemberLocations = new Dictionary<string, string>
             {
                 {
-                    token.UserId, ipAddress
+                    token.UserId.ToString(), ipAddress
                 },
             },
         };
@@ -58,8 +58,8 @@ public class RoomRepository
             if (r.RoomHostId == token.UserId) await this.RemoveAsync(r);
 
             // If they are only a member then delete them from the member list and remove their location
-            r.RoomMembers = r.RoomMembers.Where(rm => rm != token.UserId).ToList();
-            r.MemberLocations.Remove(token.UserId);
+            r.RoomMembers = r.RoomMembers.Where(rm => rm != token.UserId.ToString()).ToArray();
+            r.MemberLocations.Remove(token.UserId.ToString());
             await this.rooms.UpdateAsync(r);
         }
     }
@@ -96,7 +96,7 @@ public class RoomRepository
     public ValueTask SaveAsync() => this.rooms.SaveAsync();
 
     private IRedisCollection<RedisRoom> GetRoomsByToken(GameToken token) =>
-        this.rooms.Where(r => r.RoomMembers.Contains(token.UserId))
+        this.rooms.Where(r => r.RoomMembers.Contains(token.UserId.ToString()))
             .Where(r => r.RoomPlatform == token.Platform)
             .Where(r => r.RoomVersion == token.GameVersion);
     //.Where(r => r.RoomMembers.Contains(token.UserId))

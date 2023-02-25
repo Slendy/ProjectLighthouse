@@ -34,7 +34,7 @@ public class UpdatePlayersInRoom : IMatchCommand
 
         // TODO are reservations related to how many local players vs remote players are in the lobby?
 
-        List<int> roomMembers = new();
+        List<string> roomMembers = new();
 
         // If a user has local players in their room, then there will be duplicates of their name in the request
         foreach (string username in this.Players)
@@ -42,14 +42,14 @@ public class UpdatePlayersInRoom : IMatchCommand
             RedisUser? roomMember = await userRepository.GetUser(username);
             if (roomMember == null)
             {
-                roomMembers.Add(-1);
+                roomMembers.Add((-1).ToString());
                 Logger.Debug($"UpdatePlayersInRoom: Failed to fetch RedisUser for {username}", LogArea.Match);
                 continue;
             }
-            roomMembers.Add(roomMember.UserId);
+            roomMembers.Add(roomMember.UserId.ToString());
         }
 
-        room.RoomMembers = roomMembers.ToList();
+        room.RoomMembers = roomMembers.ToArray();
         Logger.Debug($"UpdatePlayersInRoom: Updated players for room {room.Id}: {string.Join(",", room.RoomMembers)}", LogArea.Match);
         await roomRepository.SaveAsync();
 

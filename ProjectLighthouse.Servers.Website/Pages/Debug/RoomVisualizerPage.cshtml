@@ -81,13 +81,13 @@
                 <b>You are currently in this room.</b>
             </p>
         }
-        <p>@(room.RoomMembers.Count+1) players, state is @room.RoomState, version is @room.RoomVersion.ToPrettyString() on platform @room.RoomPlatform</p>
+        <p>@(room.RoomMembers.Length+1) players, state is @room.RoomState, version is @room.RoomVersion.ToPrettyString() on platform @room.RoomPlatform</p>
         <p>Slot type: @room.RoomSlot.SlotType, slot id: @room.RoomSlot.SlotId</p>
         <p>Room host: @room.RoomHostId</p>
         <p>Room version: @room.RoomVersion</p>
         <p>Room buildVersion: @room.RoomBuildVersion</p>
         <p>Room members:</p>
-        @foreach (int userId in room.RoomMembers)
+        @foreach (string userId in room.RoomMembers)
         {
             <div class="ui segment">@userId</div>
         }

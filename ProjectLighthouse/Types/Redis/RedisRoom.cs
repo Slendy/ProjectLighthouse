@@ -59,14 +59,14 @@ public class RedisRoom
     /// </summary>
     [Indexed]
     [Searchable]
-    public List<int> RoomMembers { get; set; }
+    public string[] RoomMembers { get; set; }
 
     /// <summary>
     /// A map of user ids to their IP address in number form
     /// </summary>
     [Indexed]
-    public Dictionary<int, string> MemberLocations { get; set; }
+    public Dictionary<string, string> MemberLocations { get; set; }
 
-    public bool IsUserInRoom(int userId) => this.RoomMembers.Contains(userId);
+    public bool IsUserInRoom(int userId) => this.RoomMembers.Contains(userId.ToString());
 
 }
