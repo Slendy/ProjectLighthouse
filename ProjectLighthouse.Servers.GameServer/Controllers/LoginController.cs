@@ -191,12 +191,14 @@ public class LoginController : ControllerBase
 
         Logger.Success($"Successfully logged in user {user.Username} as {token.GameVersion} client", LogArea.Login);
 
+        #if !DEBUG
         // Invalidate user's old GameTokens for same platform/game version 
         this.database.GameTokens.RemoveWhere(t =>
             t.UserId == user.UserId &&
             t.GameVersion == npTicket.GameVersion &&
             t.Platform == npTicket.Platform &&
             t.TicketHash != npTicket.TicketHash);
+        #endif
 
         user.LastLogin = TimeHelper.TimestampMillis;
 

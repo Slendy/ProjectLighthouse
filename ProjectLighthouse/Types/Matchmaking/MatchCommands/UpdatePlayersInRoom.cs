@@ -33,10 +33,7 @@ public class UpdatePlayersInRoom : IMatchCommand
 
         // TODO are reservations related to how many local players vs remote players are in the lobby?
 
-        List<int> roomMembers = new()
-        {
-            room.RoomHostId,
-        };
+        List<int> roomMembers = new();
 
         // If a user has local players in their room, then there will be duplicates of their name in the request
         foreach (string username in this.Players)

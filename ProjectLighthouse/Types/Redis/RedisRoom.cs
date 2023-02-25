@@ -11,6 +11,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Redis;
 public class RedisRoom
 {
     [RedisIdField]
+    [Indexed]
     public Ulid Id { get; set; }
 
     /// <summary>

@@ -7,6 +7,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Redis;
 public class RedisUser
 {
     [RedisIdField]
+    [Indexed]
     public int UserId { get; set; }
 
     /// <summary>

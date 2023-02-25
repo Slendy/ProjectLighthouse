@@ -18,6 +18,8 @@ public class UpdateMyPlayerData : IMatchCommand
     public List<int>? Slot { get; set; }
     public int? PassedNoJoinPoint { get; set; }
     public int? BuildVersion { get; set; }
+    public bool? HostingDiveIn { get; set; }
+    public bool? MatchingEnabled { get; set; }
 
     public async Task<string?> ProcessCommand
     (
@@ -34,6 +36,9 @@ public class UpdateMyPlayerData : IMatchCommand
         if (this.RoomState != null) room.RoomState = this.RoomState.Value;
         if (this.Slot != null) room.RoomSlot = new RoomSlot {SlotType = (SlotType)this.Slot[0], SlotId = this.Slot[1],};
         if (this.BuildVersion != null) room.RoomBuildVersion = this.BuildVersion.Value;
+
+        if (this.HostingDiveIn.HasValue && this.HostingDiveIn.Value) room.RoomState = Rooms.RoomState.DivingInWaiting;
+        else if (this.HostingDiveIn.HasValue) room.RoomState = Rooms.RoomState.Idle;
 
         await roomRepository.SaveAsync();
 
