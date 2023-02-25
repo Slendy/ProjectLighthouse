@@ -44,8 +44,8 @@ public class RoomRepository
                 },
             },
         };
-        await this.AddRoomAsync(room);
         await this.CleanupRoomsForUser(token);
+        await this.AddRoomAsync(room);
         return room;
     }
 
