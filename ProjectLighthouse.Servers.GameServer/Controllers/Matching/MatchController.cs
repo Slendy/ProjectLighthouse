@@ -60,8 +60,10 @@ public class MatchController : ControllerBase
             room = await this.rooms.CreateRoom(token, token.UserLocation);
             Logger.Info($"Added room for {user.Username}, roomId={room.Id}", LogArea.Match);
         }
-
-        await this.rooms.ExtendRoomSessionAsync(room);
+        else
+        {
+            await this.rooms.ExtendRoomSessionAsync(room);
+        }
 
         #region Parse match data
 
