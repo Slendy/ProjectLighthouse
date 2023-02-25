@@ -35,7 +35,7 @@ public class RoomRepository
             RoomBuildVersion = -1, // unknown
             RoomSlot = RoomSlot.PodSlot,
             RoomVersion = token.GameVersion,
-            RoomState = RoomState.Unknown,
+            RoomState = RoomState.Idle,
             RoomPlatform = token.Platform,
             MemberLocations = new Dictionary<int, string>
             {
@@ -97,7 +97,8 @@ public class RoomRepository
 
     private IRedisCollection<RedisRoom> GetRoomsByToken(GameToken token) =>
         this.rooms.Where(r => r.RoomMembers.Contains(token.UserId))
-            .Where(r => r.RoomPlatform == token.Platform && r.RoomVersion == token.GameVersion);
+            .Where(r => r.RoomPlatform == token.Platform)
+            .Where(r => r.RoomVersion == token.GameVersion);
 
     /// <summary>
     /// Finds the room that the given token is in 
