@@ -337,7 +337,7 @@ public class NPTicket
             Logger.Error($"The ticket version {npTicket.ticketVersion} is not implemented yet.", LogArea.Login);
             Logger.Error
             (
-                "Please let us know that this is a ticket version that is actually used on our issue tracker at https://github.com/LBPUnion/project-lighthouse/issues !",
+                "Please let us know that this is a ticket version that is actually used on our issue tracker at https://github.com/LBPUnion/ProjectLighthouse/issues !",
                 LogArea.Login
             );
             return null;
@@ -347,7 +347,7 @@ public class NPTicket
             Logger.Error("Failed to read npTicket!", LogArea.Login);
             Logger.Error("Either this is spam data, or the more likely that this is a bug.", LogArea.Login);
             Logger.Error
-                ("Please report the following exception to our issue tracker at https://github.com/LBPUnion/project-lighthouse/issues!", LogArea.Login);
+                ("Please report the following exception to our issue tracker at https://github.com/LBPUnion/ProjectLighthouse/issues!", LogArea.Login);
             Logger.Error(e.ToDetailedException(), LogArea.Login);
             return null;
         }

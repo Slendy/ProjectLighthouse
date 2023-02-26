@@ -21,7 +21,7 @@ public static class VersionHelper
             string[] lines = remotesFile.Split('\n');
 
             // line[0] line[1]                                        line[2]
-            // origin  git@github.com:LBPUnion/project-lighthouse.git (fetch)
+            // origin  git@github.com:LBPUnion/ProjectLighthouse.git (fetch)
 
             // linq is a serious and painful catastrophe but its useful so i'm gonna keep using it
             Remotes = lines.Select(line => line.Split("\t")[1]).ToArray();
