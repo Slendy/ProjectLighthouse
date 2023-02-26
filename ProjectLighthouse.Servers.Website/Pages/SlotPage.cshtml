@@ -16,7 +16,7 @@
 
     Model.Title = HttpUtility.HtmlDecode(Model.Slot?.Name ?? "");
     Model.Description = HttpUtility.HtmlDecode(Model.Slot?.Description ?? "");
-    Model.Image = ServerConfiguration.Instance.ExternalUrl + "/gameAssets/" + Model.Slot?.WebsiteIconHash;
+    Model.Image = ServerConfiguration.Instance.ExternalUrl + "/gameAssets/" + Model.Slot?.WebsiteIconHash + ".png";
 
     bool isMobile = Request.IsMobile();
     string language = Model.GetLanguage();

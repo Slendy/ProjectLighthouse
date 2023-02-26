@@ -12,6 +12,7 @@ public class ResourcesController : ControllerBase
     [HttpGet("/gameAssets/{hash}")]
     public IActionResult GetGameImage(string hash)
     {
+        if (hash.EndsWith(".png")) hash = hash[..^4];
         string path = FileHelper.GetImagePath($"{hash}.png");
 
         string fullPath = Path.GetFullPath(path);

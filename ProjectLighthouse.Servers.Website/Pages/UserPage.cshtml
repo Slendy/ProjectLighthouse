@@ -15,7 +15,7 @@
 
     Model.Title = Model.Translate(ProfileStrings.Title, Model.ProfileUser!.Username);
     Model.Description = Model.ProfileUser?.Biography ?? Model.Translate(ProfileStrings.NoBiography, Model.ProfileUser!.Username);
-    Model.Image = ServerConfiguration.Instance.ExternalUrl + "/gameAssets/" + Model.ProfileUser!.WebsiteAvatarHash;
+    Model.Image = ServerConfiguration.Instance.ExternalUrl + "/gameAssets/" + Model.ProfileUser!.WebsiteAvatarHash + ".png";
 
     bool isMobile = Request.IsMobile();
     string language = Model.GetLanguage();
