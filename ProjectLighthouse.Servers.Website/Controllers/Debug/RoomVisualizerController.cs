@@ -1,8 +1,11 @@
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Helpers;
+using LBPUnion.ProjectLighthouse.Redis;
+using LBPUnion.ProjectLighthouse.Types.Redis;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Redis.OM;
 
 namespace LBPUnion.ProjectLighthouse.Servers.Website.Controllers.Debug;
 
@@ -11,10 +14,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Controllers.Debug;
 public class RoomVisualizerController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly RoomRepository roomRepository;
 
-    public RoomVisualizerController(DatabaseContext database)
+    public RoomVisualizerController(DatabaseContext database, RedisConnectionProvider redis)
     {
         this.database = database;
+        this.roomRepository = new RoomRepository(redis);
     }
 
     [HttpGet("createFakeRoom")]
@@ -25,6 +30,7 @@ public class RoomVisualizerController : ControllerBase
         return this.NotFound();
         #else
         List<int> users = await this.database.Users.OrderByDescending(_ => EF.Functions.Random()).Take(2).Select(u => u.UserId).ToListAsync();
+        this.roomRepository.CreateRoom()
         RoomHelperOld.CreateRoom(users, GameVersion.LittleBigPlanet2, Platform.PS3);
 
         foreach (int user in users)
@@ -36,12 +42,15 @@ public class RoomVisualizerController : ControllerBase
     }
 
     [HttpGet("deleteRooms")]
-    public IActionResult DeleteRooms()
+    public async Task<IActionResult> DeleteRooms()
     {
         #if !DEBUG
         return this.NotFound();
         #else
-        lock(RoomHelperOld.RoomLock) RoomHelperOld.Rooms.RemoveAll();
+        foreach (RedisRoom room in await this.roomRepository.GetRoomsAsync())
+        {
+            await this.roomRepository.RemoveAsync(redisRoom);
+        }
         return this.Redirect("/debug/roomVisualizer");
         #endif
     }

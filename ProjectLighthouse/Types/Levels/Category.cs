@@ -44,7 +44,8 @@ public abstract class Category
             previewResults = LbpSerializer.TaggedStringElement
             (
                 "results",
-                previewSlot.Serialize(),
+                //TODO fixme
+                previewSlot.Serialize(null),
                 new Dictionary<string, object>
                 {
                     {

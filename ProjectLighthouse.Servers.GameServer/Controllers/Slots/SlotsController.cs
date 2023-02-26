@@ -3,6 +3,7 @@ using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Helpers;
+using LBPUnion.ProjectLighthouse.Redis;
 using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
@@ -13,6 +14,7 @@ using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Redis.OM;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Slots;
 
@@ -23,9 +25,11 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Slots;
 public class SlotsController : ControllerBase
 {
     private readonly DatabaseContext database;
-    public SlotsController(DatabaseContext database)
+    private readonly RoomRepository roomRepository;
+    public SlotsController(DatabaseContext database, RedisConnectionProvider redis)
     {
         this.database = database;
+        this.roomRepository = new RoomRepository(redis);
     }
 
     private static string generateSlotsResponse(string slotAggregate, int start, int total) =>
@@ -62,7 +66,7 @@ public class SlotsController : ControllerBase
                 .Skip(Math.Max(0, pageStart - 1))
                 .Take(Math.Min(pageSize, usedSlots)),
             string.Empty,
-            (current, slot) => current + slot.Serialize(token.GameVersion)
+            (current, slot) => current + slot.Serialize(this.roomRepository, token.GameVersion)
         );
         int start = pageStart + Math.Min(pageSize, usedSlots);
         int total = await this.database.Slots.CountAsync(s => s.CreatorId == targetUserId);
@@ -85,7 +89,7 @@ public class SlotsController : ControllerBase
                     continue;
                 }
             }
-            serializedSlots.Add(slot.Serialize());
+            serializedSlots.Add(slot.Serialize(this.roomRepository));
         }
         string serialized = serializedSlots.Aggregate(string.Empty, (current, slot) => slot == null ? current : current + slot);
 
@@ -95,7 +99,7 @@ public class SlotsController : ControllerBase
     [HttpGet("slots/developer")]
     public async Task<IActionResult> StoryPlayers()
     {
-        List<int> activeSlotIds = RoomHelperOld.Rooms.Where(r => r.Slot.SlotType == SlotType.Developer).Select(r => r.Slot.SlotId).ToList();
+        List<int> activeSlotIds = this.roomRepository.GetRoomsInLevel(SlotType.Developer, null).Select(r => r.RoomSlot.SlotId).ToList();
 
         List<string> serializedSlots = new();
 
@@ -103,7 +107,7 @@ public class SlotsController : ControllerBase
         {
             int placeholderSlotId = await SlotHelper.GetPlaceholderSlotId(this.database, id, SlotType.Developer);
             Slot slot = await this.database.Slots.FirstAsync(s => s.SlotId == placeholderSlotId);
-            serializedSlots.Add(slot.SerializeDevSlot());
+            serializedSlots.Add(slot.SerializeDevSlot(this.roomRepository));
         }
 
         string serialized = serializedSlots.Aggregate(string.Empty, (current, slot) => current + slot);
@@ -117,7 +121,7 @@ public class SlotsController : ControllerBase
         int slotId = await SlotHelper.GetPlaceholderSlotId(this.database, id, SlotType.Developer);
         Slot slot = await this.database.Slots.FirstAsync(s => s.SlotId == slotId);
 
-        return this.Ok(slot.SerializeDevSlot());
+        return this.Ok(slot.SerializeDevSlot(this.roomRepository));
     } 
 
     [HttpGet("s/user/{id:int}")]
@@ -134,7 +138,7 @@ public class SlotsController : ControllerBase
         RatedLevel? ratedLevel = await this.database.RatedLevels.FirstOrDefaultAsync(r => r.SlotId == id && r.UserId == token.UserId);
         VisitedLevel? visitedLevel = await this.database.VisitedLevels.FirstOrDefaultAsync(r => r.SlotId == id && r.UserId == token.UserId);
         Review? review = await this.database.Reviews.Include(r => r.Slot).FirstOrDefaultAsync(r => r.SlotId == id && r.ReviewerId == token.UserId);
-        return this.Ok(slot.Serialize(gameVersion, ratedLevel, visitedLevel, review, true));
+        return this.Ok(slot.Serialize(this.roomRepository, gameVersion, ratedLevel, visitedLevel, review, true));
     }
 
     [HttpGet("slots/cool")]
@@ -174,7 +178,7 @@ public class SlotsController : ControllerBase
             .Skip(Math.Max(0, pageStart - 1))
             .Take(Math.Min(pageSize, 30));
 
-        string response = Enumerable.Aggregate(slots, string.Empty, (current, slot) => current + slot.Serialize(gameVersion));
+        string response = Enumerable.Aggregate(slots, string.Empty, (current, slot) => current + slot.Serialize(this.roomRepository, gameVersion));
         int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
         int total = await StatisticsHelper.SlotCountForGame(this.database, token.GameVersion);
         return this.Ok(generateSlotsResponse(response, start, total));
@@ -208,7 +212,7 @@ public class SlotsController : ControllerBase
             .Skip(Math.Max(0, pageStart - 1))
             .Take(Math.Min(pageSize, 30));
 
-        string response = Enumerable.Aggregate(slots, string.Empty, (current, slot) => current + slot.Serialize(gameVersion));
+        string response = Enumerable.Aggregate(slots, string.Empty, (current, slot) => current + slot.Serialize(this.roomRepository, gameVersion));
         int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
         int total = slotIdsWithTag.Count;
 
@@ -230,7 +234,7 @@ public class SlotsController : ControllerBase
             .Skip(Math.Max(0, pageStart - 1))
             .Take(Math.Min(pageSize, 30));
 
-        string response = slots.Aggregate(string.Empty, (current, slot) => current + slot.Serialize(gameVersion));
+        string response = slots.Aggregate(string.Empty, (current, slot) => current + slot.Serialize(this.roomRepository, gameVersion));
         int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
         int total = await StatisticsHelper.SlotCount(this.database); 
 
@@ -427,7 +431,7 @@ public class SlotsController : ControllerBase
 
         Dictionary<int, int> playersBySlotId = new();
 
-        foreach (Room room in RoomHelperOld.Rooms)
+        foreach (Room room in .Rooms)
         {
             // TODO: support developer slotTypes?
             if (room.Slot.SlotType != SlotType.User) continue;

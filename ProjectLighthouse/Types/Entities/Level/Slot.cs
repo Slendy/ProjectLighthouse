@@ -9,7 +9,7 @@ using System.Xml.Serialization;
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Files;
-using LBPUnion.ProjectLighthouse.Helpers;
+using LBPUnion.ProjectLighthouse.Redis;
 using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
@@ -272,13 +272,12 @@ public class Slot
     [JsonIgnore]
     public string HiddenReason { get; set; } = "";
 
-    public string SerializeDevSlot()
+    public string SerializeDevSlot(RoomRepository roomRepository)
     {
         int comments = this.Comments;
         int photos = this.Photos;
-        int players = RoomHelperOld.Rooms
-            .Where(r => r.Slot.SlotType == SlotType.Developer && r.Slot.SlotId == this.InternalSlotId)
-            .Sum(r => r.PlayerIds.Count);
+        int players = roomRepository.GetRoomsInLevel(SlotType.Developer, this.InternalSlotId)
+            .Sum(r => r.RoomMembers.Length);
 
         string slotData = LbpSerializer.StringElement("id", this.InternalSlotId) +
                           LbpSerializer.StringElement("playerCount", players) +
@@ -292,7 +291,7 @@ public class Slot
     public bool CommentsEnabled { get; set; } = true;
 
     public string Serialize
-    (
+    (RoomRepository roomRepository,
         GameVersion gameVersion = GameVersion.LittleBigPlanet1,
         RatedLevel? yourRatingStats = null,
         VisitedLevel? yourVisitedStats = null,
@@ -300,9 +299,9 @@ public class Slot
         bool fullSerialization = false
     )
     {
-        if (this.Type == SlotType.Developer) return this.SerializeDevSlot();
+        if (this.Type == SlotType.Developer) return this.SerializeDevSlot(roomRepository);
 
-        int playerCount = RoomHelperOld.Rooms.Count(r => r.Slot.SlotType == SlotType.User && r.Slot.SlotId == this.SlotId);
+        int playerCount = roomRepository.GetRoomsInLevel(SlotType.User, this.SlotId).Count();
 
         string slotData = LbpSerializer.StringElement("id", this.SlotId) +
                           LbpSerializer.StringElement("npHandle", this.Creator?.Username) +

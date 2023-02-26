@@ -57,7 +57,7 @@ public abstract class CategoryWithUser : Category
             previewResults = LbpSerializer.TaggedStringElement
             (
                 "results",
-                previewSlot.Serialize(),
+                previewSlot.Serialize(null),
                 new Dictionary<string, object>
                 {
                     {

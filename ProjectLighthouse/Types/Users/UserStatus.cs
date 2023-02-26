@@ -5,7 +5,6 @@ using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Localization.StringLists;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
-using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 
 namespace LBPUnion.ProjectLighthouse.Types.Users;
 
@@ -20,7 +19,6 @@ public class UserStatus
     public StatusType StatusType { get; set; }
     public GameVersion? CurrentVersion { get; set; }
     public Platform? CurrentPlatform { get; set; }
-    public Room? CurrentRoom { get; set; }
     public long LastLogin { get; set; }
     public long LastLogout { get; set; }
 
@@ -51,8 +49,6 @@ public class UserStatus
             }).FirstOrDefault();
         this.LastLogin = loginTimestamps?.LastLogin ?? 0;
         this.LastLogout = loginTimestamps?.LastLogout ?? 0;
-
-       this.CurrentRoom = RoomHelperOld.FindRoomByUserId(userId);
     }
 
     private string FormatOfflineTimestamp(string language, string timeZone)

@@ -86,6 +86,12 @@ public class RoomRepository
         return roomQuery;
     }
 
+    public IRedisCollection<RedisRoom> GetRoomsInLevel(SlotType? type, int? slotId)
+    {
+        return this.rooms.Where(r => type == null || r.RoomSlot.SlotType == type)
+            .Where(r => slotId == null || r.RoomSlot.SlotId == slotId);
+    }
+
     public async Task ExtendRoomSessionAsync(RedisRoom room)
     {
         await this.provider.Connection.ExecuteAsync("EXPIRE", $"Room:{room.Id}", "300");
@@ -110,7 +116,9 @@ public class RoomRepository
     /// </summary>
     /// <param name="token">The token to search with</param>
     /// <returns>The room that the token is in</returns>
-    public Task<RedisRoom?> GetRoomByToken(GameToken token) => this.GetRoomsByToken(token).FirstOrDefaultAsync();
+    public Task<RedisRoom?> GetRoomByTokenAsync(GameToken token) => this.GetRoomsByToken(token).FirstOrDefaultAsync();
+
+    public RedisRoom? GetRoomByToken(GameToken token) => this.GetRoomsByToken(token).FirstOrDefault();
 
     public Task<IList<RedisRoom>> GetRoomsAsync() => this.rooms.ToListAsync();
 
