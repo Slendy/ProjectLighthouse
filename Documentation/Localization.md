@@ -1,6 +1,6 @@
 # Localization
 
-Translations in Lighthouse are done with [Crowdin](https://crowdin.com/project/project-lighthouse).
+Translations in Lighthouse are done with [Crowdin](https://crowdin.com/project/lbp-union-project-lighthouse).
 
 For development, it is not important to worry about Crowdin; once your translations are merged into `main`,
 the appropriate translation changes will be uploaded to Crowdin for community members to translate.
