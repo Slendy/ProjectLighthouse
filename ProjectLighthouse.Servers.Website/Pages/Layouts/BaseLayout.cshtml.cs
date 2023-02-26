@@ -25,6 +25,8 @@ public class BaseLayout : PageModel
 
     public string Title = string.Empty;
 
+    public string Image = string.Empty;
+
     private User? user;
     public BaseLayout(DatabaseContext database)
     {

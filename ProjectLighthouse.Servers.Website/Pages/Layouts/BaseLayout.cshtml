@@ -30,6 +30,15 @@
     string title = Model.Title == string.Empty 
         ? ServerConfiguration.Instance.Customization.ServerName 
         : $"{Model.Title} - {ServerConfiguration.Instance.Customization.ServerName}";
+
+    if (string.IsNullOrWhiteSpace(Model.Image))
+    {
+        Model.Image = ServerConfiguration.Instance.ExternalUrl + "/logo-color.png";
+    }
+    if (string.IsNullOrWhiteSpace(Model.Description))
+    {
+        Model.Description = "Project Lighthouse is a clean-room, open-source custom server for LittleBigPlanet.";
+    }
 }
 
 <!DOCTYPE html>
@@ -50,15 +59,15 @@
 
     @* Embed Stuff *@
     <meta name="theme-color" data-react-helmet="true" content="#008cff">
-    <meta property="og:title" content="@title">
+    <meta property="og:title" content="@Model.Title">
     @if (!string.IsNullOrEmpty(Model.Description))
     {
         <meta property="og:description" content="@Model.Description">
     }
     <meta property="og:type" content="website">
-    <meta property="og:url" content="@Context.Request.GetDisplayUrl()">
+    <meta property="og:url" content="@(ServerConfiguration.Instance.ExternalUrl + Context.Request.Path)">
     <meta property="og:site_name" content="@ServerConfiguration.Instance.Customization.ServerName">
-    <meta property="og:image" content="@ServerConfiguration.Instance.ExternalUrl/logo-color.png">
+    <meta property="og:image" content="@Model.Image">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 

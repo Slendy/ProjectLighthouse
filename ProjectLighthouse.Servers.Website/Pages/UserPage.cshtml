@@ -1,5 +1,6 @@
 @page "/user/{userId:int}"
 @using System.Web
+@using LBPUnion.ProjectLighthouse.Configuration
 @using LBPUnion.ProjectLighthouse.Extensions
 @using LBPUnion.ProjectLighthouse.Localization.StringLists
 @using LBPUnion.ProjectLighthouse.Servers.Website.Extensions
@@ -13,14 +14,15 @@
     Model.ShowTitleInPage = false;
 
     Model.Title = Model.Translate(ProfileStrings.Title, Model.ProfileUser!.Username);
-    Model.Description = Model.ProfileUser!.Biography;
+    Model.Description = Model.ProfileUser?.Biography ?? Model.Translate(ProfileStrings.NoBiography, Model.ProfileUser!.Username);
+    Model.Image = ServerConfiguration.Instance.ExternalUrl + "/gameAssets/" + Model.ProfileUser!.WebsiteAvatarHash;
 
     bool isMobile = Request.IsMobile();
     string language = Model.GetLanguage();
     string timeZone = Model.GetTimeZone();
 }
 
-@if (Model.ProfileUser.IsBanned)
+@if (Model.ProfileUser!.IsBanned)
 {
     <div class="ui inverted red segment">
         <h3 style="margin-bottom:3px;"><i class="ban icon"></i> This user is currently banned.</h3>

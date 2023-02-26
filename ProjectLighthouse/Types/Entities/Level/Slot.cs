@@ -80,6 +80,20 @@ public class Slot
         set => this.ResourceCollection = string.Join(',', value ?? Array.Empty<string>());
     }
 
+    [NotMapped]
+    [JsonIgnore]
+    public string WebsiteIconHash
+    {
+        get
+        {
+            string iconHash = this.IconHash;
+            if (string.IsNullOrWhiteSpace(iconHash) || iconHash.StartsWith('g'))
+                iconHash = ServerConfiguration.Instance.WebsiteConfiguration.MissingIconHash;
+
+            return iconHash;
+        }
+    }
+
     /// <summary>
     ///     The location of the level on the user's earth
     ///     Stored as a single 64 bit unsigned integer but split into
