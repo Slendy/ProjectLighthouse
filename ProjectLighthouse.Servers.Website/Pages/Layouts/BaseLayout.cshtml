@@ -3,6 +3,7 @@
 @using LBPUnion.ProjectLighthouse.Helpers
 @using LBPUnion.ProjectLighthouse.Localization.StringLists
 @using LBPUnion.ProjectLighthouse.Servers.Website.Types
+@using Microsoft.AspNetCore.Http.Extensions
 @model LBPUnion.ProjectLighthouse.Servers.Website.Pages.Layouts.BaseLayout
 
 @{
@@ -49,11 +50,15 @@
 
     @* Embed Stuff *@
     <meta name="theme-color" data-react-helmet="true" content="#008cff">
-    <meta content="@title" property="og:title">
+    <meta property="og:title" content="@title">
     @if (!string.IsNullOrEmpty(Model.Description))
     {
-        <meta content="@Model.Description" property="og:description">
+        <meta property="og:description" content="@Model.Description">
     }
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="@Context.Request.GetDisplayUrl()">
+    <meta property="og:site_name" content="@ServerConfiguration.Instance.Customization.ServerName">
+    <meta property="og:image" content="@ServerConfiguration.Instance.ExternalUrl/logo-color.png">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
