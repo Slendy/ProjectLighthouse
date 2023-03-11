@@ -22,7 +22,7 @@ public class UserSettingsPage : BaseLayout
     [SuppressMessage("ReSharper", "SpecifyStringComparison")]
     public async Task<IActionResult> OnPost([FromRoute] int userId, [FromForm] string? avatar, [FromForm] string? username, [FromForm] string? email, [FromForm] string? biography, [FromForm] string? timeZone, [FromForm] string? language)
     {
-        this.ProfileUser = await this.Database.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+        this.ProfileUser = await this.Database.Users.FindAsync(userId);
         if (this.ProfileUser == null) return this.NotFound();
 
         if (this.User == null) return this.Redirect("~/user/" + userId);

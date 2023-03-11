@@ -1,0 +1,222 @@
+﻿@page "/user/{userId:int}/settings/earth"
+@using LBPUnion.ProjectLighthouse.Extensions
+@model LBPUnion.ProjectLighthouse.Servers.Website.Pages.EarthEditorPage
+
+@{
+    Layout = "Layouts/BaseLayout";
+    Model.Title = "Earth Editor";
+    Model.ShowTitleInPage = true;
+
+    bool isMobile = Request.IsMobile();
+    string language = Model.GetLanguage();
+    string timeZone = Model.GetTimeZone();
+}
+
+<script src="https://unpkg.com/konva@8/konva.min.js"></script>
+<div id="container"></div>
+<script>
+  let container = document.getElementById("container");
+  let width = container.getBoundingClientRect().width;
+  let height = window.innerHeight;
+  let stage = new Konva.Stage({
+    container: 'container',
+    width: width,
+    height: height,
+    draggable: true,
+  });
+
+  // add canvas element
+  let mapLayer = new Konva.Layer();
+  stage.add(mapLayer);
+  
+  let mapImage = new Image();
+  mapImage.onload = function () {
+    mapImage.width = width;
+    stage.height(mapImage.height);
+    // mapImage.height = height;
+    console.log(mapImage);
+    let img = new Konva.Image({
+          image: mapImage, 
+    });
+    mapLayer.add(img);
+  }
+  mapImage.src = "/assets/earthMap.png";
+  
+  
+  let objectLayer = new Konva.Layer();
+
+  // create shape
+  let box = new Konva.Rect({
+    x: 50,
+    y: 50,
+    width: 100,
+    height: 50,
+    fill: '#00D2FF',
+    stroke: 'black',
+    strokeWidth: 4,
+    draggable: true,
+  });
+  objectLayer.add(box);
+  
+  stage.add(objectLayer);
+
+  // add cursor styling
+  box.on('mouseover', function () {
+    document.body.style.cursor = 'pointer';
+  });
+  box.on('mouseout', function () {
+    document.body.style.cursor = 'default';
+  });
+
+  let scaleBy = 1.1;
+  stage.on("dragmove", (e) => {
+    let pos = stage.position();
+    let needsMove = false;
+    if (pos.x > 0){
+      needsMove = true;
+      pos.x = 0;
+    }
+    if (pos.y > 0){
+      needsMove = true;
+      pos.y = 0;
+    }
+    if (pos.y < -stage.height){
+      pos.y = -stage.height;
+      needsMove = true;
+    }
+    if (pos.x < -stage.width){
+      pos.x = -stage.width;
+      needsMove = true;
+    }
+    if (needsMove){
+      stage.position({x: pos.x, y: pos.y});
+    }    
+  });
+  stage.on('wheel', (e) => {
+      // stop default scrolling
+      e.evt.preventDefault();
+  
+      let oldScale = stage.scaleX();
+      let pointer = stage.getPointerPosition();
+  
+      let mousePointTo = {
+            x: (pointer.x - stage.x()) / oldScale,
+            y: (pointer.y - stage.y()) / oldScale,
+      };
+  
+      // how to scale? Zoom in? Or zoom out?
+      let direction = e.evt.deltaY > 0 ? -1 : 1;
+  
+      // when we zoom on trackpad, e.evt.ctrlKey is true
+      // in that case lets revert direction
+      if (e.evt.ctrlKey) {
+          direction = -direction;
+      }
+  
+      let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+      
+      if (newScale < 1 || newScale > 3) {
+        return;
+      }
+  
+      stage.scale({ x: newScale, y: newScale });
+  
+      let newPos = {
+          x: pointer.x - mousePointTo.x * newScale,
+          y: pointer.y - mousePointTo.y * newScale,
+      };
+      if (newPos.x < 0)
+        newPos.x = 0;
+      if (newPos.y < 0)
+        newPos.y = 0;
+      stage.position(newPos);
+  });
+  
+  
+</script>
+
+@* <script> *@
+@* class MapRegion { *@
+@*   constructor (img) { *@
+@*     this.img = img *@
+@*     this.w = img.width *@
+@*     this.h = img.height *@
+@*   } *@
+@*    *@
+@*   draw (ctx) { *@
+@*     console.log(this.w); *@
+@*     console.log(this.h); *@
+@*     ctx.drawImage(this.img, 0, 0, ctx.canvas.width, ctx.canvas.height); *@
+@*   } *@
+@* } *@
+@* class Camera { *@
+@*   constructor (x, y) { *@
+@*     // x and y are top-left coordinates of the camera rectangle relative to the map. *@
+@*     // This rectangle is exctaly cvs.width px wide and cvs.height px tall. *@
+@*     this.x = x || 0 *@
+@*     this.y = y || 0 *@
+@*     this.zoom = 1 *@
+@*   } *@
+@*    *@
+@*   // focus (cvs, map, player) { *@
+@*   //   // Account for half of player w/h to make their rectangle centered *@
+@*   //   this.x = this.clamp(player.x - cvs.width / 2 + player.w / 2, 0, map.w - cvs.width) *@
+@*   //   this.y = this.clamp(player.y - cvs.height / 2 + player.h / 2, 0, map.h - cvs.height) *@
+@*   // } *@
+@*    *@
+@*   clamp (coord, min, max) { *@
+@*     if (coord < min) { *@
+@*       return min *@
+@*     } else if (coord > max) { *@
+@*       return max *@
+@*     } else { *@
+@*       return coord *@
+@*     } *@
+@*   } *@
+@* } *@
+@* const canvas = document.getElementById("canvas"); *@
+@* const ctx = canvas.getContext("2d"); *@
+@* const mapImage = new Image(); *@
+@* mapImage.src = "/assets/earthMap.png"; *@
+@* mapImage.addEventListener('load', setup); *@
+@* *@
+@* let map; *@
+@* let camera; *@
+@* console.log(canvas); *@
+@* *@
+@* function getCanvasSize(){ *@
+@*   return canvas.getBoundingClientRect(); *@
+@* } *@
+@* *@
+@* function setup(){ *@
+@*   canvas.width = getCanvasSize().width; *@
+@*   canvas.height = getCanvasSize().width / 2; *@
+@*   mapImage.width = canvas.width+200; *@
+@*   mapImage.height = canvas.height; *@
+@*   map = new MapRegion(mapImage) *@
+@*   console.log(mapImage); *@
+@*   console.log(map); *@
+@*   camera = new Camera(0, 0); *@
+@*   requestAnimationFrame(draw); *@
+@* } *@
+@* *@
+@* function draw(){ *@
+@*   // Reset *@
+@*       ctx.setTransform(1, 0, 0, 1, 0, 0) *@
+@*       ctx.clearRect(0, 0, canvas.width, canvas.height) *@
+@*        *@
+@*       // Reposition player *@
+@*       // player.update(map) *@
+@*    *@
+@*       // Focus camera *@
+@*       // camera.focus(cvs, map, player) *@
+@*       // Flip the sign b/c positive shifts the canvas to the right, negative - to the left *@
+@*       ctx.scale(camera.zoom, camera.zoom); *@
+@*       ctx.translate(-camera.x * camera.zoom, -camera.y * camera.zoom) *@
+@*        *@
+@*    *@
+@*       // Draw *@
+@*       map.draw(ctx) *@
+@*       // player.draw(ctx) *@
+@* } *@
+@* </script> *@

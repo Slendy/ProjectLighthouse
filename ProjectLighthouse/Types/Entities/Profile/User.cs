@@ -48,6 +48,7 @@ public class User
     public string IconHash { get; set; }
 
     [JsonIgnore]
+    [NotMapped]
     public int Game { get; set; }
 
     [NotMapped]
