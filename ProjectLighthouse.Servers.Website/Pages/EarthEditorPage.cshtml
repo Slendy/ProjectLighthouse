@@ -1,5 +1,7 @@
 ﻿@page "/user/{userId:int}/settings/earth"
 @using LBPUnion.ProjectLighthouse.Extensions
+@using LBPUnion.ProjectLighthouse.Servers.Website.Types
+@using LBPUnion.ProjectLighthouse.Types.Misc
 @model LBPUnion.ProjectLighthouse.Servers.Website.Pages.EarthEditorPage
 
 @{
@@ -22,7 +24,7 @@
     container: 'container',
     width: width,
     height: height,
-    draggable: true,
+    draggable: false,
   });
 
   // add canvas element
@@ -46,91 +48,124 @@
   let objectLayer = new Konva.Layer();
 
   // create shape
+  @{
+    Location profileLocation = Model.UserEarth.GetProfileLocation();
+    float scaledX = (profileLocation.X / 65535f);
+    float scaledY = (profileLocation.Y / 32767f);
+  }
+  console.log("@scaledX");
+  console.log("@scaledY");
   let box = new Konva.Rect({
-    x: 50,
-    y: 50,
-    width: 100,
-    height: 50,
-    fill: '#00D2FF',
+    x: (@scaledX * mapImage.width) - 25,
+    y: (@scaledY * mapImage.height) - 27,
+    width: 50,
+    height: 55,
+    fill: '#ffffff',
     stroke: 'black',
-    strokeWidth: 4,
+    strokeWidth: 1,
     draggable: true,
   });
+
+
+  @{
+    int i = 0;
+  }
+  @foreach (KeyValuePair<Location, LocationType> l in Model.UserEarth.Locations.Where(l => l.Value == LocationType.Level))
+  {
+    scaledX = (l.Key.X / 65535f);
+    scaledY = (l.Key.Y / 32767f);
+    <text>
+    objectLayer.add(new Konva.Circle(
+    {
+      x: (@scaledX * mapImage.width),
+      y: (@scaledY * mapImage.height),
+      radius: 20,
+      fill: '#cccccc',
+      // stroke: 'white',
+      // strokeWidth: 2,
+      draggable: true,
+    }));
+    </text>
+    i++;
+  }
+ 
   objectLayer.add(box);
+  // objectLayer.add(circle)
   
   stage.add(objectLayer);
 
   // add cursor styling
-  box.on('mouseover', function () {
+  objectLayer.on('mouseover', function () {
     document.body.style.cursor = 'pointer';
   });
-  box.on('mouseout', function () {
+  objectLayer.on('mouseout', function () {
     document.body.style.cursor = 'default';
   });
 
   let scaleBy = 1.1;
-  stage.on("dragmove", (e) => {
-    let pos = stage.position();
-    let needsMove = false;
-    if (pos.x > 0){
-      needsMove = true;
-      pos.x = 0;
-    }
-    if (pos.y > 0){
-      needsMove = true;
-      pos.y = 0;
-    }
-    if (pos.y < -stage.height){
-      pos.y = -stage.height;
-      needsMove = true;
-    }
-    if (pos.x < -stage.width){
-      pos.x = -stage.width;
-      needsMove = true;
-    }
-    if (needsMove){
-      stage.position({x: pos.x, y: pos.y});
-    }    
-  });
-  stage.on('wheel', (e) => {
-      // stop default scrolling
-      e.evt.preventDefault();
-  
-      let oldScale = stage.scaleX();
-      let pointer = stage.getPointerPosition();
-  
-      let mousePointTo = {
-            x: (pointer.x - stage.x()) / oldScale,
-            y: (pointer.y - stage.y()) / oldScale,
-      };
-  
-      // how to scale? Zoom in? Or zoom out?
-      let direction = e.evt.deltaY > 0 ? -1 : 1;
-  
-      // when we zoom on trackpad, e.evt.ctrlKey is true
-      // in that case lets revert direction
-      if (e.evt.ctrlKey) {
-          direction = -direction;
-      }
-  
-      let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-      
-      if (newScale < 1 || newScale > 3) {
-        return;
-      }
-  
-      stage.scale({ x: newScale, y: newScale });
-  
-      let newPos = {
-          x: pointer.x - mousePointTo.x * newScale,
-          y: pointer.y - mousePointTo.y * newScale,
-      };
-      if (newPos.x < 0)
-        newPos.x = 0;
-      if (newPos.y < 0)
-        newPos.y = 0;
-      stage.position(newPos);
-  });
+  // stage.on("dragmove", (e) => {
+  //   let pos = stage.position();
+  //   let needsMove = false;
+  //   if (pos.x > 0){
+  //     needsMove = true;
+  //     pos.x = 0;
+  //   }
+  //   if (pos.y > 0){
+  //     needsMove = true;
+  //     pos.y = 0;
+  //   }
+  //   console.log(pos.y * stage.scaleX() + " > " + stage.height());
+  //   if (pos.y < -stage.height){
+  //     pos.y = -stage.height;
+  //     needsMove = true;
+  //   }
+  //   if (pos.x < -stage.width){
+  //     pos.x = -stage.width;
+  //     needsMove = true;
+  //   }
+  //   if (needsMove){
+  //     stage.position({x: pos.x, y: pos.y});
+  //   }    
+  // });
+  // stage.on('wheel', (e) => {
+  //     // stop default scrolling
+  //     e.evt.preventDefault();
+  //
+  //     let oldScale = stage.scaleX();
+  //     let pointer = stage.getPointerPosition();
+  //
+  //     let mousePointTo = {
+  //           x: (pointer.x - stage.x()) / oldScale,
+  //           y: (pointer.y - stage.y()) / oldScale,
+  //     };
+  //
+  //     // how to scale? Zoom in? Or zoom out?
+  //     let direction = e.evt.deltaY > 0 ? -1 : 1;
+  //
+  //     // when we zoom on trackpad, e.evt.ctrlKey is true
+  //     // in that case lets revert direction
+  //     if (e.evt.ctrlKey) {
+  //         direction = -direction;
+  //     }
+  //
+  //     let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+  //    
+  //     if (newScale < 1 || newScale > 3) {
+  //       return;
+  //     }
+  //
+  //     stage.scale({ x: newScale, y: newScale });
+  //
+  //     let newPos = {
+  //         x: pointer.x - mousePointTo.x * newScale,
+  //         y: pointer.y - mousePointTo.y * newScale,
+  //     };
+  //     if (newPos.x < 0)
+  //       newPos.x = 0;
+  //     if (newPos.y < 0)
+  //       newPos.y = 0;
+  //     stage.position(newPos);
+  // });
   
   
 </script>
