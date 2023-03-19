@@ -1,5 +1,4 @@
 ﻿using System.Xml.Serialization;
-using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Levels;
@@ -68,7 +67,7 @@ public abstract class SlotBase : ILbpSerializable
             CreatorId = slot.CreatorId,
             SlotId = slot.SlotId,
             // this gets set in PrepareSerialization
-            AuthorHandle = new NpHandle("", ""),
+            AuthorHandle = new NpHandle(slot.SlotCache?.CreatorUsername, slot.SlotCache?.CreatorIcon),
             AuthorLabels = slot.AuthorLabels,
             BackgroundHash = slot.BackgroundHash,
             GameVersion = slot.GameVersion,
@@ -101,6 +100,17 @@ public abstract class SlotBase : ILbpSerializable
             LBP3PlayCount = slot.PlaysLBP3,
             LBP3UniquePlayCount = slot.PlaysLBP3Unique,
             LBP3CompletePlayCount = slot.PlaysLBP3Complete,
+
+            // Cached data
+            HeartCount = slot.SlotCache.HeartCount,
+            ReviewCount = slot.SlotCache.ReviewCount,
+            AverageRating = slot.SlotCache.RatingLBP1,
+            PhotoCount = slot.SlotCache.PhotoCount,
+            AuthorPhotoCount = slot.SlotCache.AuthorPhotoCount,
+            ThumbsUp = slot.SlotCache.ThumbsUp,
+            ThumbsDown = slot.SlotCache.ThumbsDown,
+            Tags = slot.SlotCache.LevelTags,
+            
         };
         return userSlot;
     }

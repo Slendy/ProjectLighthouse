@@ -19,6 +19,52 @@ namespace ProjectLighthouse.Migrations
                 .HasAnnotation("ProductVersion", "7.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Cache.SlotCache", b =>
+                {
+                    b.Property<int>("SlotId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AuthorPhotoCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CommentCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatorIcon")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CreatorUsername")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("HeartCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LevelTags")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("PhotoCount")
+                        .HasColumnType("int");
+
+                    b.Property<double>("RatingLBP1")
+                        .HasColumnType("double");
+
+                    b.Property<int>("ReviewCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ThumbsDown")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ThumbsUp")
+                        .HasColumnType("int");
+
+                    b.HasKey("SlotId");
+
+                    b.ToTable("SlotCaches");
+                });
+
             modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Interaction.HeartedLevelEntity", b =>
                 {
                     b.Property<int>("HeartedLevelId")
@@ -1024,6 +1070,17 @@ namespace ProjectLighthouse.Migrations
                     b.ToTable("WebTokens");
                 });
 
+            modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Cache.SlotCache", b =>
+                {
+                    b.HasOne("LBPUnion.ProjectLighthouse.Types.Entities.Level.SlotEntity", "Slot")
+                        .WithOne("SlotCache")
+                        .HasForeignKey("LBPUnion.ProjectLighthouse.Types.Entities.Cache.SlotCache", "SlotId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Slot");
+                });
+
             modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Interaction.HeartedLevelEntity", b =>
                 {
                     b.HasOne("LBPUnion.ProjectLighthouse.Types.Entities.Level.SlotEntity", "Slot")
@@ -1375,6 +1432,11 @@ namespace ProjectLighthouse.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Level.SlotEntity", b =>
+                {
+                    b.Navigation("SlotCache");
                 });
 
             modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Profile.PhotoEntity", b =>

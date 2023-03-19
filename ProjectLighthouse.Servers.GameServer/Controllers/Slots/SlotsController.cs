@@ -107,7 +107,7 @@ public class SlotsController : ControllerBase
         GameTokenEntity token = this.GetToken();
 
         int slotId = await SlotHelper.GetPlaceholderSlotId(this.database, id, SlotType.Developer);
-        SlotEntity slot = await this.database.Slots.FirstAsync(s => s.SlotId == slotId);
+        SlotEntity? slot = await this.database.Slots.FindAsync(slotId);
 
         return this.Ok(SlotBase.CreateFromEntity(slot, token));
     } 
@@ -119,9 +119,17 @@ public class SlotsController : ControllerBase
 
         GameVersion gameVersion = token.GameVersion;
 
-        SlotEntity? slot = await this.database.Slots.ByGameVersion(gameVersion, true, true).FirstOrDefaultAsync(s => s.SlotId == id);
+
+        SlotEntity? slot = await this.database.Slots.WithCache()
+            .ByGameVersion(gameVersion, true, true)
+            .FirstOrDefaultAsync(s => s.SlotId == id);
+        await this.database.UpdateCache(slot);
+
+        await this.database.UpdateCacheItem(slot, c => c.SlotId);
 
         if (slot == null) return this.NotFound();
+
+        Console.WriteLine(slot.SlotCache?.HeartCount ?? 0);
 
         return this.Ok(SlotBase.CreateFromEntity(slot, token, SerializationMode.Full));
     }

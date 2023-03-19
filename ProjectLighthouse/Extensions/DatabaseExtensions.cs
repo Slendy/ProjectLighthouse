@@ -11,6 +11,10 @@ namespace LBPUnion.ProjectLighthouse.Extensions;
 
 public static class DatabaseExtensions
 {
+
+    public static IQueryable<SlotEntity> WithCache(this DbSet<SlotEntity> set) => set.Include(s => s.SlotCache);
+    
+
     public static IQueryable<SlotEntity> ByGameVersion
         (this DbSet<SlotEntity> set, GameVersion gameVersion, bool includeSublevels = false, bool includeCreator = false)
         => set.AsQueryable().ByGameVersion(gameVersion, includeSublevels, includeCreator);

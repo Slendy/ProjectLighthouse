@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using LBPUnion.ProjectLighthouse.Database;
+using LBPUnion.ProjectLighthouse.Types.Entities.Cache;
 using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Levels;
@@ -20,6 +21,8 @@ public class SlotEntity
 {
     [Key]
     public int SlotId { get; set; }
+
+    public SlotCache? SlotCache { get; set; }
 
     public int InternalSlotId { get; set; }
 

@@ -1,8 +1,16 @@
 ﻿#nullable enable
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
+using LBPUnion.ProjectLighthouse.Helpers;
+using LBPUnion.ProjectLighthouse.Types.Entities.Cache;
 using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.X509.Qualified;
 
 namespace LBPUnion.ProjectLighthouse.Database;
 
@@ -13,6 +21,39 @@ public partial class DatabaseContext
         this.Slots.Remove(slot);
 
         if (saveChanges) await this.SaveChangesAsync();
+    }
+
+    public async Task UpdateCacheItem(SlotEntity? slot, Func<SlotCache, object> selector)
+    {
+        if (slot?.SlotCache == null) return;
+        object field = selector(slot.SlotCache);
+        Type fieldType = field.GetType();
+        // Exclude nested classes, and anything with a custom attribute (keys)
+        Console.WriteLine("type: " + fieldType.FullName);
+        Console.WriteLine("is primitive: " + fieldType.IsPrimitive);
+        Console.WriteLine("has custom attributes: " + fieldType.GetCustomAttributes(typeof(KeyAttribute)).Any());
+
+        if ((!fieldType.IsPrimitive && fieldType != typeof(string)) || fieldType.CustomAttributes.Any()) return;
+        Console.WriteLine("val: " + field);
+
+        await this.SaveChangesAsync();
+    }
+
+    public async Task UpdateCache(SlotEntity? slot)
+    {
+        if (slot == null) return;
+        SlotCache? cache = await this.SlotCaches.FindAsync(slot.SlotId);
+
+        SlotCache updated = SlotCache.CreateFromEntity(this, slot);
+        if (cache == null)
+        {
+            this.SlotCaches.Add(updated);
+            await this.SaveChangesAsync();
+            return;
+        }
+        ReflectionHelper.CopyAllFields(updated, cache);
+        await this.SaveChangesAsync();
+
     }
 
     public async Task HeartPlaylist(int userId, PlaylistEntity heartedPlaylist)

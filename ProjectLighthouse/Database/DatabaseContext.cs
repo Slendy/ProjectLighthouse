@@ -1,4 +1,5 @@
 using LBPUnion.ProjectLighthouse.Configuration;
+using LBPUnion.ProjectLighthouse.Types.Entities.Cache;
 using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Maintenance;
@@ -39,6 +40,10 @@ public partial class DatabaseContext : DbContext
     public DbSet<ReviewEntity> Reviews { get; set; }
     public DbSet<ScoreEntity> Scores { get; set; }
     public DbSet<SlotEntity> Slots { get; set; }
+    #endregion
+
+    #region Cache
+    public DbSet<SlotCache> SlotCaches { get; set; }
     #endregion
 
     #region Interactions
