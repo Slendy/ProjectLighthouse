@@ -27,8 +27,8 @@
     Model.IsMobile = Model.Request.IsMobile();
 
     string title = Model.Title == string.Empty 
-        ? ServerConfiguration.Instance.Customization.ServerName 
-        : $"{Model.Title} - {ServerConfiguration.Instance.Customization.ServerName}";
+        ? Model.ServerConfiguration.Customization.ServerName 
+        : $"{Model.Title} - {Model.ServerConfiguration.Customization.ServerName}";
 }
 
 <!DOCTYPE html>
@@ -58,16 +58,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     @* Google Analytics *@
-    @if (ServerConfiguration.Instance.GoogleAnalytics.AnalyticsEnabled)
+    @if (Model.ServerConfiguration.GoogleAnalytics.AnalyticsEnabled)
     {
         <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=@ServerConfiguration.Instance.GoogleAnalytics.Id"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=@Model.ServerConfiguration.GoogleAnalytics.Id"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
 
-            gtag('config', '@ServerConfiguration.Instance.GoogleAnalytics.Id');
+            gtag('config', '@Model.ServerConfiguration.GoogleAnalytics.Id');
         </script>
     }
 </head>
@@ -118,7 +118,7 @@
                     {
                         <a class="item" href="/user/@Model.User.UserId">
                             <img src="/gameAssets/@Model.User.WebsiteAvatarHash" 
-                                 onerror="this.onerror='';this.src='/gameAssets/@ServerConfiguration.Instance.WebsiteConfiguration.MissingIconHash'"
+                                 onerror="this.onerror='';this.src='/gameAssets/@Model.ServerConfiguration.WebsiteConfiguration.MissingIconHash'"
                                  alt=""
                                  class="lighthouse-avatar"/>
                             @if (!Model.IsMobile)

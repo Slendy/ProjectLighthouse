@@ -21,9 +21,9 @@ public static partial class FileHelper
 
     public static string GetImagePath(string hash) => Path.Combine(ImagePath, hash);
 
-    public static bool IsFileSafe(LbpFile file)
+    public static bool IsFileSafe(ServerConfiguration serverConfig, LbpFile file)
     {
-        if (!ServerConfiguration.Instance.CheckForUnsafeFiles) return true;
+        if (!serverConfig.CheckForUnsafeFiles) return true;
 
         if (file.FileType == LbpFileType.Unknown) return false;
 

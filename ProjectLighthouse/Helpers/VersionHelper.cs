@@ -62,8 +62,8 @@ public static class VersionHelper
     /// <summary>
     /// The server's branding (environment version) to show to LBP clients. Shows the environment name next to the revision.
     /// </summary>
-    public static string EnvVer => $"{ServerConfiguration.Instance.Customization.EnvironmentName} {FullRevision}";
-    public static string FullVersion => $"Project Lighthouse {ServerConfiguration.Instance.Customization.EnvironmentName} {Branch}@{CommitHash} {Build}";
+    public static string EnvVer(ServerConfiguration serverConfiguration) => $"{serverConfiguration.Customization.EnvironmentName} {FullRevision}";
+    public static string FullVersion(ServerConfiguration serverConfiguration) => $"Project Lighthouse {serverConfiguration.Customization.EnvironmentName} {Branch}@{CommitHash} {Build}";
     public static bool IsDirty => CommitHash.EndsWith("-dirty") || CommitsOutOfDate != 1 || CommitHash == "invalid" || Branch == "invalid";
     public static int CommitsOutOfDate { get; set; }
     public static bool CanCheckForUpdates { get; set; }

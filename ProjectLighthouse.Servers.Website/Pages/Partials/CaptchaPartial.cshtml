@@ -1,15 +1,14 @@
-@using LBPUnion.ProjectLighthouse.Configuration
 @using LBPUnion.ProjectLighthouse.Configuration.ConfigurationCategories
-@if (ServerConfiguration.Instance.Captcha.CaptchaEnabled)
+@if (Model.ServerConfiguration.Captcha.CaptchaEnabled)
 {
-    @switch (ServerConfiguration.Instance.Captcha.Type)
+    @switch (Model.ServerConfiguration.Captcha.Type)
     {
         case CaptchaType.HCaptcha:
-            <div class="h-captcha" data-sitekey="@ServerConfiguration.Instance.Captcha.SiteKey"></div>
+            <div class="h-captcha" data-sitekey="@Model.ServerConfiguration.Captcha.SiteKey"></div>
             <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
             break;
         case CaptchaType.ReCaptcha:
-            <div class="g-recaptcha" data-sitekey="@ServerConfiguration.Instance.Captcha.SiteKey"></div>
+            <div class="g-recaptcha" data-sitekey="@Model.ServerConfiguration.Captcha.SiteKey"></div>
             <script src="https://www.google.com/recaptcha/api.js" async defer></script>
             break;
         default:

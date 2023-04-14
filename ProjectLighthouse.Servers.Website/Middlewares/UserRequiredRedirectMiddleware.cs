@@ -9,8 +9,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Middlewares;
 
 public class UserRequiredRedirectMiddleware : MiddlewareDBContext
 {
-    public UserRequiredRedirectMiddleware(RequestDelegate next) : base(next)
-    { }
+    private readonly ServerConfiguration serverConfiguration;
+
+    public UserRequiredRedirectMiddleware(RequestDelegate next, ServerConfiguration serverConfiguration) : base(next)
+    {
+        this.serverConfiguration = serverConfiguration;
+    }
 
     public override async Task InvokeAsync(HttpContext ctx, DatabaseContext database)
     {
@@ -35,7 +39,7 @@ public class UserRequiredRedirectMiddleware : MiddlewareDBContext
             return;
         }
 
-        if (!token.Verified && ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled)
+        if (!token.Verified && this.serverConfiguration.TwoFactorConfiguration.TwoFactorEnabled)
         {
             if (!pathContains(ctx, "/2fa"))
             {
@@ -59,7 +63,7 @@ public class UserRequiredRedirectMiddleware : MiddlewareDBContext
             return;
         }
 
-        if (user.EmailAddress == null && ServerConfiguration.Instance.Mail.MailEnabled)
+        if (user.EmailAddress == null && this.serverConfiguration.Mail.MailEnabled)
         {
             if (!pathContains(ctx, "/login/setEmail"))
             {
@@ -71,7 +75,7 @@ public class UserRequiredRedirectMiddleware : MiddlewareDBContext
             return;
         }
 
-        if (!user.EmailAddressVerified && ServerConfiguration.Instance.Mail.MailEnabled)
+        if (!user.EmailAddressVerified && this.serverConfiguration.Mail.MailEnabled)
         {
             if (!pathContains(ctx, "/login/sendVerificationEmail", "/verifyEmail"))
             {
@@ -83,7 +87,7 @@ public class UserRequiredRedirectMiddleware : MiddlewareDBContext
             return;
         }
 
-        if (user.TwoFactorRequired && !user.IsTwoFactorSetup && ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled)
+        if (user.TwoFactorRequired(this.serverConfiguration) && !user.IsTwoFactorSetup && this.serverConfiguration.TwoFactorConfiguration.TwoFactorEnabled)
         {
             if (!pathContains(ctx, "/setup2fa"))
             {

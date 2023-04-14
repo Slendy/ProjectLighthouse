@@ -18,17 +18,7 @@ public static partial class RequestExtensions
 {
     static RequestExtensions()
     {
-        Uri captchaUri = ServerConfiguration.Instance.Captcha.Type switch
-        {
-            CaptchaType.HCaptcha => new Uri("https://hcaptcha.com"),
-            CaptchaType.ReCaptcha => new Uri("https://www.google.com/recaptcha/api/"),
-            _ => throw new ArgumentOutOfRangeException(),
-        };
-        
-        client = new HttpClient
-        {
-            BaseAddress = captchaUri,
-        };
+        client = new HttpClient();
     }
     
     #region Mobile Checking
@@ -47,20 +37,32 @@ public static partial class RequestExtensions
 
     private static readonly HttpClient client;
 
-    [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
-    private static async Task<bool> verifyCaptcha(string? token)
+    private static readonly Dictionary<CaptchaType, Uri> captchaUrlMap = new()
     {
-        if (!ServerConfiguration.Instance.Captcha.CaptchaEnabled) return true;
+        {
+            CaptchaType.HCaptcha, new Uri("https://hcaptcha.com/siteverify")
+        },
+        {
+            CaptchaType.ReCaptcha, new Uri("https://www.google.com/recaptcha/api/siteverify")
+        },
+    };
+
+    [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
+    private static async Task<bool> verifyCaptcha(ServerConfiguration serverConfig, string? token)
+    {
+        if (!serverConfig.Captcha.CaptchaEnabled) return true;
 
         if (token == null) return false;
 
         List<KeyValuePair<string, string>> payload = new()
         {
-            new("secret", ServerConfiguration.Instance.Captcha.Secret),
+            new("secret", serverConfig.Captcha.Secret),
             new("response", token),
         };
 
-        HttpResponseMessage response = await client.PostAsync("siteverify", new FormUrlEncodedContent(payload));
+        captchaUrlMap.TryGetValue(serverConfig.Captcha.Type, out Uri? url);
+
+        HttpResponseMessage response = await client.PostAsync(url, new FormUrlEncodedContent(payload));
 
         response.EnsureSuccessStatusCode();
 
@@ -71,21 +73,21 @@ public static partial class RequestExtensions
         return success;
     }
 
-    public static async Task<bool> CheckCaptchaValidity(this HttpRequest request)
+    public static async Task<bool> CheckCaptchaValidity(this HttpRequest request, ServerConfiguration serverConfig)
     {
-        if (!ServerConfiguration.Instance.Captcha.CaptchaEnabled) return true;
+        if (!serverConfig.Captcha.CaptchaEnabled) return true;
 
-        string keyName = ServerConfiguration.Instance.Captcha.Type switch
+        string keyName = serverConfig.Captcha.Type switch
         {
             CaptchaType.HCaptcha => "h-captcha-response",
             CaptchaType.ReCaptcha => "g-recaptcha-response",
-            _ => throw new ArgumentOutOfRangeException(nameof(request), @$"Unknown captcha type: {ServerConfiguration.Instance.Captcha.Type}"),
+            _ => throw new ArgumentOutOfRangeException(nameof(request), @$"Unknown captcha type: {serverConfig.Captcha.Type}"),
         };
             
         bool gotCaptcha = request.Form.TryGetValue(keyName, out StringValues values);
         if (!gotCaptcha) return false;
 
-        return await verifyCaptcha(values[0]);
+        return await verifyCaptcha(serverConfig, values[0]);
     }
     #endregion
 

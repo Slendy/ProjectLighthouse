@@ -12,14 +12,17 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages.Email;
 
 public class CompleteEmailVerificationPage : BaseLayout
 {
-    public CompleteEmailVerificationPage(DatabaseContext database) : base(database)
-    {}
+    private readonly ServerConfiguration serverConfiguration;
+    public CompleteEmailVerificationPage(DatabaseContext database, ServerConfiguration serverConfiguration) : base(database)
+    {
+        this.serverConfiguration = serverConfiguration;
+    }
 
     public string? Error;
 
     public async Task<IActionResult> OnGet(string token)
     {
-        if (!ServerConfiguration.Instance.Mail.MailEnabled) return this.NotFound();
+        if (!this.serverConfiguration.Mail.MailEnabled) return this.NotFound();
 
         EmailVerificationTokenEntity? emailVerifyToken = await this.Database.EmailVerificationTokens.FirstOrDefaultAsync(e => e.EmailToken == token);
         if (emailVerifyToken == null)

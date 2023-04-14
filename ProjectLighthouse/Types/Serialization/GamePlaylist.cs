@@ -53,7 +53,7 @@ public class GamePlaylist : ILbpSerializable, INeedsPreparationForSerialization
     [XmlElement("icons")]
     public IconList LevelIcons { get; set; } = new();
 
-    public async Task PrepareSerialization(DatabaseContext database)
+    public async Task PrepareSerialization(DatabaseContext database, ServerConfiguration serverConfig)
     {
         string authorUsername = await database.Users.Where(u => u.UserId == this.CreatorId)
                 .Select(u => u.Username)
@@ -64,7 +64,7 @@ public class GamePlaylist : ILbpSerializable, INeedsPreparationForSerialization
         };
 
         this.Hearts = await database.HeartedPlaylists.CountAsync(h => h.HeartedPlaylistId == this.PlaylistId);
-        this.PlaylistQuota = ServerConfiguration.Instance.UserGeneratedContentLimits.ListsQuota;
+        this.PlaylistQuota = serverConfig.UserGeneratedContentLimits.ListsQuota;
         List<string> iconList = this.SlotIds.Select(id => database.Slots.FirstOrDefault(s => s.SlotId == id))
             .Where(slot => slot != null)
             .Where(slot => slot!.IconHash.Length > 0)

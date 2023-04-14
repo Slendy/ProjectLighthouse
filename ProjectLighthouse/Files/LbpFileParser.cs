@@ -4,6 +4,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Types.Resources;
 using LBPUnion.ProjectLighthouse.Types.Users;
 
@@ -80,7 +81,7 @@ public partial class FileHelper
         return data;
     }
 
-    public static bool AreDependenciesSafe(LbpFile file)
+    public static bool AreDependenciesSafe(ServerConfiguration serverConfig, LbpFile file)
     {
         // recursively check if dependencies are safe
         List<ResourceDescriptor> dependencies = ParseDependencyList(file);
@@ -96,7 +97,7 @@ public partial class FileHelper
                 else
                     continue;
 
-            if (!IsFileSafe(r)) return false;
+            if (!IsFileSafe(serverConfig, r)) return false;
         }
 
         return true;

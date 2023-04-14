@@ -42,7 +42,7 @@
 
                 if (string.IsNullOrWhiteSpace(faceHash) || !FileHelper.ResourceExists(faceHash))
                 {
-                    faceHash = ServerConfiguration.Instance.WebsiteConfiguration.MissingIconHash;
+                    faceHash = Model.ServerConfiguration.WebsiteConfiguration.MissingIconHash;
                 }
 
                 string faceAlt = review.Thumb switch {
@@ -57,7 +57,7 @@
 
                 <div class="card">
                     <div>
-                        <img class="cardIcon slotCardIcon" src="@ServerConfiguration.Instance.ExternalUrl/gameAssets/@faceHash" alt="@faceAlt" title="@faceAlt" style="min-width: @(size)px; width: @(size)px; height: @(size)px">
+                        <img class="cardIcon slotCardIcon" src="@Model.ServerConfiguration.ExternalUrl/gameAssets/@faceHash" alt="@faceAlt" title="@faceAlt" style="min-width: @(size)px; width: @(size)px; height: @(size)px">
                     </div>
                     <div class="cardStats">
                         <a href="/user/@review.Reviewer?.UserId">

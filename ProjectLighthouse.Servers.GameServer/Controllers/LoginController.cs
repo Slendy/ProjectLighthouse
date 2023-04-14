@@ -10,6 +10,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Users;
+using LBPUnion.ProjectLighthouse.Types.Webhook;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,10 +22,16 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers;
 public class LoginController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly ServerConfiguration serverConfiguration;
+    private readonly DiscordConfiguration discordConfiguration;
+    private readonly WebhookService webhookService;
 
-    public LoginController(DatabaseContext database)
+    public LoginController(DatabaseContext database, ServerConfiguration serverConfiguration, DiscordConfiguration discordConfiguration, WebhookService webhookService)
     {
         this.database = database;
+        this.serverConfiguration = serverConfiguration;
+        this.discordConfiguration = discordConfiguration;
+        this.webhookService = webhookService;
     }
 
     [HttpPost]
@@ -35,7 +42,7 @@ public class LoginController : ControllerBase
         NPTicket? npTicket;
         try
         {
-            npTicket = NPTicket.CreateFromBytes(loginData);
+            npTicket = NPTicket.CreateFromBytes(this.serverConfiguration, loginData);
         }
         catch
         {
@@ -125,29 +132,29 @@ public class LoginController : ControllerBase
                 return this.Forbid();
             }
 
-            if (!ServerConfiguration.Instance.Authentication.AutomaticAccountCreation)
+            if (!this.serverConfiguration.Authentication.AutomaticAccountCreation)
             {
                 Logger.Warn($"Unknown user tried to connect username={username}", LogArea.Login);
                 return this.Forbid();
             }
             // create account for user if they don't exist
-            user = await this.database.CreateUser(username, "$");
+            user = await this.database.CreateUser(this.serverConfiguration, username, "$");
             user.Password = null;
             user.LinkedRpcnId = npTicket.Platform == Platform.RPCS3 ? npTicket.UserId : 0;
             user.LinkedPsnId = npTicket.Platform != Platform.RPCS3 ? npTicket.UserId : 0;
             await this.database.SaveChangesAsync();
 
-            if (DiscordConfiguration.Instance.DiscordIntegrationEnabled)
+            if (this.discordConfiguration.DiscordIntegrationEnabled)
             {
-                string registrationAnnouncementMsg = DiscordConfiguration.Instance.RegistrationAnnouncement
+                string registrationAnnouncementMsg = this.discordConfiguration.RegistrationAnnouncement
                     .Replace("%user", username)
                     .Replace("%id", user.UserId.ToString())
-                    .Replace("%instance", ServerConfiguration.Instance.Customization.ServerName)
+                    .Replace("%instance", this.serverConfiguration.Customization.ServerName)
                     .Replace("%platform", npTicket.Platform.ToString())
                     .Replace(@"\n", "\n");
-                await WebhookHelper.SendWebhook(title: "A new user has registered!",
+                await this.webhookService.SendWebhook(title: "A new user has registered!",
                     description: registrationAnnouncementMsg,
-                    dest: WebhookHelper.WebhookDestination.Registration);
+                    dest: WebhookDestination.Registration);
             }
 
             Logger.Success($"Created new user for {username}, platform={npTicket.Platform}", LogArea.Login);
@@ -203,15 +210,15 @@ public class LoginController : ControllerBase
         await this.database.SaveChangesAsync();
 
         // Create a new room on LBP2/3/Vita
-        if (token.GameVersion != GameVersion.LittleBigPlanet1) RoomHelper.CreateRoom(user.UserId, token.GameVersion, token.Platform);
+        if (token.GameVersion != GameVersion.LittleBigPlanet1) RoomHelper.CreateRoom(this.database, user.UserId, token.GameVersion, token.Platform);
 
         return this.Ok
         (
             new LoginResult
             {
                 AuthTicket = "MM_AUTH=" + token.UserToken,
-                ServerBrand = VersionHelper.EnvVer,
-                TitleStorageUrl = ServerConfiguration.Instance.GameApiExternalUrl,
+                ServerBrand = VersionHelper.EnvVer(this.serverConfiguration),
+                TitleStorageUrl = this.serverConfiguration.GameApiExternalUrl,
             }
         );
     }

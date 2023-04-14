@@ -1,5 +1,4 @@
 @page "/login/setEmail"
-@using LBPUnion.ProjectLighthouse.Configuration
 @using LBPUnion.ProjectLighthouse.Localization.StringLists
 @model LBPUnion.ProjectLighthouse.Servers.Website.Pages.Email.SetEmailForm
 
@@ -23,7 +22,7 @@
 <form class="ui form" onsubmit="return onSubmit(this)" method="post">
     @Html.AntiForgeryToken()
 
-    @if (ServerConfiguration.Instance.Mail.MailEnabled)
+    @if (Model.ServerConfiguration.Mail.MailEnabled)
     {
         <div class="field">
             <label>Please type a valid email address and verify it:</label>

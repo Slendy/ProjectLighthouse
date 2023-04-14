@@ -12,19 +12,17 @@ public static class ServerStatics
 {
     public const int PageSize = 20;
 
-    public static bool DbConnected {
-        get {
-            try
-            {
-                using DatabaseContext db = new();
-                return db.Database.CanConnect();
-            }
-            catch(Exception e)
-            {
-                Logger.Error(e.ToString(), LogArea.Database);
-                return false;
-            }
+    public static DatabaseContext? DbConnected(ServerConfiguration config) {
+        try
+        {
+            using DatabaseContext db = DatabaseContext.CreateNewInstance(config);
+            if (db.Database.CanConnect()) return db;
         }
+        catch (Exception e)
+        {
+            Logger.Error(e.ToString(), LogArea.Database);
+        }
+        return null;
     }
 
     // FIXME: This needs to go at some point.

@@ -3,8 +3,8 @@ namespace LBPUnion.ProjectLighthouse.Configuration;
 public interface ILighthouseConfigProvider
 {
 
-    public void SaveConfig(ILighthouseConfig config);
+    public void SaveConfig(ConfigurationBase config, string serialized);
 
-    public ConfigurationBase LoadConfig(ILighthouseConfig config);
+    public string LoadConfig(ConfigurationBase config);
 
 }

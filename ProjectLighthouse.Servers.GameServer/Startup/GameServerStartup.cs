@@ -1,4 +1,5 @@
 using System.Net;
+using LBPUnion.ProjectLighthouse.Administration;
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Logging;
@@ -6,6 +7,8 @@ using LBPUnion.ProjectLighthouse.Middlewares;
 using LBPUnion.ProjectLighthouse.Serialization;
 using LBPUnion.ProjectLighthouse.Servers.GameServer.Middlewares;
 using LBPUnion.ProjectLighthouse.Types.Logging;
+using LBPUnion.ProjectLighthouse.Types.Synchronization;
+using LBPUnion.ProjectLighthouse.Types.Webhook;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
@@ -14,12 +17,14 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Startup;
 
 public class GameServerStartup
 {
-    public GameServerStartup(IConfiguration configuration)
+    public GameServerStartup(IConfiguration configuration, ServerConfiguration serverConfiguration)
     {
-        this.Configuration = configuration;
+        this.configuration = configuration;
+        this.serverConfiguration = serverConfiguration;
     }
 
-    public IConfiguration Configuration { get; }
+    private readonly ServerConfiguration serverConfiguration;
+    private readonly IConfiguration configuration;
 
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
@@ -51,12 +56,17 @@ public class GameServerStartup
 
         services.AddDbContext<DatabaseContext>();
 
+        services.AddSingleton(this.serverConfiguration);
+        services.AddSingleton<WebhookService>();
+
+        services.AddHostedService<RepeatingTaskService>();
+
         services.Configure<ForwardedHeadersOptions>
         (
             options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-                foreach (KeyValuePair<string, string?> proxy in this.Configuration.GetSection("KnownProxies").AsEnumerable())
+                foreach (KeyValuePair<string, string?> proxy in this.configuration.GetSection("KnownProxies").AsEnumerable())
                 {
                     if (proxy.Value == null) continue;
                     options.KnownProxies.Add(IPAddress.Parse(proxy.Value));
@@ -70,7 +80,7 @@ public class GameServerStartup
     {
         bool computeDigests = true;
 
-        if (string.IsNullOrEmpty(ServerConfiguration.Instance.DigestKey.PrimaryDigestKey))
+        if (string.IsNullOrEmpty(this.serverConfiguration.DigestKey.PrimaryDigestKey))
         {
             Logger.Warn
             (

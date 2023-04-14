@@ -21,8 +21,12 @@ public class RateLimitMiddleware : Middleware
     // (ipAddress, requestData)
     private static readonly ConcurrentDictionary<IPAddress, ConcurrentQueue<LighthouseRequest?>> recentRequests = new();
 
-    public RateLimitMiddleware(RequestDelegate next) : base(next)
-    { }
+    private readonly ServerConfiguration serverConfiguration;
+
+    public RateLimitMiddleware(ServerConfiguration serverConfiguration, RequestDelegate next) : base(next)
+    {
+        this.serverConfiguration = serverConfiguration;
+    }
 
     public override async Task InvokeAsync(HttpContext ctx)
     {
@@ -41,9 +45,9 @@ public class RateLimitMiddleware : Middleware
 
         PathString path = RemoveTrailingSlash(ctx.Request.Path.ToString());
 
-        RateLimitOptions? options = GetRateLimitOverride(path);
+        RateLimitOptions? options = this.GetRateLimitOverride(path);
 
-        if (!IsRateLimitEnabled(options))
+        if (!this.IsRateLimitEnabled(options))
         {
             await this.next(ctx);
             return;
@@ -51,7 +55,7 @@ public class RateLimitMiddleware : Middleware
 
         RemoveExpiredEntries();
 
-        if (GetNumRequestsForPath(address, path, options) >= GetMaxNumRequests(options))
+        if (GetNumRequestsForPath(address, path, options) >= this.GetMaxNumRequests(options))
         {
             Logger.Info($"Request limit reached for {address} ({ctx.Request.Path})", LogArea.RateLimit);
             recentRequests[address].TryPeek(out LighthouseRequest? request);
@@ -65,21 +69,21 @@ public class RateLimitMiddleware : Middleware
             return;
         }
 
-        LogRequest(address, path, options);
+        this.LogRequest(address, path, options);
 
         // Handle request as normal
         await this.next(ctx);
     }
 
-    private static int GetMaxNumRequests(RateLimitOptions? options) => options?.RequestsPerInterval ?? ServerConfiguration.Instance.RateLimitConfiguration.GlobalOptions.RequestsPerInterval;
+    private int GetMaxNumRequests(RateLimitOptions? options) => options?.RequestsPerInterval ?? this.serverConfiguration.RateLimitConfiguration.GlobalOptions.RequestsPerInterval;
 
-    private static bool IsRateLimitEnabled(RateLimitOptions? options) => options?.Enabled ?? ServerConfiguration.Instance.RateLimitConfiguration.GlobalOptions.Enabled;
+    private bool IsRateLimitEnabled(RateLimitOptions? options) => options?.Enabled ?? this.serverConfiguration.RateLimitConfiguration.GlobalOptions.Enabled;
 
-    private static long GetRequestInterval(RateLimitOptions? options) => options?.RequestInterval ?? ServerConfiguration.Instance.RateLimitConfiguration.GlobalOptions.RequestInterval;
+    private long GetRequestInterval(RateLimitOptions? options) => options?.RequestInterval ?? this.serverConfiguration.RateLimitConfiguration.GlobalOptions.RequestInterval;
 
-    private static RateLimitOptions? GetRateLimitOverride(PathString path)
+    private RateLimitOptions? GetRateLimitOverride(PathString path)
     {
-        Dictionary<string, RateLimitOptions> overrides = ServerConfiguration.Instance.RateLimitConfiguration.OverrideOptions;
+        Dictionary<string, RateLimitOptions> overrides = this.serverConfiguration.RateLimitConfiguration.OverrideOptions;
         List<string> matchingOptions = overrides.Keys.Where(s => new Regex("^" + s.Replace("/", @"\/").Replace("*", ".*") + "$").Match(path).Success).ToList();
         if (matchingOptions.Count == 0) return null;
         // return 0 for equal, -1 for a, and 1 for b
@@ -102,9 +106,9 @@ public class RateLimitMiddleware : Middleware
         return overrides[matchingOptions.First()];
     }
 
-    private static void LogRequest(IPAddress address, PathString path, RateLimitOptions? options)
+    private void LogRequest(IPAddress address, PathString path, RateLimitOptions? options)
     {
-        LighthouseRequest request = LighthouseRequest.Create(path, GetRequestInterval(options) * 1000 + TimeHelper.TimestampMillis, options);
+        LighthouseRequest request = LighthouseRequest.Create(path, this.GetRequestInterval(options) * 1000 + TimeHelper.TimestampMillis, options);
         recentRequests.GetOrAdd(address, new ConcurrentQueue<LighthouseRequest?>()).Enqueue(request);
     }
 

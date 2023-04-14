@@ -1,10 +1,18 @@
 ﻿using LBPUnion.ProjectLighthouse.Configuration.ConfigurationCategories;
+using LBPUnion.ProjectLighthouse.Types.Synchronization;
 using YamlDotNet.Serialization;
 
 namespace LBPUnion.ProjectLighthouse.Configuration;
 
-public class ServerConfiguration : ConfigurationBase<ServerConfiguration>
+[YamlSerializable]
+public sealed class ServerConfiguration : ConfigurationBase
 {
+    public ServerConfiguration
+        (ILighthouseConfigProvider configProvider, ILighthouseMutex mutex) : base(configProvider,
+        mutex)
+    { }
+
+
     // HEY, YOU!
     // THIS VALUE MUST BE INCREMENTED FOR EVERY CONFIG CHANGE!
     //
@@ -41,6 +49,4 @@ public class ServerConfiguration : ConfigurationBase<ServerConfiguration>
     public CustomizationConfiguration Customization { get; set; } = new();
     public RateLimitConfiguration RateLimitConfiguration { get; set; } = new();
     public TwoFactorConfiguration TwoFactorConfiguration { get; set; } = new();
-
-    public override ConfigurationBase<ServerConfiguration> Deserialize(IDeserializer deserializer, string text) => deserializer.Deserialize<ServerConfiguration>(text);
 }

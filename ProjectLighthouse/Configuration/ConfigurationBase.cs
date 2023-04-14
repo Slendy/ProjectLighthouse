@@ -1,13 +1,13 @@
 ﻿#nullable enable
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Threading;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types.Logging;
+using LBPUnion.ProjectLighthouse.Types.Synchronization;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+// ReSharper disable VirtualMemberCallInConstructor
 
 namespace LBPUnion.ProjectLighthouse.Configuration;
 
@@ -16,9 +16,9 @@ public abstract class ConfigurationBase
 {
     // Global mutex for synchronizing processes so that only one process can read a config at a time
     // Mostly useful for migrations so only one server will try to rewrite the config file
-    // private static Mutex? _configFileMutex;
+    private readonly ILighthouseMutex configFileMutex;
 
-    private readonly Lazy<Mutex?> configFileMutex;
+    private readonly ILighthouseConfigProvider configProvider;
 
     [YamlIgnore]
     public abstract string ConfigName { get; set; }
@@ -26,22 +26,19 @@ public abstract class ConfigurationBase
     [YamlMember(Alias = "configVersionDoNotModifyOrYouWillBeSlapped", Order = -2)]
     public abstract int ConfigVersion { get; set; }
 
-    [YamlIgnore]
-    // Used to indicate whether the config will be generated with a .configme extension or not
-    public virtual bool NeedsConfiguration { get; set; } = true;
+    public readonly int LatestConfigVersion;
 
-    [YamlMember(Order = -1)]
-    public bool ConfigReloading { get; set; } = false;
 
-    // Used to listen for changes to the config file
-    private static FileSystemWatcher? _fileWatcher;
-
-    protected ConfigurationBase(ILighthouseConfigProvider provider)
+    protected ConfigurationBase(ILighthouseConfigProvider configProvider, ILighthouseMutex mutex)
     {
-        // Trim ConfigName by 4 to remove the .yml
-        string mutexName = $"Global\\LighthouseConfig-{this.ConfigName[..^4]}";
+        this.LatestConfigVersion = this.ConfigVersion;
+        this.configProvider = configProvider;
+        this.configFileMutex = mutex;
+    }
 
-        this.configFileMutex = new Lazy<Mutex?>(() => new Mutex(false, mutexName));
+    protected ConfigurationBase()
+    {
+
     }
 
     // internal ConfigurationBase()
@@ -67,70 +64,57 @@ public abstract class ConfigurationBase
     //     _fileWatcher.EnableRaisingEvents = true; // begin watching
     // }
 
-    internal void onConfigChanged(object sender, FileSystemEventArgs e)
+    // internal void onConfigChanged(object sender, FileSystemEventArgs e)
+    // {
+    //     if (_fileWatcher == null) return;
+    //     try
+    //     {
+    //         _fileWatcher.EnableRaisingEvents = false;
+    //         Debug.Assert(e.Name == this.ConfigName);
+    //         Logger.Info("Configuration file modified, reloading config...", LogArea.Config);
+    //         Logger.Warn("Some changes may not apply; they will require a restart of Lighthouse.", LogArea.Config);
+    //
+    //         this.loadStoredConfig();
+    //
+    //         Logger.Success("Successfully reloaded the configuration!", LogArea.Config);
+    //     }
+    //     finally
+    //     {
+    //         _fileWatcher.EnableRaisingEvents = true;
+    //     }
+    // }
+
+    public void LoadConfig()
     {
-        if (_fileWatcher == null) return;
         try
         {
-            _fileWatcher.EnableRaisingEvents = false;
-            Debug.Assert(e.Name == this.ConfigName);
-            Logger.Info("Configuration file modified, reloading config...", LogArea.Config);
-            Logger.Warn("Some changes may not apply; they will require a restart of Lighthouse.", LogArea.Config);
+            this.configFileMutex.WaitOne();
 
-            this.loadStoredConfig();
-
-            Logger.Success("Successfully reloaded the configuration!", LogArea.Config);
-        }
-        finally
-        {
-            _fileWatcher.EnableRaisingEvents = true;
-        }
-    }
-
-    private void loadStoredConfig()
-    {
-        try
-        {
-            this.configFileMutex.Value?.WaitOne();
-
-            ConfigurationBase storedConfig;
+            ConfigurationBase? storedConfig;
 
             if (File.Exists(this.ConfigName) && (storedConfig = this.fromFile(this.ConfigName)) != null)
             {
-                if (storedConfig.ConfigVersion < GetVersion())
+                if (storedConfig.ConfigVersion < this.LatestConfigVersion)
                 {
-                    int newVersion = GetVersion();
-                    Logger.Info($"Upgrading config file from version {storedConfig.ConfigVersion} to version {newVersion}", LogArea.Config);
+                    Logger.Info($"Upgrading config file from version {storedConfig.ConfigVersion} to version {this.LatestConfigVersion}", LogArea.Config);
                     File.Copy(this.ConfigName, this.ConfigName + ".v" + storedConfig.ConfigVersion);
-                    this.loadConfig(storedConfig);
-                    this.ConfigVersion = newVersion;
-                    this.writeConfig(this.ConfigName);
+                    this.LoadConfig(storedConfig);
+                    this.ConfigVersion = this.LatestConfigVersion;
+                    this.WriteConfig();
                 }
                 else
                 {
-                    this.loadConfig(storedConfig);
+                    this.LoadConfig(storedConfig);
                 }
             }
             else if (!File.Exists(this.ConfigName))
             {
-                if (this.NeedsConfiguration)
-                {
-                    Logger.Warn("The configuration file was not found. " +
-                                "A blank configuration file has been created for you at " +
-                                $"{Path.Combine(Environment.CurrentDirectory, this.ConfigName + ".configme")}",
-                        LogArea.Config);
-                    this.writeConfig(this.ConfigName + ".configme");
-                    this.ConfigVersion = -1;
-                }
-                else
-                {
-                    this.writeConfig(this.ConfigName);
-                }
+                this.WriteConfig();
             }
         }
         finally
         {
-            this.configFileMutex.Value?.ReleaseMutex();
+            this.configFileMutex.ReleaseMutex();
         }
     }
 
@@ -138,7 +122,7 @@ public abstract class ConfigurationBase
     /// Uses reflection to set all values of this class to the values of another class
     /// </summary>
     /// <param name="otherConfig">The config to be loaded</param>
-    private void loadConfig(ConfigurationBase otherConfig)
+    private void LoadConfig(ConfigurationBase otherConfig)
     {
         foreach (PropertyInfo propertyInfo in otherConfig.GetType().GetProperties())
         {
@@ -164,10 +148,10 @@ public abstract class ConfigurationBase
 
         try
         {
-            string text = File.ReadAllText(path);
+            string text = this.configProvider.LoadConfig(this);
 
             if (text.StartsWith("configVersionDoNotModifyOrYouWillBeSlapped"))
-                return this.Deserialize(deserializer, text);
+                return deserializer.Deserialize<ConfigurationBase>(text);
         }
         catch (Exception e)
         {
@@ -179,16 +163,14 @@ public abstract class ConfigurationBase
         return null;
     }
 
-    // public abstract ConfigurationBase<T> Deserialize(IDeserializer deserializer, string text);
+    private string SerializeConfig() => new SerializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build().Serialize(this);
 
-    private string serializeConfig() => new SerializerBuilder().WithNamingConvention(CamelCaseNamingConvention.Instance).Build().Serialize(this);
-
-    private void writeConfig(string path) => File.WriteAllText(path, this.serializeConfig());
+    private void WriteConfig() => this.configProvider.SaveConfig(this, this.SerializeConfig());
 
     public void Dispose()
     {
-        this.configFileMutex.Value?.Dispose();
-        _fileWatcher?.Dispose();
+        this.configFileMutex.Dispose();
+        // _fileWatcher?.Dispose();
     }
 
 }

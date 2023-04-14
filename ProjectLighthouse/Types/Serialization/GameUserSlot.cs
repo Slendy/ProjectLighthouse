@@ -179,19 +179,11 @@ public class GameUserSlot : SlotBase, INeedsPreparationForSerialization
     public bool ShouldSerializeYourReview() => this.SerializationMode == SerializationMode.Full; 
 
     [XmlElement("reviewsEnabled")]
-    public bool ReviewsEnabled
-    {
-        get => ServerConfiguration.Instance.UserGeneratedContentLimits.LevelReviewsEnabled;
-        set => throw new NotSupportedException();
-    }
+    public bool ReviewsEnabled { get; set; }
     public bool ShouldSerializeReviewsEnabled() => this.SerializationMode == SerializationMode.Full;
 
     [XmlElement("commentsEnabled")]
-    public bool CommentsEnabled
-    {
-        get => ServerConfiguration.Instance.UserGeneratedContentLimits.LevelCommentsEnabled;
-        set => throw new NotSupportedException();
-    }
+    public bool CommentsEnabled { get; set; }
     public bool ShouldSerializeCommentsEnabled() => this.SerializationMode == SerializationMode.Full;
 
     [XmlElement("playCount")]
@@ -232,7 +224,7 @@ public class GameUserSlot : SlotBase, INeedsPreparationForSerialization
     public int ResourcesSize { get; set; }
     public bool ShouldSerializeResourcesSize() => this.TargetGame == GameVersion.LittleBigPlanetVita;
 
-    public async Task PrepareSerialization(DatabaseContext database)
+    public async Task PrepareSerialization(DatabaseContext database, ServerConfiguration serverConfiguration)
     {
         var stats = await database.Slots
             .Select(_ => new
@@ -249,6 +241,8 @@ public class GameUserSlot : SlotBase, INeedsPreparationForSerialization
             .FirstAsync();
         ReflectionHelper.CopyAllFields(stats, this);
         this.AuthorHandle = new NpHandle(stats.Username, "");
+
+        this.ReviewsEnabled = serverConfiguration.UserGeneratedContentLimits.LevelReviewsEnabled;
 
         if (this.GameVersion == GameVersion.LittleBigPlanet1)
         {

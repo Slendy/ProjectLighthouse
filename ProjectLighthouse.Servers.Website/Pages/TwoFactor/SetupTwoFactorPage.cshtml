@@ -11,7 +11,7 @@
 @if (!string.IsNullOrWhiteSpace(Model.QrCode))
 {
     <div class="ui center segment center aligned">
-        @if (Model.User?.TwoFactorRequired ?? false)
+        @if (Model.User?.TwoFactorRequired(Model.ServerConfiguration) ?? false)
         {
             <h3>@Model.Translate(TwoFactorStrings.TwoFactorRequired)</h3>
         }
@@ -46,7 +46,7 @@ else
                 @backupCode<br/>
             }
         </h3>
-        <a class="ui blue button" onclick="saveCodes('@(ServerConfiguration.Instance.Customization.ServerName + "-backup-codes.txt")')">
+        <a class="ui blue button" onclick="saveCodes('@(Model.ServerConfiguration.Customization.ServerName + "-backup-codes.txt")')">
             <i class="arrow circle down icon"></i>
             <span>@Model.Translate(TwoFactorStrings.DownloadBackupCodes)</span>
         </a>
@@ -59,7 +59,7 @@ else
         function saveCodes(filename){
             let codes = document.getElementById("codes");
             let codeArray = codes.innerText.split("\n");
-            let serverName = "@ServerConfiguration.Instance.Customization.ServerName";
+            let serverName = "@Model.ServerConfiguration.Customization.ServerName";
             let username = "@Model.User.Username";
             let data = "These are your " + serverName + " backup codes for account " + username + ".  Keep them safe!\n\n"
             for (const code of codeArray){

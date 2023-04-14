@@ -18,8 +18,9 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages.Login;
 
 public class LoginForm : BaseLayout
 {
-    public LoginForm(DatabaseContext database) : base(database)
-    {}
+    public LoginForm(DatabaseContext database, ServerConfiguration serverConfiguration) : base(database, serverConfiguration)
+    {
+    }
 
     public string? Error { get; private set; }
 
@@ -28,7 +29,7 @@ public class LoginForm : BaseLayout
     {
         if (string.IsNullOrWhiteSpace(username))
         {
-            this.Error = ServerConfiguration.Instance.Mail.MailEnabled ? this.Translate(ErrorStrings.UsernameInvalid) : this.Translate(ErrorStrings.EmailInvalid);
+            this.Error = this.ServerConfiguration.Mail.MailEnabled ? this.Translate(ErrorStrings.UsernameInvalid) : this.Translate(ErrorStrings.EmailInvalid);
             return this.Page();
         }
 
@@ -38,7 +39,7 @@ public class LoginForm : BaseLayout
             return this.Page();
         }
 
-        if (!await this.Request.CheckCaptchaValidity())
+        if (!await this.Request.CheckCaptchaValidity(this.ServerConfiguration))
         {
             this.Error = this.Translate(ErrorStrings.CaptchaFailed);
             return this.Page();
@@ -46,7 +47,7 @@ public class LoginForm : BaseLayout
 
         UserEntity? user;
 
-        if (!ServerConfiguration.Instance.Mail.MailEnabled)
+        if (!this.ServerConfiguration.Mail.MailEnabled)
         {
             user = await this.Database.Users.FirstOrDefaultAsync(u => u.Username == username);
         }
@@ -64,7 +65,7 @@ public class LoginForm : BaseLayout
         if (user == null || user.Password == null)
         {
             Logger.Warn($"User {username} failed to login on web due to invalid username", LogArea.Login);
-            this.Error = ServerConfiguration.Instance.Mail.MailEnabled
+            this.Error = this.ServerConfiguration.Mail.MailEnabled
                 ? "The email or password you entered is invalid."
                 : "The username or password you entered is invalid.";
             return this.Page();
@@ -73,7 +74,7 @@ public class LoginForm : BaseLayout
         if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
         {
             Logger.Warn($"User {user.Username} (id: {user.UserId}) failed to login on web due to invalid password", LogArea.Login);
-            this.Error = ServerConfiguration.Instance.Mail.MailEnabled
+            this.Error = this.ServerConfiguration.Mail.MailEnabled
                 ? "The email or password you entered is invalid."
                 : "The username or password you entered is invalid.";
             return this.Page();
@@ -91,7 +92,7 @@ public class LoginForm : BaseLayout
             UserId = user.UserId,
             UserToken = CryptoHelper.GenerateAuthToken(),
             ExpiresAt = DateTime.Now + TimeSpan.FromDays(7),
-            Verified = !ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled || !user.IsTwoFactorSetup,
+            Verified = !this.ServerConfiguration.TwoFactorConfiguration.TwoFactorEnabled || !user.IsTwoFactorSetup,
         };
 
         this.Database.WebTokens.Add(webToken);
@@ -118,7 +119,7 @@ public class LoginForm : BaseLayout
 
         if (user.PasswordResetRequired) return this.Redirect("~/passwordResetRequired");
 
-        return ServerConfiguration.Instance.Mail.MailEnabled switch
+        return this.ServerConfiguration.Mail.MailEnabled switch
         {
             true when string.IsNullOrWhiteSpace(user.EmailAddress) => this.Redirect("~/login/setEmail"),
             true when !user.EmailAddressVerified => this.Redirect("~/login/sendVerificationEmail"),

@@ -11,12 +11,15 @@ public sealed class DatabaseFactAttribute : FactAttribute
 
     public DatabaseFactAttribute()
     {
-        ServerConfiguration.Instance.DbConnectionString = "server=127.0.0.1;uid=root;pwd=lighthouse;database=lighthouse";
-        if (!ServerStatics.DbConnected) this.Skip = "Database not available";
+        ServerConfiguration config = new ServerConfiguration
+        {
+            DbConnectionString = "server=127.0.0.1;uid=root;pwd=lighthouse;database=lighthouse"
+        };
+        using DatabaseContext? database = ServerStatics.DbConnected(config);
+        if (database == null) this.Skip = "Database not available";
         else
             lock (migrateLock)
             {
-                using DatabaseContext database = new();
                 database.Database.Migrate();
             }
     }

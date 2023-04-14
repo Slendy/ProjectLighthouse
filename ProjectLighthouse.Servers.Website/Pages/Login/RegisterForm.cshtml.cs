@@ -15,7 +15,7 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages.Login;
 
 public class RegisterForm : BaseLayout
 {
-    public RegisterForm(DatabaseContext database) : base(database)
+    public RegisterForm(DatabaseContext database, ServerConfiguration ServerConfiguration) : base(database, ServerConfiguration)
     { }
 
     public string? Error { get; private set; }
@@ -28,7 +28,7 @@ public class RegisterForm : BaseLayout
     {
         if (this.Database.UserFromWebRequest(this.Request) != null) return this.Redirect("~/");
 
-        if (!ServerConfiguration.Instance.Authentication.RegistrationEnabled) return this.NotFound();
+        if (!this.ServerConfiguration.Authentication.RegistrationEnabled) return this.NotFound();
 
         if (string.IsNullOrWhiteSpace(username))
         {
@@ -42,7 +42,7 @@ public class RegisterForm : BaseLayout
             return this.Page();
         }
 
-        if (string.IsNullOrWhiteSpace(emailAddress) && ServerConfiguration.Instance.Mail.MailEnabled)
+        if (string.IsNullOrWhiteSpace(emailAddress) && this.ServerConfiguration.Mail.MailEnabled)
         {
             this.Error = this.Translate(ErrorStrings.EmailInvalid);
             return this.Page();
@@ -61,20 +61,20 @@ public class RegisterForm : BaseLayout
             return this.Page();
         }
 
-        if (ServerConfiguration.Instance.Mail.MailEnabled &&
+        if (this.ServerConfiguration.Mail.MailEnabled &&
             await this.Database.Users.AnyAsync(u => u.EmailAddress != null && u.EmailAddress.ToLower() == emailAddress.ToLower()))
         {
             this.Error = this.Translate(ErrorStrings.EmailTaken);
             return this.Page();
         }
 
-        if (!await this.Request.CheckCaptchaValidity())
+        if (!await this.Request.CheckCaptchaValidity(this.ServerConfiguration))
         {
             this.Error = this.Translate(ErrorStrings.CaptchaFailed);
             return this.Page();
         }
 
-        UserEntity user = await this.Database.CreateUser(username, CryptoHelper.BCryptHash(password), emailAddress);
+        UserEntity user = await this.Database.CreateUser(this.ServerConfiguration, username, CryptoHelper.BCryptHash(password), emailAddress);
 
         WebTokenEntity webToken = new()
         {
@@ -88,7 +88,7 @@ public class RegisterForm : BaseLayout
 
         this.Response.Cookies.Append("LighthouseToken", webToken.UserToken);
 
-        return ServerConfiguration.Instance.Mail.MailEnabled ? 
+        return this.ServerConfiguration.Mail.MailEnabled ? 
             this.Redirect("~/login/sendVerificationEmail") : 
             this.Redirect("~/");
     }
@@ -98,7 +98,7 @@ public class RegisterForm : BaseLayout
     public IActionResult OnGet()
     {
         this.Error = string.Empty;
-        if (!ServerConfiguration.Instance.Authentication.RegistrationEnabled)
+        if (!this.ServerConfiguration.Authentication.RegistrationEnabled)
         {
             return this.NotFound();
         }

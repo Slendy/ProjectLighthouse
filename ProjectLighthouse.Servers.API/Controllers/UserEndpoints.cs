@@ -1,4 +1,5 @@
 #nullable enable
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Helpers;
@@ -17,10 +18,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.API.Controllers;
 public class UserEndpoints : ApiEndpointController
 {
     private readonly DatabaseContext database;
+    private readonly ServerConfiguration serverConfiguration;
 
-    public UserEndpoints(DatabaseContext database)
+    public UserEndpoints(DatabaseContext database, ServerConfiguration serverConfiguration)
     {
         this.database = database;
+        this.serverConfiguration = serverConfiguration;
     }
 
     /// <summary>
@@ -96,7 +99,7 @@ public class UserEndpoints : ApiEndpointController
     [HttpPost("user/inviteToken/{username}")]
     public async Task<IActionResult> CreateUserInviteToken([FromRoute] string? username)
     {
-        if (!Configuration.ServerConfiguration.Instance.Authentication.RegistrationEnabled)
+        if (!this.serverConfiguration.Authentication.RegistrationEnabled)
             return this.NotFound();
 
         string? authHeader = this.Request.Headers["Authorization"];

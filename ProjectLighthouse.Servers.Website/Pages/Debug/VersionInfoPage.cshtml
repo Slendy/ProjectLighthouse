@@ -5,7 +5,7 @@
 @{
     Layout = "Layouts/BaseLayout";
     Model.Title = "Debug - Version Information";
-    Model.Description = VersionHelper.FullVersion;
+    Model.Description = VersionHelper.FullVersion(Model.ServerConfiguration);
 }
 
 <h2>Build specific information</h2>

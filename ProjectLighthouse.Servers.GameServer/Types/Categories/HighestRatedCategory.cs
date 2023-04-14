@@ -14,12 +14,12 @@ public class HighestRatedCategory : Category
     public override string Description { get; set; } = "Community Highest Rated content";
     public override string IconHash { get; set; } = "g820603";
     public override string Endpoint { get; set; } = "thumbs";
-    public override SlotEntity? GetPreviewSlot(DatabaseContext database) => database.Slots.Where(s => s.Type == SlotType.User).AsEnumerable().MaxBy(s => s.Thumbsup);
+    public override SlotEntity? GetPreviewSlot(DatabaseContext database) => database.Slots.Where(s => s.Type == SlotType.User).AsEnumerable().MaxBy(s => s.Thumbsup(database));
     public override IEnumerable<SlotEntity> GetSlots
         (DatabaseContext database, int pageStart, int pageSize)
         => database.Slots.ByGameVersion(GameVersion.LittleBigPlanet3, false, true)
             .AsEnumerable()
-            .OrderByDescending(s => s.Thumbsup)
+            .OrderByDescending(s => s.Thumbsup(database))
             .ThenBy(_ => RandomNumberGenerator.GetInt32(int.MaxValue))
             .Skip(Math.Max(0, pageStart - 1))
             .Take(Math.Min(pageSize, 20));

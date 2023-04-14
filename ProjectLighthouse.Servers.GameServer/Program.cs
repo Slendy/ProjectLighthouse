@@ -15,14 +15,14 @@ public static class Program
         CreateHostBuilder(args).Build().Run();
     }
 
-    public static IHostBuilder CreateHostBuilder(string[] args)
+    private static IHostBuilder CreateHostBuilder(ServerConfiguration serverConfiguration, string[] args)
         => Host.CreateDefaultBuilder(args)
             .ConfigureWebHostDefaults
             (
                 webBuilder =>
                 {
                     webBuilder.UseStartup<GameServerStartup>();
-                    webBuilder.UseUrls(ServerConfiguration.Instance.GameApiListenUrl);
+                    webBuilder.UseUrls(serverConfiguration.GameApiListenUrl);
                 }
             )
             .ConfigureLogging

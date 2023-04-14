@@ -84,7 +84,7 @@ public class MatchController : ControllerBase
             case UpdateMyPlayerData playerData:
             {
                 MatchHelper.SetUserLocation(user.UserId, token.UserLocation);
-                Room? room = RoomHelper.FindRoomByUser(user.UserId, token.GameVersion, token.Platform, true);
+                Room? room = RoomHelper.FindRoomByUser(this.database, user.UserId, token.GameVersion, token.Platform, true);
 
                 if (playerData.RoomState != null)
                     if (room != null && Equals(room.HostId, user.UserId))
@@ -97,9 +97,13 @@ public class MatchController : ControllerBase
             #else
             case FindBestRoom diveInData when MatchHelper.UserLocations.Count > 1:
             #endif
-            {
-                FindBestRoomResponse? response = RoomHelper.FindBestRoom
-                    (user, token.GameVersion, diveInData.RoomSlot, token.Platform, token.UserLocation);
+        {
+            FindBestRoomResponse? response = RoomHelper.FindBestRoom(this.database,
+                user,
+                token.GameVersion,
+                diveInData.RoomSlot,
+                token.Platform,
+                token.UserLocation);
 
                 if (response == null) return this.NotFound();
 
@@ -120,7 +124,7 @@ public class MatchController : ControllerBase
                 }
 
                 // Create a new one as requested
-                RoomHelper.CreateRoom(users, token.GameVersion, token.Platform, createRoom.RoomSlot);
+                RoomHelper.CreateRoom(this.database, users, token.GameVersion, token.Platform, createRoom.RoomSlot);
                 break;
             }
             case UpdatePlayersInRoom updatePlayersInRoom:
@@ -139,7 +143,7 @@ public class MatchController : ControllerBase
                     }
 
                     room.PlayerIds = users.Select(u => u.UserId).ToList();
-                    await RoomHelper.CleanupRooms(null, room);
+                    await RoomHelper.CleanupRooms(this.database, null, room);
                 }
 
                 break;

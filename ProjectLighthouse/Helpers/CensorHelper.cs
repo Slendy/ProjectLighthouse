@@ -17,30 +17,30 @@ public static class CensorHelper
         "UwU", "OwO", "uwu", "owo", "o3o", ">.>", "*pounces on you*", "*boops*", "*baps*", ":P", "x3", "O_O", "xD", ":3", ";3", "^w^",
     };
 
-    public static string FilterMessage(string message)
+    public static string FilterMessage(CensorConfiguration censorConfiguration, string message)
     {
-        if (CensorConfiguration.Instance.UserInputFilterMode == FilterMode.None) return message;
+        if (censorConfiguration.UserInputFilterMode == FilterMode.None) return message;
 
         int profaneIndex;
 
-        foreach (string profanity in CensorConfiguration.Instance.FilteredWordList)
+        foreach (string profanity in censorConfiguration.FilteredWordList)
             do
             {
                 profaneIndex = message.ToLower().IndexOf(profanity, StringComparison.Ordinal);
-                if (profaneIndex != -1) message = Censor(profaneIndex, profanity.Length, message);
+                if (profaneIndex != -1) message = CensorWord(censorConfiguration, profaneIndex, profanity.Length, message);
             }
             while (profaneIndex != -1);
 
         return message;
     }
 
-    private static string Censor(int profanityIndex, int profanityLength, string message)
+    private static string CensorWord(CensorConfiguration censorConfiguration, int profanityIndex, int profanityLength, string message)
     {
         StringBuilder sb = new();
 
         sb.Append(message.AsSpan(0, profanityIndex));
 
-        switch (CensorConfiguration.Instance.UserInputFilterMode)
+        switch (censorConfiguration.UserInputFilterMode)
         {
             case FilterMode.Random:
                 char prevRandomChar = '\0';

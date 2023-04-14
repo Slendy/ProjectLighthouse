@@ -1,8 +1,7 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Administration.Maintenance;
@@ -10,31 +9,27 @@ using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Maintenance;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace LBPUnion.ProjectLighthouse.Administration;
 
-public static class RepeatingTaskHandler
+public class RepeatingTaskService : BackgroundService
 {
-    private static bool initialized = false;
+    private readonly IServiceProvider serviceProvider;
 
-    public static void Initialize()
+    public RepeatingTaskService(IServiceProvider serviceProvider)
     {
-        if (initialized) throw new InvalidOperationException("RepeatingTaskHandler was initialized twice");
-
-        initialized = true;
-        Task.Factory.StartNew(taskLoop);
+        this.serviceProvider = serviceProvider;
     }
 
-    [SuppressMessage("ReSharper", "FunctionNeverReturns")]
-    private static async Task taskLoop()
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         Queue<IRepeatingTask> taskQueue = new();
         foreach (IRepeatingTask task in MaintenanceHelper.RepeatingTasks) taskQueue.Enqueue(task);
-
-        DatabaseContext database = new();
-
-        while (true)
+        while (!stoppingToken.IsCancellationRequested)
         {
+            await using DatabaseContext database = this.serviceProvider.GetRequiredService<DatabaseContext>();
             try
             {
                 if (!taskQueue.TryDequeue(out IRepeatingTask? task))
@@ -45,7 +40,7 @@ public static class RepeatingTaskHandler
 
                 Debug.Assert(task != null);
 
-                if ((task.LastRan + task.RepeatInterval) <= DateTime.Now)
+                if (task.LastRan + task.RepeatInterval <= DateTime.Now)
                 {
                     await task.Run(database);
                     task.LastRan = DateTime.Now;
@@ -56,7 +51,7 @@ public static class RepeatingTaskHandler
                 taskQueue.Enqueue(task);
                 Thread.Sleep(500); // Doesn't need to be that precise.
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Logger.Warn($"Error occured while processing repeating tasks: \n{e}", LogArea.Maintenance);
             }

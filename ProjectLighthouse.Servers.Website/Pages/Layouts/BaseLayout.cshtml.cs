@@ -14,6 +14,8 @@ public class BaseLayout : PageModel
 {
     public readonly DatabaseContext Database;
 
+    public readonly ServerConfiguration ServerConfiguration;
+
     public readonly List<PageNavigationItem> NavigationItems = new();
 
     public readonly List<PageNavigationItem> NavigationItemsRight = new();
@@ -26,10 +28,16 @@ public class BaseLayout : PageModel
     public string Title = string.Empty;
 
     private UserEntity? user;
+    public BaseLayout(DatabaseContext database, ServerConfiguration serverConfiguration) : this(database)
+    {
+        this.ServerConfiguration = serverConfiguration;
+    }
+
     public BaseLayout(DatabaseContext database)
     {
         this.Database = database;
-        
+        this.ServerConfiguration = null!;
+
         this.NavigationItems.Add(new PageNavigationItem(BaseLayoutStrings.HeaderUsers, "/users/0", "user friends"));
         this.NavigationItems.Add(new PageNavigationItem(BaseLayoutStrings.HeaderPhotos, "/photos/0", "camera"));
         this.NavigationItems.Add(new PageNavigationItem(BaseLayoutStrings.HeaderSlots, "/slots/0", "globe americas"));

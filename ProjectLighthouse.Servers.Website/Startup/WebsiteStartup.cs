@@ -1,9 +1,12 @@
 using System.Globalization;
 using System.Net;
+using LBPUnion.ProjectLighthouse.Administration;
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Localization;
 using LBPUnion.ProjectLighthouse.Middlewares;
 using LBPUnion.ProjectLighthouse.Servers.Website.Middlewares;
+using LBPUnion.ProjectLighthouse.Types.Synchronization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.FileProviders;
@@ -43,6 +46,12 @@ public class WebsiteStartup
         #endif
 
         services.AddDbContext<DatabaseContext>();
+
+        ServerConfiguration serverConfig = new(new FileConfigProvider(), new LighthouseFileMutex("serverConfig.lock"));
+
+        services.AddSingleton(serverConfig);
+
+        services.AddHostedService<RepeatingTaskService>();
 
         services.Configure<ForwardedHeadersOptions>
         (

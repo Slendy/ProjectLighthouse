@@ -140,17 +140,13 @@ public class SlotEntity
 
     public bool CommentsEnabled { get; set; } = true;
 
-    [NotMapped]
-    public int Hearts => new DatabaseContext().HeartedLevels.Count(s => s.SlotId == this.SlotId);
+    public int Hearts(DatabaseContext database) => database.HeartedLevels.Count(s => s.SlotId == this.SlotId);
 
-    [NotMapped]
-    public int Comments => new DatabaseContext().Comments.Count(c => c.Type == CommentType.Level && c.TargetId == this.SlotId);
+    public int Comments(DatabaseContext database) => database.Comments.Count(c => c.Type == CommentType.Level && c.TargetId == this.SlotId);
 
-    [NotMapped]
-    public int Photos => new DatabaseContext().Photos.Count(p => p.SlotId == this.SlotId);
+    public int Photos(DatabaseContext database) => database.Photos.Count(p => p.SlotId == this.SlotId);
 
-    [NotMapped]
-    public int PhotosWithAuthor => new DatabaseContext().Photos.Count(p => p.SlotId == this.SlotId && p.CreatorId == this.CreatorId);
+    public int PhotosWithAuthor(DatabaseContext database) => database.Photos.Count(p => p.SlotId == this.SlotId && p.CreatorId == this.CreatorId);
 
     [NotMapped]
     public int Plays => this.PlaysLBP1 + this.PlaysLBP2 + this.PlaysLBP3;
@@ -161,11 +157,9 @@ public class SlotEntity
     [NotMapped]
     public int PlaysComplete => this.PlaysLBP1Complete + this.PlaysLBP2Complete + this.PlaysLBP3Complete;
 
-    public double RatingLBP1 => new DatabaseContext().RatedLevels.Where(r => r.SlotId == this.SlotId).Average(r => (double?)r.RatingLBP1) ?? 3.0;
+    public double RatingLBP1(DatabaseContext database) => database.RatedLevels.Where(r => r.SlotId == this.SlotId).Average(r => (double?)r.RatingLBP1) ?? 3.0;
 
-    [NotMapped]
-    public int Thumbsup => new DatabaseContext().RatedLevels.Count(r => r.SlotId == this.SlotId && r.Rating == 1);
+    public int Thumbsup(DatabaseContext database) => database.RatedLevels.Count(r => r.SlotId == this.SlotId && r.Rating == 1);
 
-    [NotMapped]
-    public int Thumbsdown => new DatabaseContext().RatedLevels.Count(r => r.SlotId == this.SlotId && r.Rating == -1);
+    public int Thumbsdown(DatabaseContext database) => database.RatedLevels.Count(r => r.SlotId == this.SlotId && r.Rating == -1);
 }

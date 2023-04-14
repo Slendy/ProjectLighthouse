@@ -1,6 +1,7 @@
 #nullable enable
 using System.Buffers;
 using System.IO.Pipelines;
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Files;
 using LBPUnion.ProjectLighthouse.Logging;
@@ -19,6 +20,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Resources;
 [Route("LITTLEBIGPLANETPS3_XML")]
 public class ResourcesController : ControllerBase
 {
+    private readonly ServerConfiguration serverConfiguration;
+
+    public ResourcesController(ServerConfiguration serverConfiguration)
+    {
+        this.serverConfiguration = serverConfiguration;
+    }
 
     [HttpPost("showModerated")]
     public IActionResult ShowModerated() => this.Ok(new ResourceList());
@@ -67,15 +74,15 @@ public class ResourcesController : ControllerBase
         if (!fullPath.StartsWith(FileHelper.FullResourcePath)) return this.BadRequest();
 
         Logger.Info($"Processing resource upload (hash: {hash})", LogArea.Resources);
-        LbpFile file = new(await readFromPipeReader(this.Request.BodyReader));
+        LbpFile file = new(await this.Request.BodyReader.ReadAllAsync());
 
-        if (!FileHelper.IsFileSafe(file))
+        if (!FileHelper.IsFileSafe(this.serverConfiguration, file))
         {
             Logger.Warn($"File is unsafe (hash: {hash}, type: {file.FileType})", LogArea.Resources);
             return this.Conflict();
         }
 
-        if (!FileHelper.AreDependenciesSafe(file))
+        if (!FileHelper.AreDependenciesSafe(this.serverConfiguration, file))
         {
             Logger.Warn($"File has unsafe dependencies (hash: {hash}, type: {file.FileType}", LogArea.Resources);
             return this.Conflict();
@@ -92,26 +99,5 @@ public class ResourcesController : ControllerBase
         Logger.Success($"File is OK! (hash: {hash}, type: {file.FileType})", LogArea.Resources);
         await IOFile.WriteAllBytesAsync(path, file.Data);
         return this.Ok();
-    }
-
-    // Written with reference from
-    // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/middleware/request-response?view=aspnetcore-5.0
-    // Surprisingly doesn't take seconds. (67ms for a 100kb file)
-    private static async Task<byte[]> readFromPipeReader(PipeReader reader)
-    {
-        List<byte> data = new();
-        while (true)
-        {
-            ReadResult readResult = await reader.ReadAsync();
-            ReadOnlySequence<byte> buffer = readResult.Buffer;
-
-            if (readResult.IsCompleted && buffer.Length > 0) data.AddRange(buffer.ToArray());
-
-            reader.AdvanceTo(buffer.Start, buffer.End);
-
-            if (readResult.IsCompleted) break;
-        }
-
-        return data.ToArray();
     }
 }

@@ -27,7 +27,7 @@ public class RoomHelper
     private static int roomIdIncrement;
     internal static int RoomIdIncrement => roomIdIncrement++;
 
-    public static FindBestRoomResponse? FindBestRoom(UserEntity? user, GameVersion roomVersion, RoomSlot? slot, Platform? platform, string? location)
+    public static FindBestRoomResponse? FindBestRoom(DatabaseContext database, UserEntity? user, GameVersion roomVersion, RoomSlot? slot, Platform? platform, string? location)
     {
         if (roomVersion == GameVersion.LittleBigPlanet1 || roomVersion == GameVersion.LittleBigPlanetPSP)
         {
@@ -87,7 +87,7 @@ public class RoomHelper
                 Locations = new List<string>(),
             };
 
-            foreach (UserEntity player in room.GetPlayers(new DatabaseContext()))
+            foreach (UserEntity player in room.GetPlayers(database))
             {
                 response.Players.Add
                 (
@@ -135,9 +135,10 @@ public class RoomHelper
         return null;
     }
 
-    public static Room CreateRoom(int userId, GameVersion roomVersion, Platform roomPlatform, RoomSlot? slot = null)
+    public static Room CreateRoom(DatabaseContext database, int userId, GameVersion roomVersion, Platform roomPlatform, RoomSlot? slot = null)
         => CreateRoom
         (
+            database,
             new List<int>
             {
                 userId,
@@ -146,7 +147,7 @@ public class RoomHelper
             roomPlatform,
             slot
         );
-    public static Room CreateRoom(List<int> users, GameVersion roomVersion, Platform roomPlatform, RoomSlot? slot = null)
+    public static Room CreateRoom(DatabaseContext database, List<int> users, GameVersion roomVersion, Platform roomPlatform, RoomSlot? slot = null)
     {
         Room room = new()
         {
@@ -158,19 +159,19 @@ public class RoomHelper
             RoomPlatform = roomPlatform,
         };
 
-        CleanupRooms(room.HostId, room);
+        CleanupRooms(database, room.HostId, room);
         lock(RoomLock) Rooms.Add(room);
         Logger.Info($"Created room (id: {room.RoomId}) for host {room.HostId}", LogArea.Match);
 
         return room;
     }
 
-    public static Room? FindRoomByUser(int userId, GameVersion roomVersion, Platform roomPlatform, bool createIfDoesNotExist = false)
+    public static Room? FindRoomByUser(DatabaseContext database, int userId, GameVersion roomVersion, Platform roomPlatform, bool createIfDoesNotExist = false)
     {
         foreach (Room room in Rooms.Where(room => room.PlayerIds.Any(player => userId == player)))
             return room;
 
-        return createIfDoesNotExist ? CreateRoom(userId, roomVersion, roomPlatform) : null;
+        return createIfDoesNotExist ? CreateRoom(database, userId, roomVersion, roomPlatform) : null;
     }
 
     public static Room? FindRoomByUserId(int userId)
@@ -188,7 +189,7 @@ public class RoomHelper
     }
 
     [SuppressMessage("ReSharper", "InvertIf")]
-    public static Task CleanupRooms(int? hostId = null, Room? newRoom = null, DatabaseContext? database = null)
+    public static Task CleanupRooms(DatabaseContext database, int? hostId = null, Room? newRoom = null)
     {
         #if DEBUG
         Stopwatch stopwatch = new();
@@ -203,8 +204,6 @@ public class RoomHelper
             Logger.Debug($"Cleaning up rooms... (took {stopwatch.ElapsedMilliseconds}ms to get lock on {nameof(RoomLock)})", LogArea.Match);
             #endif
             int roomCountBeforeCleanup = rooms.Count();
-
-            database ??= new DatabaseContext();
 
             // Remove offline players from rooms
             foreach (Room room in rooms)

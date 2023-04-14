@@ -30,7 +30,7 @@ public static class MaintenanceHelper
     public static List<IMigrationTask> MigrationTasks { get; }
     public static List<IRepeatingTask> RepeatingTasks { get; }
 
-    public static async Task<List<LogLine>> RunCommand(string[] args)
+    public static async Task<List<LogLine>> RunCommand(IServiceProvider serviceProvider, string[] args)
     {
         if (args.Length < 1)
             throw new Exception
@@ -51,7 +51,7 @@ public static class MaintenanceHelper
         {
             logger.LogInfo("Running command " + command.Name(), LogArea.Command);
             
-            await command.Run(args, logger);
+            await command.Run(serviceProvider, args, logger);
             logger.Flush();
             return memoryLogger.Lines;
         }
@@ -61,18 +61,16 @@ public static class MaintenanceHelper
         return memoryLogger.Lines;
     }
 
-    public static async Task RunMaintenanceJob(string jobName)
+    public static async Task RunMaintenanceJob(DatabaseContext database, string jobName)
     {
         IMaintenanceJob? job = MaintenanceJobs.FirstOrDefault(j => j.GetType().Name == jobName);
         if (job == null) throw new ArgumentNullException(nameof(jobName));
 
-        await job.Run();
+        await job.Run(database);
     }
 
-    public static async Task RunMigration(IMigrationTask migrationTask, DatabaseContext? database = null)
+    public static async Task RunMigration(DatabaseContext database, IMigrationTask migrationTask)
     {
-        database ??= new DatabaseContext();
-
         // Migrations should never be run twice.
         Debug.Assert(!await database.CompletedMigrations.Has(m => m.MigrationName == migrationTask.GetType().Name));
         

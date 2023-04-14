@@ -14,6 +14,7 @@ using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Resources;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Users;
+using LBPUnion.ProjectLighthouse.Types.Webhook;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -28,10 +29,16 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Slots;
 public class PublishController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly ServerConfiguration serverConfiguration;
+    private readonly CensorConfiguration censorConfiguration;
+    private readonly WebhookService webhookService;
 
-    public PublishController(DatabaseContext database)
+    public PublishController(DatabaseContext database, ServerConfiguration serverConfiguration, CensorConfiguration censorConfiguration, WebhookService webhookService)
     {
         this.database = database;
+        this.serverConfiguration = serverConfiguration;
+        this.censorConfiguration = censorConfiguration;
+        this.webhookService = webhookService;
     }
 
     /// <summary>
@@ -83,7 +90,7 @@ public class PublishController : ControllerBase
                 return this.BadRequest();
             }
         }
-        else if (usedSlots > user.EntitledSlots)
+        else if (usedSlots > user.EntitledSlots(this.serverConfiguration))
         {
             return this.Forbid();
         }
@@ -124,7 +131,7 @@ public class PublishController : ControllerBase
         // Yes Rider, this isn't null
         Debug.Assert(slot.Resources != null, "slot.ResourceList != null");
 
-        slot.Description = CensorHelper.FilterMessage(slot.Description);
+        slot.Description = CensorHelper.FilterMessage(this.censorConfiguration, slot.Description);
 
         if (slot.Description.Length > 512)
         {
@@ -132,7 +139,7 @@ public class PublishController : ControllerBase
             return this.BadRequest();
         }
 
-        slot.Name = CensorHelper.FilterMessage(slot.Name);
+        slot.Name = CensorHelper.FilterMessage(this.censorConfiguration, slot.Name);
 
         if (slot.Name.Length > 64)
         {
@@ -249,7 +256,7 @@ public class PublishController : ControllerBase
 
         int usedSlots = await this.database.Slots.CountAsync(s => s.CreatorId == token.UserId && s.GameVersion == slotVersion);
 
-        if (usedSlots > user.EntitledSlots)
+        if (usedSlots > user.EntitledSlots(this.serverConfiguration))
         {
             Logger.Warn("Rejecting level upload, too many published slots", LogArea.Publish);
             return this.BadRequest();
@@ -275,8 +282,8 @@ public class PublishController : ControllerBase
 
         if (user.LevelVisibility == PrivacyType.All)
         {
-            await WebhookHelper.SendWebhook("New level published!",
-                $"**{user.Username}** just published a new level: [**{slotEntity.Name}**]({ServerConfiguration.Instance.ExternalUrl}/slot/{slotEntity.SlotId})\n{slotEntity.Description}");
+            await this.webhookService.SendWebhook("New level published!",
+                $"**{user.Username}** just published a new level: [**{slotEntity.Name}**]({this.serverConfiguration.ExternalUrl}/slot/{slotEntity.SlotId})\n{slotEntity.Description}");
         }
 
         Logger.Success($"Successfully published level {slotEntity.Name} (id: {slotEntity.SlotId}) by {user.Username} (id: {user.UserId})", LogArea.Publish);

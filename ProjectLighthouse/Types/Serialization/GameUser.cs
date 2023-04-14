@@ -44,7 +44,7 @@ public class GameUser : ILbpSerializable, INeedsPreparationForSerialization
 
     [DefaultValue(0)]
     [XmlElement("lists_quota")]
-    public int PlaylistQuota { get; set; } = ServerConfiguration.Instance.UserGeneratedContentLimits.ListsQuota;
+    public int PlaylistQuota { get; set; }
 
     [DefaultValue(0)]
     [XmlElement("heartCount")]
@@ -161,7 +161,7 @@ public class GameUser : ILbpSerializable, INeedsPreparationForSerialization
 
     #endregion
 
-    public async Task PrepareSerialization(DatabaseContext database)
+    public async Task PrepareSerialization(DatabaseContext database, ServerConfiguration serverConfiguration)
     {
         var stats = await database.Users.Where(u => u.UserId == this.UserId)
             .Select(_ => new
@@ -183,9 +183,11 @@ public class GameUser : ILbpSerializable, INeedsPreparationForSerialization
             .FirstOrDefaultAsync();
 
         this.UserHandle.Username = stats.Username;
-        this.CommentsEnabled = this.CommentsEnabled && ServerConfiguration.Instance.UserGeneratedContentLimits.ProfileCommentsEnabled;
+        this.CommentsEnabled = this.CommentsEnabled && serverConfiguration.UserGeneratedContentLimits.ProfileCommentsEnabled;
 
-        int entitledSlots = ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots + stats.BonusSlots;
+        this.PlaylistQuota = serverConfiguration.UserGeneratedContentLimits.ListsQuota;
+
+        int entitledSlots = serverConfiguration.UserGeneratedContentLimits.EntitledSlots + stats.BonusSlots;
 
         IQueryable<SlotEntity> SlotCount(GameVersion version)
         {

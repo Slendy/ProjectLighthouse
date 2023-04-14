@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
+using LBPUnion.ProjectLighthouse.Types.Synchronization;
 using YamlDotNet.Serialization;
 
 namespace LBPUnion.ProjectLighthouse.Configuration;
@@ -11,8 +13,12 @@ public enum FilterMode
     Furry,
 }
 
-public class CensorConfiguration : ConfigurationBase<CensorConfiguration>
+public class CensorConfiguration : ConfigurationBase
 {
+
+    public CensorConfiguration(ILighthouseConfigProvider configProvider, ILighthouseMutex mutex) : base(configProvider, mutex)
+    { }
+
     // HEY, YOU!
     // THIS VALUE MUST BE INCREMENTED FOR EVERY CONFIG CHANGE!
     //
@@ -21,7 +27,6 @@ public class CensorConfiguration : ConfigurationBase<CensorConfiguration>
     // Thanks for listening~
     public override int ConfigVersion { get; set; } = 1;
     public override string ConfigName { get; set; } = "censor.yml";
-    public override bool NeedsConfiguration { get; set; } = false;
 
     public FilterMode UserInputFilterMode { get; set; } = FilterMode.None;
 
@@ -45,6 +50,5 @@ public class CensorConfiguration : ConfigurationBase<CensorConfiguration>
         "restitched",
         "h4h",
     };
-    
-    public override ConfigurationBase<CensorConfiguration> Deserialize(IDeserializer deserializer, string text) => deserializer.Deserialize<CensorConfiguration>(text);
+
 }

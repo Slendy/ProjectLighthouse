@@ -12,6 +12,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
+using LBPUnion.ProjectLighthouse.Types.Webhook;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,10 +26,14 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Resources;
 public class PhotosController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly ServerConfiguration serverConfiguration;
+    private readonly WebhookService webhookService;
 
-    public PhotosController(DatabaseContext database)
+    public PhotosController(DatabaseContext database, ServerConfiguration serverConfiguration, WebhookService webhookService)
     {
         this.database = database;
+        this.serverConfiguration = serverConfiguration;
+        this.webhookService = webhookService;
     }
 
     [HttpPost("uploadPhoto")]
@@ -37,7 +42,7 @@ public class PhotosController : ControllerBase
         UserEntity? user = await this.database.UserFromGameToken(this.GetToken());
         if (user == null) return this.Forbid();
 
-        if (user.GetUploadedPhotoCount(this.database) >= ServerConfiguration.Instance.UserGeneratedContentLimits.PhotosQuota) return this.BadRequest();
+        if (user.GetUploadedPhotoCount(this.database) >= this.serverConfiguration.UserGeneratedContentLimits.PhotosQuota) return this.BadRequest();
 
         GamePhoto? photo = await this.DeserializeBody<GamePhoto>();
         if (photo == null) return this.BadRequest();
@@ -145,14 +150,14 @@ public class PhotosController : ControllerBase
 
         await this.database.SaveChangesAsync();
 
-        await WebhookHelper.SendWebhook
+        await this.webhookService.SendWebhook
         (
             new EmbedBuilder
             {
                 Title = "New photo uploaded!",
                 Description = $"{user.Username} uploaded a new photo.",
-                ImageUrl = $"{ServerConfiguration.Instance.ExternalUrl}/gameAssets/{photo.LargeHash}",
-                Color = WebhookHelper.GetEmbedColor(),
+                ImageUrl = $"{this.serverConfiguration.ExternalUrl}/gameAssets/{photo.LargeHash}",
+                Color = this.webhookService.GetEmbedColor(),
             }
         );
 

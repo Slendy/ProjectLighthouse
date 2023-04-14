@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Files;
 using LBPUnion.ProjectLighthouse.Helpers;
@@ -12,9 +13,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages;
 public class SlotSettingsPage : BaseLayout
 {
 
+    private readonly CensorConfiguration censorConfiguration;
     public SlotEntity? Slot;
-    public SlotSettingsPage(DatabaseContext database) : base(database)
-    {}
+    public SlotSettingsPage(DatabaseContext database, CensorConfiguration censorConfiguration) : base(database)
+    {
+        this.censorConfiguration = censorConfiguration;
+    }
 
     public async Task<IActionResult> OnPost([FromRoute] int slotId, [FromForm] string? avatar, [FromForm] string? name, [FromForm] string? description, string? labels)
     {
@@ -31,14 +35,14 @@ public class SlotSettingsPage : BaseLayout
 
         if (name != null)
         {
-            name = CensorHelper.FilterMessage(name);
+            name = CensorHelper.FilterMessage(this.censorConfiguration, name);
             if (this.Slot.Name != name && name.Length <= 64)
                 this.Slot.Name = name;
         }
 
         if (description != null)
         {
-            description = CensorHelper.FilterMessage(description);
+            description = CensorHelper.FilterMessage(this.censorConfiguration, description);
             if (this.Slot.Description != description && description?.Length <= 512)
                 this.Slot.Description = description;
         }

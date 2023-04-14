@@ -10,13 +10,13 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages.TwoFactor;
 
 public class DisableTwoFactorPage : BaseLayout
 {
-    public DisableTwoFactorPage(DatabaseContext database) : base(database) { }
+    public DisableTwoFactorPage(DatabaseContext database, ServerConfiguration serverConfiguration) : base(database, serverConfiguration) { }
 
     public string Error { get; set; } = "";
 
     public IActionResult OnGet()
     {
-        if (!ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
+        if (!this.ServerConfiguration.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
 
         UserEntity? user = this.Database.UserFromWebRequest(this.Request);
         if (user == null) return this.Redirect("~/login");
@@ -28,7 +28,7 @@ public class DisableTwoFactorPage : BaseLayout
 
     public async Task<IActionResult> OnPost([FromForm] string? code, [FromForm] string? backup)
     {
-        if (!ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
+        if (!this.ServerConfiguration.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
 
         UserEntity? user = this.Database.UserFromWebRequest(this.Request);
         if (user == null) return this.Redirect("~/login");

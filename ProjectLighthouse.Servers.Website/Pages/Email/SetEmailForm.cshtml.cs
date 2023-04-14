@@ -14,14 +14,17 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages.Email;
 
 public class SetEmailForm : BaseLayout
 {
-    public SetEmailForm(DatabaseContext database) : base(database)
-    {}
+    public ServerConfiguration ServerConfiguration;
+    public SetEmailForm(DatabaseContext database, ServerConfiguration serverConfiguration) : base(database)
+    {
+        this.ServerConfiguration = serverConfiguration;
+    }
 
     public string? Error { get; private set; }
 
     public IActionResult OnGet()
     {
-        if (!ServerConfiguration.Instance.Mail.MailEnabled) return this.NotFound();
+        if (!this.ServerConfiguration.Mail.MailEnabled) return this.NotFound();
         WebTokenEntity? token = this.Database.WebTokenFromRequest(this.Request);
         if (token == null) return this.Redirect("/login");
 
@@ -31,7 +34,7 @@ public class SetEmailForm : BaseLayout
     [SuppressMessage("ReSharper", "SpecifyStringComparison")]
     public async Task<IActionResult> OnPost(string emailAddress)
     {
-        if (!ServerConfiguration.Instance.Mail.MailEnabled) return this.NotFound();
+        if (!this.ServerConfiguration.Mail.MailEnabled) return this.NotFound();
 
         WebTokenEntity? token = this.Database.WebTokenFromRequest(this.Request);
         if (token == null) return this.Redirect("~/login");

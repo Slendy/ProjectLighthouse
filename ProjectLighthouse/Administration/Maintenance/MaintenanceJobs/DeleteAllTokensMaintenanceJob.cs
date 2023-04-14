@@ -7,16 +7,14 @@ namespace LBPUnion.ProjectLighthouse.Administration.Maintenance.MaintenanceJobs;
 
 public class DeleteAllTokensMaintenanceJob : IMaintenanceJob
 {
-    private readonly DatabaseContext database = new();
-
     public string Name() => "Delete ALL Tokens";
     public string Description() => "Deletes ALL game tokens and web tokens.";
-    public async Task Run()
+    public async Task Run(DatabaseContext database)
     {
-        this.database.GameTokens.RemoveRange(this.database.GameTokens);
-        this.database.WebTokens.RemoveRange(this.database.WebTokens);
+        database.GameTokens.RemoveRange(database.GameTokens);
+        database.WebTokens.RemoveRange(database.WebTokens);
 
-        await this.database.SaveChangesAsync();
+        await database.SaveChangesAsync();
 
         Console.WriteLine("Deleted ALL tokens.");
     }

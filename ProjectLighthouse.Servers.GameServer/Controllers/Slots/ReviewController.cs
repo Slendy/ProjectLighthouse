@@ -1,4 +1,5 @@
 #nullable enable
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Helpers;
@@ -20,10 +21,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Slots;
 public class ReviewController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly CensorConfiguration censorConfiguration;
 
-    public ReviewController(DatabaseContext database)
+    public ReviewController(DatabaseContext database, CensorConfiguration censorConfiguration)
     {
         this.database = database;
+        this.censorConfiguration = censorConfiguration;
     }
 
     // LBP1 rating
@@ -95,7 +98,7 @@ public class ReviewController : ControllerBase
         GameReview? newReview = await this.DeserializeBody<GameReview>();
         if (newReview == null) return this.BadRequest();
 
-        newReview.Text = CensorHelper.FilterMessage(newReview.Text);
+        newReview.Text = CensorHelper.FilterMessage(this.censorConfiguration, newReview.Text);
 
         if (newReview.Text.Length > 512) return this.BadRequest();
 

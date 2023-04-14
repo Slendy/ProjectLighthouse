@@ -5,6 +5,7 @@ using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Servers.Website.Pages.Layouts;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
+using LBPUnion.ProjectLighthouse.Types.Mail;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,14 +18,18 @@ public class PasswordResetRequestForm : BaseLayout
 
     public string? Status { get; private set; }
 
-    public PasswordResetRequestForm(DatabaseContext database) : base(database)
-    { }
+    private readonly IMailService mailService;
+
+    public PasswordResetRequestForm(DatabaseContext database, IMailService mailService) : base(database)
+    {
+        this.mailService = mailService;
+    }
 
     [UsedImplicitly]
     public async Task<IActionResult> OnPost(string email)
     {
 
-        if (!ServerConfiguration.Instance.Mail.MailEnabled)
+        if (!this.ServerConfiguration.Mail.MailEnabled)
         {
             this.Error = "Email is not configured on this server, so password resets cannot be issued. Please contact your instance administrator for more details.";
             return this.Page();
@@ -60,10 +65,10 @@ public class PasswordResetRequestForm : BaseLayout
 
         string messageBody = $"Hello, {user.Username}.\n\n" +
             "A request to reset your account's password was issued. If this wasn't you, this can probably be ignored.\n\n" +
-            $"If this was you, your {ServerConfiguration.Instance.Customization.ServerName} password can be reset at the following link:\n" +
-            $"{ServerConfiguration.Instance.ExternalUrl}/passwordReset?token={token.ResetToken}";
+            $"If this was you, your {this.ServerConfiguration.Customization.ServerName} password can be reset at the following link:\n" +
+            $"{this.ServerConfiguration.ExternalUrl}/passwordReset?token={token.ResetToken}";
 
-        SMTPHelper.SendEmail(user.EmailAddress, $"Project Lighthouse Password Reset Request for {user.Username}", messageBody);
+        this.mailService.SendEmail(user.EmailAddress, $"Project Lighthouse Password Reset Request for {user.Username}", messageBody);
 
         this.Database.PasswordResetTokens.Add(token);
         await this.Database.SaveChangesAsync();
@@ -72,5 +77,6 @@ public class PasswordResetRequestForm : BaseLayout
                       "If you do not receive an email verify that you have entered the correct email address";
         return this.Page();
     }
+
     public void OnGet() => this.Page();
 }

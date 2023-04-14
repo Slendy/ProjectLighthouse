@@ -17,18 +17,15 @@ namespace LBPUnion.ProjectLighthouse.StorableLists;
 
 public static class RedisDatabase
 {
-    private static readonly RedisConnectionProvider provider;
-
-    static RedisDatabase()
-    {
-        ConnectionMultiplexer.SetFeatureFlag("preventthreadtheft", true);
-        provider = new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString);
-    }
+    private static RedisConnectionProvider _provider = null!;
 
     public static bool Initialized { get; private set; }
-    public static async Task Initialize()
+    public static async Task Initialize(ServerConfiguration serverConfiguration)
     {
         if (Initialized) throw new InvalidOperationException("Redis has already been initialized.");
+
+        ConnectionMultiplexer.SetFeatureFlag("preventthreadtheft", true);
+        _provider = new RedisConnectionProvider(serverConfiguration.RedisConnectionString);
 
         try
         {
@@ -71,10 +68,10 @@ public static class RedisDatabase
     private static IRedisConnection getConnection()
     {
         Logger.Debug("Getting a Redis connection", LogArea.Redis);
-        return provider.Connection;
+        return _provider.Connection;
     }
 
-    public static IRedisCollection<UserFriendData> UserFriendStoreCollection => provider.RedisCollection<UserFriendData>();
+    public static IRedisCollection<UserFriendData> UserFriendStoreCollection => _provider.RedisCollection<UserFriendData>();
 
-    internal static IRedisCollection<Room> GetRooms() => provider.RedisCollection<Room>();
+    internal static IRedisCollection<Room> GetRooms() => _provider.RedisCollection<Room>();
 }

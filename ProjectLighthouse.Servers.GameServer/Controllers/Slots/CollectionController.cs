@@ -23,10 +23,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Slots;
 public class CollectionController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly ServerConfiguration serverConfiguration;
 
-    public CollectionController(DatabaseContext database)
+    public CollectionController(DatabaseContext database, ServerConfiguration serverConfiguration)
     {
         this.database = database;
+        this.serverConfiguration = serverConfiguration;
     }
 
     [HttpGet("playlists/{playlistId:int}/slots")]
@@ -119,7 +121,7 @@ public class CollectionController : ControllerBase
 
         int playlistCount = await this.database.Playlists.CountAsync(p => p.CreatorId == token.UserId);
 
-        if (playlistCount > ServerConfiguration.Instance.UserGeneratedContentLimits.ListsQuota) return this.BadRequest();
+        if (playlistCount > this.serverConfiguration.UserGeneratedContentLimits.ListsQuota) return this.BadRequest();
 
         GamePlaylist? playlist = await this.DeserializeBody<GamePlaylist>("playlist");
 

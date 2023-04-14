@@ -29,7 +29,7 @@ public class UserPage : BaseLayout
     public List<SlotEntity>? QueuedSlots;
 
     public UserEntity? ProfileUser;
-    public UserPage(DatabaseContext database) : base(database)
+    public UserPage(DatabaseContext database, ServerConfiguration serverConfiguration) : base(database, serverConfiguration)
     {}
 
     public async Task<IActionResult> OnGet([FromRoute] int userId)
@@ -91,7 +91,7 @@ public class UserPage : BaseLayout
                 .ToListAsync();
         }
 
-        this.CommentsEnabled = ServerConfiguration.Instance.UserGeneratedContentLimits.LevelCommentsEnabled && this.ProfileUser.CommentsEnabled;
+        this.CommentsEnabled = this.ServerConfiguration.UserGeneratedContentLimits.LevelCommentsEnabled && this.ProfileUser.CommentsEnabled;
 
         if (this.CommentsEnabled)
         {

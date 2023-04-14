@@ -8,12 +8,12 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Maintenance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LBPUnion.ProjectLighthouse.Administration.Maintenance.Commands;
 
 public class ResetPasswordCommand : ICommand
 {
-    private readonly DatabaseContext database = new();
     public string Name() => "Reset Password";
     public string[] Aliases()
         => new[]
@@ -23,13 +23,14 @@ public class ResetPasswordCommand : ICommand
     public string Arguments() => "<username/userId> <sha256/plaintext>";
     public int RequiredArgs() => 2;
 
-    public async Task Run(string[] args, Logger logger)
+    public async Task Run(IServiceProvider serviceProvider, string[] args, Logger logger)
     {
-        UserEntity? user = await this.database.Users.FirstOrDefaultAsync(u => u.Username == args[0]);
+        await using DatabaseContext database = serviceProvider.GetRequiredService<DatabaseContext>();
+        UserEntity? user = await database.Users.FirstOrDefaultAsync(u => u.Username == args[0]);
         if (user == null)
             try
             {
-                user = await this.database.Users.FirstOrDefaultAsync(u => u.UserId == Convert.ToInt32(args[0]));
+                user = await database.Users.FirstOrDefaultAsync(u => u.UserId == Convert.ToInt32(args[0]));
                 if (user == null) throw new Exception();
             }
             catch
@@ -44,7 +45,7 @@ public class ResetPasswordCommand : ICommand
         user.Password = CryptoHelper.BCryptHash(password);
         user.PasswordResetRequired = true;
 
-        await this.database.SaveChangesAsync();
+        await database.SaveChangesAsync();
 
         logger.LogSuccess($"The password for user {user.Username} (id: {user.UserId}) has been reset.", LogArea.Command);
     }

@@ -12,7 +12,7 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages.TwoFactor;
 
 public class TwoFactorLoginPage : BaseLayout
 {
-    public TwoFactorLoginPage(DatabaseContext database) : base(database)
+    public TwoFactorLoginPage(DatabaseContext database, ServerConfiguration serverConfiguration) : base(database, serverConfiguration)
     { }
 
     public string Error { get; set; } = "";
@@ -20,7 +20,7 @@ public class TwoFactorLoginPage : BaseLayout
 
     public async Task<IActionResult> OnGet([FromQuery] string? redirect)
     {
-        if (!ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
+        if (!this.ServerConfiguration.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
 
         WebTokenEntity? token = this.Database.WebTokenFromRequest(this.Request);
         if (token == null) return this.Redirect("~/login");
@@ -41,7 +41,7 @@ public class TwoFactorLoginPage : BaseLayout
 
     public async Task<IActionResult> OnPost([FromForm] string? code, [FromForm] string? redirect, [FromForm] string? backup)
     {
-        if (!ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
+        if (!this.ServerConfiguration.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
 
         WebTokenEntity? token = this.Database.WebTokenFromRequest(this.Request);
         if (token == null) return this.Redirect("~/login");

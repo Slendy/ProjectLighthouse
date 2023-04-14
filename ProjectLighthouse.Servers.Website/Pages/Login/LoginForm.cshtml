@@ -51,7 +51,7 @@
 
             <div class="field">
                 @{
-                    string username = ServerConfiguration.Instance.Mail.MailEnabled ? Model.Translate(GeneralStrings.Email) : Model.Translate(GeneralStrings.Username);
+                    string username = Model.ServerConfiguration.Mail.MailEnabled ? Model.Translate(GeneralStrings.Email) : Model.Translate(GeneralStrings.Username);
                 }
                 <label>@username</label>
                 <div class="ui left icon input">
@@ -69,7 +69,7 @@
                 </div>
             </div>
 
-            @if (ServerConfiguration.Instance.Captcha.CaptchaEnabled)
+            @if (Model.ServerConfiguration.Captcha.CaptchaEnabled)
             {
                 @await Html.PartialAsync("Partials/CaptchaPartial")
                 <div class="ui divider fitted hidden"></div>
@@ -82,7 +82,7 @@
                 </div>
             </a>
             
-            @if (ServerConfiguration.Instance.Authentication.RegistrationEnabled)
+            @if (Model.ServerConfiguration.Authentication.RegistrationEnabled)
             {
                 <div class="ui divider"></div>
                 <a href="/register" style="text-align: center;">

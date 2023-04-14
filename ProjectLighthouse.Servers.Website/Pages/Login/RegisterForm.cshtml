@@ -56,7 +56,7 @@
         </div>
     </div>
 
-    @if (ServerConfiguration.Instance.Mail.MailEnabled)
+    @if (Model.ServerConfiguration.Mail.MailEnabled)
     {
         <div class="field">
             <label>Email address</label>
@@ -91,7 +91,7 @@
         </div>
     </div>
 
-    @if (ServerConfiguration.Instance.Captcha.CaptchaEnabled)
+    @if (Model.ServerConfiguration.Captcha.CaptchaEnabled)
     {
         @await Html.PartialAsync("Partials/CaptchaPartial")
     }

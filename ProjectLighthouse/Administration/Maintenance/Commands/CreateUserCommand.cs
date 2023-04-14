@@ -1,5 +1,7 @@
 ﻿#nullable enable
+using System;
 using System.Threading.Tasks;
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
@@ -7,30 +9,32 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Maintenance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LBPUnion.ProjectLighthouse.Administration.Maintenance.Commands;
 
 public class CreateUserCommand : ICommand
 {
-    private readonly DatabaseContext _database = new();
-
-    public async Task Run(string[] args, Logger logger)
+    public async Task Run(IServiceProvider serviceProvider, string[] args, Logger logger)
     {
         string onlineId = args[0];
         string password = args[1];
 
         password = CryptoHelper.Sha256Hash(password);
 
-        UserEntity? user = await this._database.Users.FirstOrDefaultAsync(u => u.Username == onlineId);
+        await using DatabaseContext database = serviceProvider.GetRequiredService<DatabaseContext>();
+
+        UserEntity? user = await database.Users.FirstOrDefaultAsync(u => u.Username == onlineId);
         if (user == null)
         {
-            user = await this._database.CreateUser(onlineId, CryptoHelper.BCryptHash(password));
+            ServerConfiguration serverConfiguration = serviceProvider.GetRequiredService<ServerConfiguration>();
+            user = await database.CreateUser(serverConfiguration, onlineId, CryptoHelper.BCryptHash(password));
             logger.LogSuccess($"Created user {user.UserId} with online ID (username) {user.Username} and the specified password.", LogArea.Command);
 
             user.PasswordResetRequired = true;
             logger.LogInfo("This user will need to reset their password when they log in.", LogArea.Command);
 
-            await this._database.SaveChangesAsync();
+            await database.SaveChangesAsync();
             logger.LogInfo("Database changes saved.", LogArea.Command);
         }
         else

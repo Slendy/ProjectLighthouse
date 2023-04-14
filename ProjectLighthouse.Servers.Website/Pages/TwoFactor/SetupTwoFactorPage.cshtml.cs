@@ -20,7 +20,7 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages.TwoFactor;
 
 public class SetupTwoFactorPage : BaseLayout
 {
-    public SetupTwoFactorPage(DatabaseContext database) : base(database)
+    public SetupTwoFactorPage(DatabaseContext database, ServerConfiguration serverConfiguration) : base(database, serverConfiguration)
     { }
 
     public string QrCode { get; set; } = "";
@@ -29,7 +29,7 @@ public class SetupTwoFactorPage : BaseLayout
 
     public async Task<IActionResult> OnGet()
     {
-        if (!ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
+        if (!this.ServerConfiguration.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
 
         UserEntity? user = this.Database.UserFromWebRequest(this.Request);
         if (user == null) return this.Redirect("~/login");
@@ -87,16 +87,16 @@ public class SetupTwoFactorPage : BaseLayout
         return image.ToBase64String(PngFormat.Instance);
     }
 
-    private static string getQrCode(UserEntity user)
+    private string getQrCode(UserEntity user)
     {
-        string instanceName = ServerConfiguration.Instance.Customization.ServerName;
+        string instanceName = this.ServerConfiguration.Customization.ServerName;
         string totpLink = CryptoHelper.GenerateTotpLink(user.TwoFactorSecret, HttpUtility.HtmlEncode(instanceName), user.Username);
         return GenerateQrCode(totpLink, 6, Color.FromRgb(18, 18, 18), Color.Transparent, false);
     }
 
     public async Task<IActionResult> OnPost([FromForm] string? code)
     {
-        if (!ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
+        if (!this.ServerConfiguration.TwoFactorConfiguration.TwoFactorEnabled) return this.Redirect("~/login");
 
         WebTokenEntity? token = this.Database.WebTokenFromRequest(this.Request);
         if (token == null) return this.Redirect("~/login");

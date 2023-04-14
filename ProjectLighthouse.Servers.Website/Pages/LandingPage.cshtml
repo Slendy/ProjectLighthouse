@@ -16,7 +16,7 @@
     string timeZone = Model.GetTimeZone();
 }
 <h1 class="lighthouse-welcome lighthouse-title">
-    @Model.Translate(LandingPageStrings.Welcome, ServerConfiguration.Instance.Customization.ServerName)
+    @Model.Translate(LandingPageStrings.Welcome, Model.ServerConfiguration.Customization.ServerName)
 </h1>
 
 @if (Model.User != null)

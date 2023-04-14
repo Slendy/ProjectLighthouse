@@ -11,8 +11,11 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages.Login;
 
 public class PasswordResetPage : BaseLayout
 {
-    public PasswordResetPage(DatabaseContext database) : base(database)
-    {}
+    private readonly ServerConfiguration serverConfiguration;
+    public PasswordResetPage(DatabaseContext database, ServerConfiguration serverConfiguration) : base(database)
+    {
+        this.serverConfiguration = serverConfiguration;
+    }
 
     public string? Error { get; private set; }
 
@@ -52,7 +55,7 @@ public class PasswordResetPage : BaseLayout
 
         await this.Database.SaveChangesAsync();
 
-        if (!user.EmailAddressVerified && ServerConfiguration.Instance.Mail.MailEnabled) 
+        if (!user.EmailAddressVerified && this.serverConfiguration.Mail.MailEnabled) 
             return this.Redirect("~/login/sendVerificationEmail");
 
         return this.Redirect("~/");

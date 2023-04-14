@@ -2,10 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
-using LBPUnion.ProjectLighthouse.Administration;
 using LBPUnion.ProjectLighthouse.Administration.Maintenance;
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
@@ -20,9 +17,11 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Maintenance;
 using LBPUnion.ProjectLighthouse.Types.Misc;
+using LBPUnion.ProjectLighthouse.Types.Synchronization;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Medallion.Threading.MySql;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LBPUnion.ProjectLighthouse;
 
@@ -43,30 +42,26 @@ public static class StartupTasks
         Logger.Info($"Welcome to the Project Lighthouse {serverType.ToString()}!", LogArea.Startup);
 
         Logger.Info("Loading configurations...", LogArea.Startup);
-        if (!loadConfigurations())
-        {
-            Logger.Error("Failed to load one or more configurations", LogArea.Config);
-            Environment.Exit(1);
-        }
+
+        ServerConfiguration serverConfiguration = new(new FileConfigProvider(), new LighthouseFileMutex("serverConfig.lock"));
 
         // Version info depends on ServerConfig 
         Logger.Info($"You are running version {VersionHelper.FullVersion}", LogArea.Startup);
 
         Logger.Info("Connecting to the database...", LogArea.Startup);
-        bool dbConnected = ServerStatics.DbConnected;
-        if (!dbConnected)
+        using DatabaseContext database = ServerStatics.DbConnected(serverConfiguration);
+
+        if (database == null)
         {
             Logger.Error("Database unavailable! Exiting.", LogArea.Startup);
+            Environment.Exit(1);
         }
         else
         {
             Logger.Success("Connected to the database!", LogArea.Startup);
         }
 
-        if (!dbConnected) Environment.Exit(1);
-        using DatabaseContext database = new();
-        
-        migrateDatabase(database).Wait();
+        MigrateDatabase(serverConfiguration, database).Wait();
 
         Logger.Debug
         (
@@ -79,22 +74,23 @@ public static class StartupTasks
 
         if (args.Length != 0)
         {
-            List<LogLine> logLines = MaintenanceHelper.RunCommand(args).Result;
+            ServiceCollection serviceCollection = new();
+            serviceCollection.AddSingleton(database);
+            serviceCollection.AddSingleton(serverConfiguration);
+            IServiceProvider serviceProvider =
+                new DefaultServiceProviderFactory().CreateServiceProvider(serviceCollection);
+            List<LogLine> logLines = MaintenanceHelper.RunCommand(serviceProvider, args).Result;
             Console.WriteLine(logLines.ToLogString());
             return;
         }
 
-        if (ServerConfiguration.Instance.WebsiteConfiguration.ConvertAssetsOnStartup
-            && serverType == ServerType.Website)
+        if (serverConfiguration.WebsiteConfiguration.ConvertAssetsOnStartup && serverType == ServerType.Website)
         {
             FileHelper.ConvertAllTexturesToPng();
         }
 
         Logger.Info("Initializing Redis...", LogArea.Startup);
-        RedisDatabase.Initialize().Wait();
-
-        Logger.Info("Initializing repeating tasks...", LogArea.Startup);
-        RepeatingTaskHandler.Initialize();
+        RedisDatabase.Initialize(serverConfiguration).Wait();
 
         // Create admin user if no users exist
         if (serverType == ServerType.Website && database.Users.CountAsync().Result == 0)
@@ -102,7 +98,7 @@ public static class StartupTasks
             const string passwordClear = "lighthouse";
             string password = CryptoHelper.BCryptHash(CryptoHelper.Sha256Hash(passwordClear));
             
-            UserEntity admin = database.CreateUser("admin", password).Result;
+            UserEntity admin = database.CreateUser(serverConfiguration, "admin", password).Result;
             admin.PermissionLevel = PermissionLevel.Administrator;
             admin.PasswordResetRequired = true;
 
@@ -116,42 +112,8 @@ public static class StartupTasks
         Logger.Success($"Ready! Startup took {stopwatch.ElapsedMilliseconds}ms. Passing off control to ASP.NET...", LogArea.Startup);
     }
 
-    private static bool loadConfigurations()
-    {
-        Assembly assembly = Assembly.GetAssembly(typeof(ConfigurationBase<>));
-        if (assembly == null) return false;
-        bool didLoad = true;
-        foreach (Type type in assembly.GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.BaseType?.Name == "ConfigurationBase`1"))
-        {
-            if (type.BaseType == null) continue;
-            if (type.BaseType.GetProperty("Instance") != null)
-            {
-                // force create lazy instance
-                type.BaseType.GetProperty("Instance")?.GetValue(null);
-                bool isConfigured = false;
-                while (!isConfigured)
-                {
-                    isConfigured = (bool)(type.BaseType.GetProperty("IsConfigured")?.GetValue(null) ?? false);
-                    Thread.Sleep(10);
-                }
-            }
 
-            object objRef = type.BaseType.GetProperty("Instance")?.GetValue(null);
-            int configVersion = ((int?)type.GetProperty("ConfigVersion")?.GetValue(objRef)).GetValueOrDefault();
-            if (configVersion <= 0)
-            {
-                didLoad = false;
-            }
-            else
-            {
-                Logger.Success($"Successfully loaded {type.Name} version {configVersion}", LogArea.Startup);
-            }
-        }
-
-        return didLoad;
-    }
-
-    private static async Task migrateDatabase(DatabaseContext database)
+    private static async Task MigrateDatabase(ServerConfiguration serverConfiguration, DatabaseContext database)
     {
         int? originalTimeout = database.Database.GetCommandTimeout();
         database.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
@@ -161,7 +123,7 @@ public static class StartupTasks
         Stopwatch totalStopwatch = Stopwatch.StartNew();
         Stopwatch stopwatch = Stopwatch.StartNew();
         Logger.Info("Migrating database...", LogArea.Database);
-        MySqlDistributedLock mutex = new("LighthouseMigration", ServerConfiguration.Instance.DbConnectionString);
+        MySqlDistributedLock mutex = new("LighthouseMigration", serverConfiguration.DbConnectionString);
         await using (await mutex.AcquireAsync())
         {
             stopwatch.Stop();
@@ -183,7 +145,7 @@ public static class StartupTasks
 
             foreach (IMigrationTask migrationTask in migrationsToRun)
             {
-                MaintenanceHelper.RunMigration(migrationTask, database).Wait();
+                MaintenanceHelper.RunMigration(database, migrationTask).Wait();
             }
 
             stopwatch.Stop();

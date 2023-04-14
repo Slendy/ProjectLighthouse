@@ -15,8 +15,11 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages.Admin;
 public class AdminPanelPage : BaseLayout
 {
     public List<ICommand> Commands = MaintenanceHelper.Commands;
-    public AdminPanelPage(DatabaseContext database) : base(database)
-    { }
+    public readonly IServiceProvider ServiceProvider;
+    public AdminPanelPage(DatabaseContext database, IServiceProvider serviceProvider) : base(database)
+    {
+        this.ServiceProvider = serviceProvider;
+    }
 
     public List<AdminPanelStatistic> Statistics = new();
 
@@ -37,15 +40,15 @@ public class AdminPanelPage : BaseLayout
         {
             args ??= "";
             args = command + " " + args;
-            string[] split = args.Split(" ");
+            string[] split = args.Split(" ", StringSplitOptions.RemoveEmptyEntries);
 
-            List<LogLine> runCommand = await MaintenanceHelper.RunCommand(split);
+            List<LogLine> runCommand = await MaintenanceHelper.RunCommand(this.ServiceProvider, split);
             return this.Redirect($"~/admin?log={CryptoHelper.ToBase64(runCommand.ToLogString())}");
         }
 
         if (!string.IsNullOrEmpty(maintenanceJob))
         {
-            await MaintenanceHelper.RunMaintenanceJob(maintenanceJob);
+            await MaintenanceHelper.RunMaintenanceJob(this.Database, maintenanceJob);
             return this.Redirect("~/admin");
         }
 

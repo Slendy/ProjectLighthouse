@@ -7,12 +7,12 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Maintenance;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LBPUnion.ProjectLighthouse.Administration.Maintenance.Commands;
 
 public class DeleteUserCommand : ICommand
 {
-    private readonly DatabaseContext database = new();
     public string Name() => "Delete User";
     public string[] Aliases()
         => new[]
@@ -21,13 +21,14 @@ public class DeleteUserCommand : ICommand
         };
     public string Arguments() => "<username/userId>";
     public int RequiredArgs() => 1;
-    public async Task Run(string[] args, Logger logger)
+    public async Task Run(IServiceProvider serviceProvider, string[] args, Logger logger)
     {
-        UserEntity? user = await this.database.Users.FirstOrDefaultAsync(u => u.Username.Length > 0 && u.Username == args[0]);
+        await using DatabaseContext database = serviceProvider.GetRequiredService<DatabaseContext>();
+        UserEntity? user = await database.Users.FirstOrDefaultAsync(u => u.Username.Length > 0 && u.Username == args[0]);
         if (user == null)
             try
             {
-                user = await this.database.Users.FirstOrDefaultAsync(u => u.UserId == Convert.ToInt32(args[0]));
+                user = await database.Users.FirstOrDefaultAsync(u => u.UserId == Convert.ToInt32(args[0]));
                 if (user == null) throw new Exception();
             }
             catch
@@ -36,7 +37,7 @@ public class DeleteUserCommand : ICommand
                 return;
             }
 
-        await this.database.RemoveUser(user);
+        await database.RemoveUser(user);
         logger.LogSuccess($"Successfully deleted user {user.Username}", LogArea.Command);
     }
 }

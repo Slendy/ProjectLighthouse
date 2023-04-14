@@ -8,6 +8,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBPUnion.ProjectLighthouse.Servers.Website.Pages;
@@ -20,11 +21,15 @@ public class SlotPage : BaseLayout
     public List<ScoreEntity> Scores = new();
 
     public bool CommentsEnabled;
-    public readonly bool ReviewsEnabled = ServerConfiguration.Instance.UserGeneratedContentLimits.LevelReviewsEnabled;
+    public readonly bool ReviewsEnabled;
 
     public SlotEntity? Slot;
-    public SlotPage(DatabaseContext database) : base(database)
-    {}
+
+    public SlotPage
+        (DatabaseContext database, ServerConfiguration serverConfiguration) : base(database, serverConfiguration)
+    {
+        this.ReviewsEnabled = serverConfiguration.UserGeneratedContentLimits.LevelReviewsEnabled;
+    }
 
     public async Task<IActionResult> OnGet([FromRoute] int id)
     {
@@ -68,7 +73,7 @@ public class SlotPage : BaseLayout
                 where blockedProfile.UserId == this.User.UserId
                 select blockedProfile.BlockedUserId).ToListAsync();
         
-        this.CommentsEnabled = ServerConfiguration.Instance.UserGeneratedContentLimits.LevelCommentsEnabled && this.Slot.CommentsEnabled;
+        this.CommentsEnabled = this.ServerConfiguration.UserGeneratedContentLimits.LevelCommentsEnabled && this.Slot.CommentsEnabled;
         if (this.CommentsEnabled)
         {
             this.Comments = await this.Database.Comments.Include(p => p.Poster)

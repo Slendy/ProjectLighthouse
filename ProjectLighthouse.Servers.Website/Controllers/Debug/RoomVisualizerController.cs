@@ -25,7 +25,7 @@ public class RoomVisualizerController : ControllerBase
         return this.NotFound();
         #else
         List<int> users = await this.database.Users.OrderByDescending(_ => EF.Functions.Random()).Take(2).Select(u => u.UserId).ToListAsync();
-        RoomHelper.CreateRoom(users, GameVersion.LittleBigPlanet2, Platform.PS3);
+        RoomHelper.CreateRoom(this.database, users, GameVersion.LittleBigPlanet2, Platform.PS3);
 
         foreach (int user in users)
         {
@@ -54,8 +54,8 @@ public class RoomVisualizerController : ControllerBase
         return this.NotFound();
         #else
         List<int> users = await this.database.Users.OrderByDescending(_ => EF.Functions.Random()).Take(1).Select(u => u.UserId).ToListAsync();
-        RoomHelper.CreateRoom(users, GameVersion.LittleBigPlanet2, Platform.PS3);
-        RoomHelper.CreateRoom(users, GameVersion.LittleBigPlanet2, Platform.PS3);
+        RoomHelper.CreateRoom(this.database, users, GameVersion.LittleBigPlanet2, Platform.PS3);
+        RoomHelper.CreateRoom(this.database, users, GameVersion.LittleBigPlanet2, Platform.PS3);
         return this.Redirect("/debug/roomVisualizer");
         #endif
     }

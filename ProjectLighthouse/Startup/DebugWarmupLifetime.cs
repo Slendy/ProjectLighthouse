@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Configuration;
@@ -7,6 +8,7 @@ using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Misc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
@@ -18,6 +20,8 @@ public class DebugWarmupLifetime : IHostLifetime
 {
     public IHostApplicationLifetime ApplicationLifetime { get; }
 
+    public ServerConfiguration ServerConfiguration { get; init; }
+
     private CancellationTokenRegistration applicationStartedRegistration;
 
     private readonly ConsoleLifetime consoleLifetime;
@@ -28,22 +32,24 @@ public class DebugWarmupLifetime : IHostLifetime
         IHostEnvironment environment,
         IHostApplicationLifetime applicationLifetime,
         IOptions<HostOptions> hostOptions,
-        ILoggerFactory loggerFactory
+        ILoggerFactory loggerFactory,
+        ServerConfiguration serverConfiguration
     )
     {
         this.consoleLifetime = new ConsoleLifetime(options, environment, applicationLifetime, hostOptions, loggerFactory);
+        this.ServerConfiguration = serverConfiguration;
         this.ApplicationLifetime = applicationLifetime;
     }
 
-    public static void OnApplicationStarted()
+    public void OnApplicationStarted()
     {
         using HttpClient client = new();
 
         string url = ServerStatics.ServerType switch
         {
-            ServerType.GameServer => ServerConfiguration.Instance.GameApiListenUrl,
-            ServerType.Website => ServerConfiguration.Instance.WebsiteListenUrl,
-            ServerType.Api => ServerConfiguration.Instance.ApiListenUrl,
+            ServerType.GameServer => this.ServerConfiguration.GameApiListenUrl,
+            ServerType.Website => this.ServerConfiguration.WebsiteListenUrl,
+            ServerType.Api => this.ServerConfiguration.ApiListenUrl,
             _ => throw new ArgumentOutOfRangeException(),
         };
 
@@ -67,7 +73,7 @@ public class DebugWarmupLifetime : IHostLifetime
 
     public Task WaitForStartAsync(CancellationToken cancellationToken)
     {
-        this.applicationStartedRegistration = this.ApplicationLifetime.ApplicationStarted.Register((Action<object>)(_ => OnApplicationStarted()), (object)this);
+        this.applicationStartedRegistration = this.ApplicationLifetime.ApplicationStarted.Register((Action<object>)(_ => this.OnApplicationStarted()), this);
 
         return this.consoleLifetime.WaitForStartAsync(cancellationToken);
     }

@@ -1,4 +1,5 @@
 #nullable enable
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
@@ -21,10 +22,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Controllers;
 public class SlotPageController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly CensorConfiguration censorConfiguration;
 
-    public SlotPageController(DatabaseContext database)
+    public SlotPageController(DatabaseContext database, CensorConfiguration censorConfiguration)
     {
         this.database = database;
+        this.censorConfiguration = censorConfiguration;
     }
 
     [HttpGet("unpublish")]
@@ -68,7 +71,7 @@ public class SlotPageController : ControllerBase
             return this.Redirect("~/slot/" + id);
         }
 
-        msg = CensorHelper.FilterMessage(msg);
+        msg = CensorHelper.FilterMessage(this.censorConfiguration, msg);
 
         bool success = await this.database.PostComment(token.UserId, id, CommentType.Level, msg);
         if (success)

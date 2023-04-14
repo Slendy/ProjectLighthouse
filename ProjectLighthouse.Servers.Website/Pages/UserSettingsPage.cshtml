@@ -21,7 +21,7 @@
 <script>
 function onSubmit(e){
     document.getElementById("avatar-encoded").value = selectedAvatar.toString();
-    @if (ServerConfiguration.Instance.Mail.MailEnabled){
+    @if (Model.ServerConfiguration.Mail.MailEnabled){
         <text>
         let newEmail = document.getElementById("email").value;
         if (newEmail.length === 0){
@@ -64,7 +64,7 @@ function onSubmit(e){
                     <label style="text-align: left" for="username">@Model.Translate(GeneralStrings.Username)</label>
                     <input type="text" name="username" id="username" value="@Model.ProfileUser.Username" placeholder="Username" readonly>
                 </div>
-                @if (ServerConfiguration.Instance.Mail.MailEnabled && (Model.User == Model.ProfileUser || Model.User!.IsAdmin))
+                @if (Model.ServerConfiguration.Mail.MailEnabled && (Model.User == Model.ProfileUser || Model.User!.IsAdmin))
                 {
                     <div class="field">
                         <label style="text-align: left" for="email">@Model.Translate(GeneralStrings.Email)</label>
@@ -122,7 +122,7 @@ function onSubmit(e){
                             <i class="key icon"></i>
                             @Model.Translate(GeneralStrings.ResetPassword)
                         </a>
-                        @if (ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled)
+                        @if (Model.ServerConfiguration.TwoFactorConfiguration.TwoFactorEnabled)
                         {
                             @if (Model.ProfileUser.IsTwoFactorSetup)
                             {
@@ -151,7 +151,7 @@ function onSubmit(e){
 </div>
 
 <script>
-    @if (ServerConfiguration.Instance.Mail.MailEnabled)
+    @if (Model.ServerConfiguration.Mail.MailEnabled)
     {
         <text>
         const email = document.getElementById("email").value;

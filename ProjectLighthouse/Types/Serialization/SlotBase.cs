@@ -87,6 +87,7 @@ public abstract class SlotBase : ILbpSerializable
             IsTeamPicked = slot.TeamPick,
             FirstUploaded = slot.FirstUploaded,
             LastUpdated = slot.LastUpdated,
+            CommentsEnabled = slot.CommentsEnabled,
             IsCrossControlRequired = slot.CrossControllerRequired,
             IsMoveRequired = slot.MoveRequired,
             LevelType = slot.LevelType,

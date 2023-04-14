@@ -65,7 +65,7 @@ public struct ApiSlot
             PlaysUnique = slot.PlaysUnique,
             PlaysComplete = slot.PlaysComplete,
             CommentsEnabled = slot.CommentsEnabled,
-            AverageRating = slot.RatingLBP1,
+            AverageRating = slot.RatingLBP1(context),
             LevelType = slot.LevelType,
         };
 }

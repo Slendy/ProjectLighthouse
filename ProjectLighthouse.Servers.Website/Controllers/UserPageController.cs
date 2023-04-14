@@ -1,4 +1,5 @@
 #nullable enable
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
@@ -15,10 +16,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Controllers;
 public class UserPageController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly CensorConfiguration censorConfiguration;
 
-    public UserPageController(DatabaseContext database)
+    public UserPageController(DatabaseContext database, CensorConfiguration censorConfiguration)
     {
         this.database = database;
+        this.censorConfiguration = censorConfiguration;
     }
 
     [HttpGet("rateComment")]
@@ -44,7 +47,7 @@ public class UserPageController : ControllerBase
             return this.Redirect("~/user/" + id);
         }
 
-        msg = CensorHelper.FilterMessage(msg);
+        msg = CensorHelper.FilterMessage(this.censorConfiguration, msg);
 
         bool success = await this.database.PostComment(token.UserId, id, CommentType.Profile, msg);
         if (success)

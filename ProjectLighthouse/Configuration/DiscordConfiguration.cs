@@ -1,9 +1,15 @@
+using JetBrains.Annotations;
+using LBPUnion.ProjectLighthouse.Types.Synchronization;
 using YamlDotNet.Serialization;
 
 namespace LBPUnion.ProjectLighthouse.Configuration;
 
-public class DiscordConfiguration : ConfigurationBase<DiscordConfiguration>
+public class DiscordConfiguration : ConfigurationBase
 {
+
+    public DiscordConfiguration(ILighthouseConfigProvider configProvider, ILighthouseMutex mutex) : base(configProvider, mutex)
+    { }
+
     // HEY, YOU!
     // THIS VALUE MUST BE INCREMENTED FOR EVERY CONFIG CHANGE!
     //
@@ -13,8 +19,6 @@ public class DiscordConfiguration : ConfigurationBase<DiscordConfiguration>
     public override int ConfigVersion { get; set; } = 1;
 
     public override string ConfigName { get; set; } = "discord.yml";
-
-    public override bool NeedsConfiguration { get; set; } = false;
 
     // TODO integrations should be more modular
 
@@ -29,6 +33,4 @@ public class DiscordConfiguration : ConfigurationBase<DiscordConfiguration>
     public string RegistrationUrl { get; set; } = "";
 
     public string RegistrationAnnouncement { get; set; } = "%user just connected to %instance for the first time using %platform!";
-
-    public override ConfigurationBase<DiscordConfiguration> Deserialize(IDeserializer deserializer, string text) => deserializer.Deserialize<DiscordConfiguration>(text);
 }

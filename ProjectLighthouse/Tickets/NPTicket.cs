@@ -253,7 +253,7 @@ public class NPTicket
     /// <summary>
     ///     https://www.psdevwiki.com/ps3/X-I-5-Ticket
     /// </summary>
-    public static NPTicket? CreateFromBytes(byte[] data)
+    public static NPTicket? CreateFromBytes(ServerConfiguration serverConfiguration, byte[] data)
     {
         NPTicket npTicket = new();
         try
@@ -316,7 +316,7 @@ public class NPTicket
                 return null;
             }
 
-            if (ServerConfiguration.Instance.Authentication.VerifyTickets && !npTicket.ValidateSignature())
+            if (serverConfiguration.Authentication.VerifyTickets && !npTicket.ValidateSignature())
             {
                 Logger.Warn($"Failed to verify authenticity of ticket from user {npTicket.Username}", LogArea.Login);
                 return null;

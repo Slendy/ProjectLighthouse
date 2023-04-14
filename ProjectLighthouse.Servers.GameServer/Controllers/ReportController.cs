@@ -9,6 +9,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Moderation;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Moderation.Reports;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
+using LBPUnion.ProjectLighthouse.Types.Webhook;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,10 +22,14 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers;
 public class ReportController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly ServerConfiguration serverConfiguration;
+    private readonly WebhookService webhookService;
 
-    public ReportController(DatabaseContext database)
+    public ReportController(DatabaseContext database, ServerConfiguration serverConfiguration, WebhookService webhookService)
     {
         this.database = database;
+        this.serverConfiguration = serverConfiguration;
+        this.webhookService = webhookService;
     }
 
     [HttpPost("grief")]
@@ -55,11 +60,11 @@ public class ReportController : ControllerBase
         this.database.Reports.Add(reportEntity);
         await this.database.SaveChangesAsync();
 
-        await WebhookHelper.SendWebhook(
+        await this.webhookService.SendWebhook(
             title: "New grief report",
             description: $"Submitted by {username}\n" +
-                         $"To view it, click [here]({ServerConfiguration.Instance.ExternalUrl}/moderation/report/{reportEntity.ReportId}).",
-            dest: WebhookHelper.WebhookDestination.Moderation
+                         $"To view it, click [here]({this.serverConfiguration.ExternalUrl}/moderation/report/{reportEntity.ReportId}).",
+            dest: WebhookDestination.Moderation
         );
 
         return this.Ok();

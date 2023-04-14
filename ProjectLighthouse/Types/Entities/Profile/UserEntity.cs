@@ -34,18 +34,18 @@ public class UserEntity
     /// </summary>
     public string Biography { get; set; }
 
-    [NotMapped]
-    public string WebsiteAvatarHash {
-        get {
-            string avatarHash = this.IconHash;
+    public string WebsiteAvatarHash(ServerConfiguration serverConfig)
+    {
+        string avatarHash = this.IconHash;
 
-            if (string.IsNullOrWhiteSpace(avatarHash) || this.IconHash.StartsWith('g')) avatarHash = this.YayHash;
-            if (string.IsNullOrWhiteSpace(avatarHash)) avatarHash = this.MehHash;
-            if (string.IsNullOrWhiteSpace(avatarHash)) avatarHash = this.BooHash;
-            if (string.IsNullOrWhiteSpace(avatarHash)) avatarHash = ServerConfiguration.Instance.WebsiteConfiguration.MissingIconHash;
+        if (string.IsNullOrWhiteSpace(avatarHash) || this.IconHash.StartsWith('g')) avatarHash = this.YayHash;
+        if (string.IsNullOrWhiteSpace(avatarHash)) avatarHash = this.MehHash;
+        if (string.IsNullOrWhiteSpace(avatarHash)) avatarHash = this.BooHash;
+        if (string.IsNullOrWhiteSpace(avatarHash))
+            avatarHash = serverConfig.WebsiteConfiguration.MissingIconHash;
 
-            return avatarHash;
-        }
+        return avatarHash;
+
     }
 
     public UserStatus GetStatus(DatabaseContext database) => new(database, this.UserId);
@@ -116,8 +116,8 @@ public class UserEntity
 
     public PrivacyType ProfileVisibility { get; set; } = PrivacyType.All;
 
-    public bool TwoFactorRequired => ServerConfiguration.Instance.TwoFactorConfiguration.RequireTwoFactor && 
-                                     this.PermissionLevel >= ServerConfiguration.Instance.TwoFactorConfiguration.RequiredTwoFactorLevel;
+    public bool TwoFactorRequired(ServerConfiguration serverConfiguration) => serverConfiguration.TwoFactorConfiguration.RequireTwoFactor && 
+                                     this.PermissionLevel >= serverConfiguration.TwoFactorConfiguration.RequiredTwoFactorLevel;
 
     public bool IsTwoFactorSetup => this.TwoFactorBackup?.Length > 0 && this.TwoFactorSecret?.Length > 0;
 
@@ -131,7 +131,7 @@ public class UserEntity
 
     public int AdminGrantedSlots { get; set; }
 
-    public int EntitledSlots => ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots + this.AdminGrantedSlots;
+    public int EntitledSlots(ServerConfiguration serverConfiguration) => serverConfiguration.UserGeneratedContentLimits.EntitledSlots + this.AdminGrantedSlots;
 
     // should not be adjustable by user
     public bool CommentsEnabled { get; set; } = true;

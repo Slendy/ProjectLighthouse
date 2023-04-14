@@ -4,6 +4,7 @@ using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
+using LBPUnion.ProjectLighthouse.Types.Webhook;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,10 +15,14 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Controllers.Moderator;
 public class ModerationSlotController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly WebhookService webhookService;
+    private readonly ServerConfiguration serverConfiguration;
 
-    public ModerationSlotController(DatabaseContext database)
+    public ModerationSlotController(DatabaseContext database, WebhookService webhookService, ServerConfiguration serverConfiguration)
     {
         this.database = database;
+        this.webhookService = webhookService;
+        this.serverConfiguration = serverConfiguration;
     }
 
     [HttpGet("teamPick")]
@@ -32,7 +37,7 @@ public class ModerationSlotController : ControllerBase
         slot.TeamPick = true;
 
         // Send webhook with slot.Name and slot.Creator.Username
-        await WebhookHelper.SendWebhook("New Team Pick!", $"The level [**{slot.Name}**]({ServerConfiguration.Instance.ExternalUrl}/slot/{slot.SlotId}) by **{slot.Creator?.Username}** has been team picked");
+        await this.webhookService.SendWebhook("New Team Pick!", $"The level [**{slot.Name}**]({this.serverConfiguration.ExternalUrl}/slot/{slot.SlotId}) by **{slot.Creator?.Username}** has been team picked");
 
         await this.database.SaveChangesAsync();
 

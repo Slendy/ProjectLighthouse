@@ -10,10 +10,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Middlewares;
 public class DigestMiddleware : Middleware
 {
     private readonly bool computeDigests;
+    private readonly ServerConfiguration serverConfiguration;
 
-    public DigestMiddleware(RequestDelegate next, bool computeDigests) : base(next)
+    public DigestMiddleware(RequestDelegate next, bool computeDigests, ServerConfiguration serverConfiguration) : base(next)
     {
         this.computeDigests = computeDigests;
+        this.serverConfiguration = serverConfiguration;
     }
 
     #if !DEBUG
@@ -56,7 +58,7 @@ public class DigestMiddleware : Middleware
             }
 
             string clientRequestDigest = CryptoHelper.ComputeDigest
-                (digestPath, authCookie, bodyBytes, ServerConfiguration.Instance.DigestKey.PrimaryDigestKey, excludeBodyFromDigest);
+                (digestPath, authCookie, bodyBytes, this.serverConfiguration.DigestKey.PrimaryDigestKey, excludeBodyFromDigest);
 
             // Check the digest we've just calculated against the digest header if the game set the header. They should match.
             if (context.Request.Headers.TryGetValue(digestHeaderKey, out StringValues sentDigest))
@@ -67,13 +69,13 @@ public class DigestMiddleware : Middleware
                     usedAlternateDigestKey = true;
 
                     clientRequestDigest = CryptoHelper.ComputeDigest
-                        (digestPath, authCookie, bodyBytes, ServerConfiguration.Instance.DigestKey.AlternateDigestKey, excludeBodyFromDigest);
+                        (digestPath, authCookie, bodyBytes, this.serverConfiguration.DigestKey.AlternateDigestKey, excludeBodyFromDigest);
                     if (clientRequestDigest != sentDigest)
                     {
                         #if DEBUG
                         Console.WriteLine("Digest failed");
-                        Console.WriteLine("digestKey: " + ServerConfiguration.Instance.DigestKey.PrimaryDigestKey);
-                        Console.WriteLine("altDigestKey: " + ServerConfiguration.Instance.DigestKey.AlternateDigestKey);
+                        Console.WriteLine("digestKey: " + this.serverConfiguration.DigestKey.PrimaryDigestKey);
+                        Console.WriteLine("altDigestKey: " + this.serverConfiguration.DigestKey.AlternateDigestKey);
                         Console.WriteLine("computed digest: " + clientRequestDigest);
                         #endif
                         // We still failed to validate. Abort the request.
@@ -134,8 +136,8 @@ public class DigestMiddleware : Middleware
             responseBuffer.Position = 0;
 
             string digestKey = usedAlternateDigestKey
-                ? ServerConfiguration.Instance.DigestKey.AlternateDigestKey
-                : ServerConfiguration.Instance.DigestKey.PrimaryDigestKey;
+                ? this.serverConfiguration.DigestKey.AlternateDigestKey
+                : this.serverConfiguration.DigestKey.PrimaryDigestKey;
 
             // Compute the digest for the response.
             string serverDigest = CryptoHelper.ComputeDigest(context.Request.Path, authCookie, responseBuffer.ToArray(), digestKey);

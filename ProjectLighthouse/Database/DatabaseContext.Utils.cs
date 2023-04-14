@@ -23,7 +23,7 @@ public partial class DatabaseContext
     public bool IsUsernameValid(string username) => UsernameRegex().IsMatch(username);
 
     #nullable enable
-    public async Task<UserEntity> CreateUser(string username, string password, string? emailAddress = null)
+    public async Task<UserEntity> CreateUser(ServerConfiguration serverConfig, string username, string password, string? emailAddress = null)
     {
         if (!password.StartsWith('$')) throw new ArgumentException(nameof(password) + " is not a BCrypt hash");
 
@@ -48,13 +48,6 @@ public partial class DatabaseContext
         this.Users.Add(user);
 
         await this.SaveChangesAsync();
-
-        if (!ServerConfiguration.Instance.Mail.MailEnabled || emailAddress == null) return user;
-
-        string body = "An account for Project Lighthouse has been registered with this email address.\n\n" +
-                      $"You can login at {ServerConfiguration.Instance.ExternalUrl}.";
-
-        SMTPHelper.SendEmail(emailAddress, "Project Lighthouse Account Created: " + username, body);
 
         return user;
     }

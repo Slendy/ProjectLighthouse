@@ -1,4 +1,5 @@
 #nullable enable
+using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Helpers;
@@ -20,9 +21,11 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers;
 public class CommentController : ControllerBase
 {
     private readonly DatabaseContext database;
-    public CommentController(DatabaseContext database)
+    private readonly CensorConfiguration censorConfiguration;
+    public CommentController(DatabaseContext database, CensorConfiguration censorConfiguration)
     {
         this.database = database;
+        this.censorConfiguration = censorConfiguration;
     }
 
     [HttpPost("rateUserComment/{username}")]
@@ -117,7 +120,7 @@ public class CommentController : ControllerBase
             targetId = await this.database.UserIdFromUsername(username!);
         }
 
-        string filteredText = CensorHelper.FilterMessage(comment.Message);
+        string filteredText = CensorHelper.FilterMessage(this.censorConfiguration, comment.Message);
 
         bool success = await this.database.PostComment(token.UserId, targetId, type, filteredText);
         if (success) return this.Ok();

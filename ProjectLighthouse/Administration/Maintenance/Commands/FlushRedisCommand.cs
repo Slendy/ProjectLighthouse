@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.StorableLists;
@@ -14,7 +15,7 @@ public class FlushRedisCommand : ICommand
     public string Arguments() => "";
     public int RequiredArgs() => 0;
 
-    public async Task Run(string[] args, Logger logger)
+    public async Task Run(IServiceProvider serviceProvider, string[] args, Logger logger)
     {
         await RedisDatabase.FlushAll();
     }

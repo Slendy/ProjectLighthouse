@@ -23,9 +23,11 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Slots;
 public class SlotsController : ControllerBase
 {
     private readonly DatabaseContext database;
-    public SlotsController(DatabaseContext database)
+    private readonly ServerConfiguration serverConfiguration;
+    public SlotsController(DatabaseContext database, ServerConfiguration serverConfiguration)
     {
         this.database = database;
+        this.serverConfiguration = serverConfiguration;
     }
 
     [HttpGet("slots/by")]
@@ -163,7 +165,7 @@ public class SlotsController : ControllerBase
             .Take(Math.Min(pageSize, 30))
             .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
 
-        int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
+        int start = pageStart + Math.Min(pageSize, this.serverConfiguration.UserGeneratedContentLimits.EntitledSlots);
         int total = await StatisticsHelper.SlotCountForGame(this.database, token.GameVersion);
         return this.Ok(new GenericSlotResponse(slots, total, start));
     }
@@ -197,7 +199,7 @@ public class SlotsController : ControllerBase
             .Take(Math.Min(pageSize, 30))
             .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
 
-        int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
+        int start = pageStart + Math.Min(pageSize, this.serverConfiguration.UserGeneratedContentLimits.EntitledSlots);
         int total = slotIdsWithTag.Count;
 
         return this.Ok(new GenericSlotResponse(slots, total, start));
@@ -214,12 +216,12 @@ public class SlotsController : ControllerBase
 
         List<SlotBase> slots = (await this.database.Slots.ByGameVersion(gameVersion, false, true)
             .ToAsyncEnumerable()
-            .OrderByDescending(s => s.RatingLBP1)
+            .OrderByDescending(s => s.RatingLBP1(this.database))
             .Skip(Math.Max(0, pageStart - 1))
             .Take(Math.Min(pageSize, 30))
             .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
 
-        int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
+        int start = pageStart + Math.Min(pageSize, this.serverConfiguration.UserGeneratedContentLimits.EntitledSlots);
         int total = await StatisticsHelper.SlotCount(this.database); 
 
         return this.Ok(new GenericSlotResponse(slots, total, start));
@@ -244,7 +246,7 @@ public class SlotsController : ControllerBase
             .Take(Math.Min(pageSize, 30))
             .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
 
-        int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
+        int start = pageStart + Math.Min(pageSize, this.serverConfiguration.UserGeneratedContentLimits.EntitledSlots);
         int total = slotIdsWithTag.Count;
 
         return this.Ok(new GenericSlotResponse(slots, total, start));
@@ -263,7 +265,7 @@ public class SlotsController : ControllerBase
             .Skip(Math.Max(0, pageStart - 1))
             .Take(Math.Min(pageSize, 30))
             .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
-        int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
+        int start = pageStart + Math.Min(pageSize, this.serverConfiguration.UserGeneratedContentLimits.EntitledSlots);
         int total = await StatisticsHelper.TeamPickCountForGame(this.database, token.GameVersion);
 
         return this.Ok(new GenericSlotResponse(slots, total, start));
@@ -283,7 +285,7 @@ public class SlotsController : ControllerBase
             .Take(Math.Min(pageSize, 30))
             .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
 
-        int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
+        int start = pageStart + Math.Min(pageSize, this.serverConfiguration.UserGeneratedContentLimits.EntitledSlots);
         int total = await StatisticsHelper.SlotCountForGame(this.database, token.GameVersion);
 
         return this.Ok(new GenericSlotResponse(slots, total, start));
@@ -308,13 +310,13 @@ public class SlotsController : ControllerBase
 
         List<SlotBase> slots = (await this.filterByRequest(gameFilterType, dateFilterType, token.GameVersion)
             .AsAsyncEnumerable()
-            .OrderByDescending(s => s.Thumbsup)
+            .OrderByDescending(s => s.Thumbsup(this.database))
             .ThenBy(_ => rand.Next())
             .Skip(Math.Max(0, pageStart - 1))
             .Take(Math.Min(pageSize, 30))
             .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
 
-        int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
+        int start = pageStart + Math.Min(pageSize, this.serverConfiguration.UserGeneratedContentLimits.EntitledSlots);
         int total = await StatisticsHelper.SlotCountForGame(this.database, token.GameVersion);
 
         return this.Ok(new GenericSlotResponse(slots, total, start));
@@ -357,7 +359,7 @@ public class SlotsController : ControllerBase
             .Take(Math.Min(pageSize, 30))
             .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
 
-        int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
+        int start = pageStart + Math.Min(pageSize, this.serverConfiguration.UserGeneratedContentLimits.EntitledSlots);
         int total = await StatisticsHelper.SlotCountForGame(this.database, token.GameVersion);
 
         return this.Ok(new GenericSlotResponse(slots, total, start));
@@ -380,13 +382,13 @@ public class SlotsController : ControllerBase
 
         List<SlotBase> slots = (await this.filterByRequest(gameFilterType, dateFilterType, token.GameVersion)
             .AsAsyncEnumerable()
-            .OrderByDescending(s => s.Hearts)
+            .OrderByDescending(s => s.Hearts(this.database))
             .ThenBy(_ => RandomNumberGenerator.GetInt32(int.MaxValue))
             .Skip(Math.Max(0, pageStart - 1))
             .Take(Math.Min(pageSize, 30))
             .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
 
-        int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
+        int start = pageStart + Math.Min(pageSize, this.serverConfiguration.UserGeneratedContentLimits.EntitledSlots);
         int total = await StatisticsHelper.SlotCountForGame(this.database, token.GameVersion);
 
         return this.Ok(new GenericSlotResponse(slots, total, start));
@@ -441,7 +443,7 @@ public class SlotsController : ControllerBase
             slots.Add(SlotBase.CreateFromEntity(slot, token));
         }
 
-        int start = pageStart + Math.Min(pageSize, ServerConfiguration.Instance.UserGeneratedContentLimits.EntitledSlots);
+        int start = pageStart + Math.Min(pageSize, this.serverConfiguration.UserGeneratedContentLimits.EntitledSlots);
         int total = playersBySlotId.Count;
 
         return this.Ok(new GenericSlotResponse(slots, total, start));
