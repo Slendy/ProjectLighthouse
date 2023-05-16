@@ -1,8 +1,8 @@
 # Contributing
 
-## Setting up MySQL
+## Setting up PostgreSQL
 
-Project Lighthouse requires a MySQL database. For Linux users running docker, one can be set up using
+Project Lighthouse requires a PostgreSQL database. For Linux users running docker, one can be set up using
 the `docker-compose.yml` file in the root of the project folder.
 
 Next, make sure the `LIGHTHOUSE_DB_CONNECTION_STRING` environment variable is set correctly. By default, it
@@ -10,7 +10,11 @@ is `server=127.0.0.1;uid=root;pwd=lighthouse;database=lighthouse`. If you are ru
 above `docker-compose.yml` you shouldn't need to change this. For other development/especially production environments
 you will need to change this.
 
-Once you've gotten MySQL running you can run Lighthouse. It will take care of the rest.
+## Setting up Redis
+Project Lighthouse also requires a Redis server with the RedisJSON and RediSearch. The recommended way to set this up
+is to use Redis Stack because it comes preinstalled with these extensions, but alternatively you could compile them yourself.
+
+The connection string for the Redis server can be set in the lighthouse.yml configuration file
 
 ## Connecting (PS3)
 
@@ -70,11 +74,19 @@ After saving the file your LBP1 EBOOT can be used with RPCS3.
 Some modifications may require updates to the database schema. You can automatically create a migration file by:
 
 1. Making sure the tools are installed. You can do this by running `dotnet tool restore`.
-2. Making sure `LIGHTHOUSE_DB_CONNECTION_STRING` is set correctly. See the `Running` section for more details.
-3. Modifying the database schema via the C# portion of the code. Do not modify the actual SQL database.
-4. Running `dotnet ef migrations add <NameOfMigrationInPascalCase> --project ProjectLighthouse`.
+2. Modifying the database schema via the C# portion of the code. Do not modify the actual SQL database.
+3. Ensure you are in the root of the project
+4. Running `dotnet ef migrations add <NameOfMigrationInPascalCase> --project ProjectLighthouse -s ProjectLighthouse.Servers.GameServer`.
 
-This process will create a migration file from the changes made in the C# code.
+This process will create a migration file and a designer file that ends in `.Designer.cs`.
+
+The designer file contains two attributes that must be copied to the migration file in order for it to
+be recognized by the EntityFramework runtime. The attributes look like so:
+```csharp
+[DbContext(typeof(DatabaseContext))]
+[Migration("20230516034448_MigrationName")]
+```
+Once you have copied the attributes to the top of the migration class then the designer file can be safely deleted. 
 
 The new migrations will automatically be applied upon starting Lighthouse.
 

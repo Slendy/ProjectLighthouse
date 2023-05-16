@@ -84,8 +84,12 @@ public static class MockHelper
         return new DatabaseContext(options);
     }
 
-    public static async Task<DatabaseContext> GetTestDatabase(List<UserEntity>? users = null, List<GameTokenEntity>? tokens = null,
-        [CallerMemberName] string caller = "", [CallerLineNumber] int lineNum = 0
+    public static async Task<DatabaseContext> GetTestDatabase
+    (
+        List<UserEntity>? users = null,
+        List<GameTokenEntity>? tokens = null,
+        [CallerMemberName] string caller = "",
+        [CallerLineNumber] int lineNum = 0
     )
     {
         users ??= new List<UserEntity>

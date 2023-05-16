@@ -70,8 +70,7 @@ public partial class DatabaseContext : DbContext
     public static DatabaseContext CreateNewInstance()
     {
         DbContextOptionsBuilder<DatabaseContext> builder = new();
-        builder.UseMySql(ServerConfiguration.Instance.DbConnectionString,
-            MySqlServerVersion.LatestSupportedServerVersion);
+        builder.UseNpgsql(ServerConfiguration.Instance.DbConnectionString);
         return new DatabaseContext(builder.Options);
     }
 }

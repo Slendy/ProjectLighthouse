@@ -30,8 +30,7 @@ public class ApiStartup
 
         services.AddDbContext<DatabaseContext>(builder =>
         {
-            builder.UseMySql(ServerConfiguration.Instance.DbConnectionString,
-                MySqlServerVersion.LatestSupportedServerVersion);
+            builder.UseNpgsql(ServerConfiguration.Instance.DbConnectionString);
         });
 
         services.AddSwaggerGen

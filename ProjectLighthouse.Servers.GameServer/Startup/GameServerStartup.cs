@@ -54,8 +54,7 @@ public class GameServerStartup
 
         services.AddDbContext<DatabaseContext>(builder =>
         {
-            builder.UseMySql(ServerConfiguration.Instance.DbConnectionString,
-                MySqlServerVersion.LatestSupportedServerVersion);
+            builder.UseNpgsql(ServerConfiguration.Instance.DbConnectionString);
         });
 
         IMailService mailService = ServerConfiguration.Instance.Mail.MailEnabled
