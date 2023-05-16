@@ -11,7 +11,7 @@ public class RegistrationTokenEntity
 
     public string Token { get; set; }
 
-    public DateTime Created { get; set; }
+    public DateTimeOffset Created { get; set; }
 
     public string Username { get; set; }
 }

@@ -13,7 +13,7 @@ public class FileLogger : ILogger
     public void Log(LogLine line)
     {
         FileHelper.EnsureDirectoryCreated(logsDirectory);
-        string time = DateTime.Now.ToString("MM/dd/yyyy-HH:mm:ss.fff");
+        string time = DateTimeOffset.UtcNow.ToString("MM/dd/yyyy-HH:mm:ss.fff");
         string contentFile = $"[{time}] [{ServerStatics.ServerType}] [{line.Level}] <{line.Trace.Name}:{line.Trace.Section}> {line.Message}\n";
         string contentAll = $"[{time}] [{ServerStatics.ServerType}] [{line.Area}:{line.Level}] <{line.Trace.Name}:{line.Trace.Section}> {line.Message}\n";
 

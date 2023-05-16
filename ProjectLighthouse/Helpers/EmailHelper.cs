@@ -48,7 +48,7 @@ public static class SMTPHelper
 
         PasswordResetTokenEntity token = new()
         {
-            Created = DateTime.Now,
+            Created = DateTimeOffset.UtcNow,
             UserId = user.UserId,
             ResetToken = CryptoHelper.GenerateAuthToken(),
         };
@@ -90,7 +90,7 @@ public static class SMTPHelper
             UserId = user.UserId,
             User = user,
             EmailToken = CryptoHelper.GenerateAuthToken(),
-            ExpiresAt = DateTime.Now.AddHours(6),
+            ExpiresAt = DateTimeOffset.UtcNow.AddHours(6),
         };
 
         database.EmailVerificationTokens.Add(verifyToken);

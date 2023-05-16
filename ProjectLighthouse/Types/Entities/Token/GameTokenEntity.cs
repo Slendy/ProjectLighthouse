@@ -27,5 +27,5 @@ public class GameTokenEntity
 
     public string TicketHash { get; set; }
 
-    public DateTime ExpiresAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
 }

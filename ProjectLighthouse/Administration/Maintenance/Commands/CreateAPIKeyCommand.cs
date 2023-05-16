@@ -24,7 +24,7 @@ namespace LBPUnion.ProjectLighthouse.Administration.Maintenance.Commands
                 key.Description = "<no description specified>";
             }
             key.Key = CryptoHelper.GenerateAuthToken();
-            key.Created = DateTime.Now;
+            key.Created = DateTimeOffset.UtcNow;
             DatabaseContext database = DatabaseContext.CreateNewInstance();
             await database.APIKeys.AddAsync(key);
             await database.SaveChangesAsync();

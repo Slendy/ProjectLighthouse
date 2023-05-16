@@ -30,7 +30,7 @@ public class CompleteEmailVerificationPage : BaseLayout
 
         UserEntity user = await this.Database.Users.FirstAsync(u => u.UserId == emailVerifyToken.UserId);
 
-        if (DateTime.Now > emailVerifyToken.ExpiresAt)
+        if (DateTimeOffset.UtcNow > emailVerifyToken.ExpiresAt)
         {
             this.Error = "This token has expired";
             return this.Page();
@@ -52,7 +52,7 @@ public class CompleteEmailVerificationPage : BaseLayout
         // if user's account was created automatically
         WebTokenEntity webToken = new()
         {
-            ExpiresAt = DateTime.Now.AddDays(7),
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
             Verified = true,
             UserId = user.UserId,
             UserToken = CryptoHelper.GenerateAuthToken(),
@@ -64,7 +64,7 @@ public class CompleteEmailVerificationPage : BaseLayout
             webToken.UserToken,
             new CookieOptions
             {
-                Expires = DateTimeOffset.Now.AddDays(7),
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
             });
         return this.Redirect("/passwordReset");
     }

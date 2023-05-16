@@ -23,27 +23,27 @@ public class ModerationCaseEntity
 
     public string ModeratorNotes { get; set; } = "";
 
-    public bool Processed { get; set; } = false;
+    public bool Processed { get; set; }
     
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
     
-    public DateTime? ExpiresAt { get; set; }
-    public bool Expired => this.ExpiresAt != null && this.ExpiresAt < DateTime.Now;
+    public DateTimeOffset? ExpiresAt { get; set; }
+    public bool Expired => this.ExpiresAt != null && this.ExpiresAt < DateTimeOffset.Now;
 
-    public DateTime? DismissedAt { get; set; }
+    public DateTimeOffset? DismissedAt { get; set; }
     public bool Dismissed => this.DismissedAt != null;
 
     public int? DismisserId { get; set; }
     public string? DismisserUsername { get; set; }
 
     [ForeignKey(nameof(DismisserId))]
-    public virtual UserEntity? Dismisser { get; set; }
+    public UserEntity? Dismisser { get; set; }
     
     public int CreatorId { get; set; }
     public required string CreatorUsername { get; set; }
 
     [ForeignKey(nameof(CreatorId))]
-    public virtual UserEntity? Creator { get; set; }
+    public UserEntity? Creator { get; set; }
     
     public int AffectedId { get; set; }
 

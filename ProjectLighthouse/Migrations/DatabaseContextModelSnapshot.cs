@@ -507,7 +507,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
                     b.Property<string>("MigrationName")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("RanAt")
+                    b.Property<DateTimeOffset>("RanAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("MigrationName");
@@ -574,7 +574,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
                     b.Property<int>("AffectedId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("CreatorId")
@@ -584,7 +584,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("DismissedAt")
+                    b.Property<DateTimeOffset?>("DismissedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("DismisserId")
@@ -593,7 +593,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
                     b.Property<string>("DismisserUsername")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("ExpiresAt")
+                    b.Property<DateTimeOffset?>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ModeratorNotes")
@@ -916,7 +916,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("Created")
+                    b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
@@ -941,7 +941,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
                     b.Property<string>("EmailToken")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("ExpiresAt")
+                    b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
@@ -965,7 +965,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
                     b.Property<string>("EmailToken")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("ExpiresAt")
+                    b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
@@ -986,7 +986,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TokenId"));
 
-                    b.Property<DateTime>("ExpiresAt")
+                    b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("GameVersion")
@@ -1022,7 +1022,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TokenId"));
 
-                    b.Property<DateTime>("Created")
+                    b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ResetToken")
@@ -1044,7 +1044,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TokenId"));
 
-                    b.Property<DateTime>("Created")
+                    b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Token")
@@ -1066,7 +1066,7 @@ namespace LBPUnion.ProjectLighthouse.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TokenId"));
 
-                    b.Property<DateTime>("ExpiresAt")
+                    b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")

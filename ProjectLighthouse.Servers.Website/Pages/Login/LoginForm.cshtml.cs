@@ -94,7 +94,7 @@ public class LoginForm : BaseLayout
         {
             UserId = user.UserId,
             UserToken = CryptoHelper.GenerateAuthToken(),
-            ExpiresAt = DateTime.Now + TimeSpan.FromDays(7),
+            ExpiresAt = DateTimeOffset.UtcNow + TimeSpan.FromDays(7),
             Verified = !ServerConfiguration.Instance.TwoFactorConfiguration.TwoFactorEnabled || !user.IsTwoFactorSetup,
         };
 
@@ -107,7 +107,7 @@ public class LoginForm : BaseLayout
             webToken.UserToken,
             new CookieOptions
             {
-                Expires = DateTimeOffset.Now.AddDays(7),
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
             }
         );
 

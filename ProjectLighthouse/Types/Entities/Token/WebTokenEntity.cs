@@ -13,7 +13,7 @@ public class WebTokenEntity
 
     public string UserToken { get; set; }
 
-    public DateTime ExpiresAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
 
     public bool Verified { get; set; }
 }

@@ -12,5 +12,5 @@ public class ApiKeyEntity
 
     public string Key { get; set; }
 
-    public DateTime Created { get; set; }
+    public DateTimeOffset Created { get; set; }
 }

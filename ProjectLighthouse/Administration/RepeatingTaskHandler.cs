@@ -45,10 +45,10 @@ public static class RepeatingTaskHandler
 
                 Debug.Assert(task != null);
 
-                if ((task.LastRan + task.RepeatInterval) <= DateTime.Now)
+                if ((task.LastRan + task.RepeatInterval) <= DateTimeOffset.UtcNow)
                 {
                     await task.Run(database);
-                    task.LastRan = DateTime.Now;
+                    task.LastRan = DateTimeOffset.UtcNow;
 
                     Logger.Debug($"Ran task \"{task.Name}\"", LogArea.Maintenance);
                 }

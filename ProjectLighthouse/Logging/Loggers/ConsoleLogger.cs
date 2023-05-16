@@ -13,7 +13,7 @@ public class ConsoleLogger : ILogger
 
         foreach (string line in logLine.Message.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
-            string time = DateTime.Now.ToString("MM/dd/yyyy-HH:mm:ss.fff");
+            string time = DateTimeOffset.UtcNow.ToString("MM/dd/yyyy-HH:mm:ss.fff");
             string trace = "";
             if (logLine.Trace.Name != null)
             {

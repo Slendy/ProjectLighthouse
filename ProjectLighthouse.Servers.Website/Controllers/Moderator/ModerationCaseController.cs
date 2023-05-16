@@ -26,7 +26,7 @@ public class ModerationCaseController : ControllerBase
         ModerationCaseEntity? @case = await this.database.Cases.FirstOrDefaultAsync(c => c.CaseId == id);
         if (@case == null) return this.NotFound();
         
-        @case.DismissedAt = DateTime.Now;
+        @case.DismissedAt = DateTimeOffset.UtcNow;
         @case.DismisserId = user.UserId;
         @case.DismisserUsername = user.Username;
         

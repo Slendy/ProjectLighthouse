@@ -13,5 +13,5 @@ public class PasswordResetTokenEntity
 
     public string ResetToken { get; set; }
 
-    public DateTime Created { get; set; }
+    public DateTimeOffset Created { get; set; }
 }

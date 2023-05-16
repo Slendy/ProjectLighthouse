@@ -21,7 +21,7 @@ using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Maintenance;
 using LBPUnion.ProjectLighthouse.Types.Misc;
 using LBPUnion.ProjectLighthouse.Types.Users;
-using Medallion.Threading.MySql;
+using Medallion.Threading.Postgres;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBPUnion.ProjectLighthouse;
@@ -66,7 +66,7 @@ public static class StartupTasks
         if (!dbConnected) Environment.Exit(1);
         using DatabaseContext database = DatabaseContext.CreateNewInstance();
         
-        migrateDatabase(database).Wait();
+        MigrateDatabase(database).Wait();
 
         Logger.Debug
         (
@@ -151,7 +151,7 @@ public static class StartupTasks
         return didLoad;
     }
 
-    private static async Task migrateDatabase(DatabaseContext database)
+    private static async Task MigrateDatabase(DatabaseContext database)
     {
         int? originalTimeout = database.Database.GetCommandTimeout();
         database.Database.SetCommandTimeout(TimeSpan.FromMinutes(5));
@@ -161,7 +161,7 @@ public static class StartupTasks
         Stopwatch totalStopwatch = Stopwatch.StartNew();
         Stopwatch stopwatch = Stopwatch.StartNew();
         Logger.Info("Migrating database...", LogArea.Database);
-        MySqlDistributedLock mutex = new("LighthouseMigration", ServerConfiguration.Instance.DbConnectionString);
+        PostgresDistributedLock mutex = new(new PostgresAdvisoryLockKey("LighthouseMigration", true), ServerConfiguration.Instance.DbConnectionString);
         await using (await mutex.AcquireAsync())
         {
             stopwatch.Stop();

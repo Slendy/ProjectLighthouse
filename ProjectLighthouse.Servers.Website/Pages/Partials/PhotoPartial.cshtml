@@ -73,7 +73,7 @@
                     throw new ArgumentOutOfRangeException();
             }
         }
-        at @TimeZoneInfo.ConvertTime(DateTime.UnixEpoch.AddSeconds(Model.Timestamp), timeZoneInfo).ToString("M/d/yyyy h:mm:ss tt")
+        at @TimeZoneInfo.ConvertTime(DateTimeOffset.UnixEpoch.AddSeconds(Model.Timestamp), timeZoneInfo).ToString("M/d/yyyy h:mm:ss tt")
     </i>
 </p>
 

@@ -19,7 +19,7 @@ public class PerformCaseActionsTask : IRepeatingTask
 {
     public string Name => "Perform actions on moderation cases";
     public TimeSpan RepeatInterval => TimeSpan.FromSeconds(10);
-    public DateTime LastRan { get; set; }
+    public DateTimeOffset LastRan { get; set; }
     public async Task Run(DatabaseContext database)
     {
         foreach (ModerationCaseEntity @case in await database.Cases.Where(c => !c.Processed).ToListAsync())

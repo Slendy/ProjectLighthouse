@@ -21,5 +21,5 @@ public class CompletedMigrationEntity
     /// <summary>
     ///     The moment the migration was ran.
     /// </summary>
-    public DateTime RanAt { get; set; }
+    public DateTimeOffset RanAt { get; set; }
 }

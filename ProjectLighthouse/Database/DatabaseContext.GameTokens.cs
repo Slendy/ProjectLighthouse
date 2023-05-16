@@ -34,7 +34,7 @@ public partial class DatabaseContext
 
         if (token == null) return null;
 
-        if (DateTime.Now <= token.ExpiresAt) return token;
+        if (DateTimeOffset.UtcNow <= token.ExpiresAt) return token;
 
         this.Remove(token);
         await this.SaveChangesAsync();

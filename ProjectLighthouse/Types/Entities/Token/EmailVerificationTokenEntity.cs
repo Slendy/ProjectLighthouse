@@ -18,5 +18,5 @@ public class EmailVerificationTokenEntity
 
     public string EmailToken { get; set; }
 
-    public DateTime ExpiresAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
 }

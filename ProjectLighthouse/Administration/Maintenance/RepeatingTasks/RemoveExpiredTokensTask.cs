@@ -9,7 +9,7 @@ public class RemoveExpiredTokensTask : IRepeatingTask
 {
     public string Name => "Remove Expired Tokens";
     public TimeSpan RepeatInterval => TimeSpan.FromHours(1);
-    public DateTime LastRan { get; set; }
+    public DateTimeOffset LastRan { get; set; }
 
     public async Task Run(DatabaseContext database) => await database.RemoveExpiredTokens();
 }

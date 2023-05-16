@@ -32,7 +32,7 @@ public static class MockHelper
         {
             Platform = Platform.UnitTest,
             UserId = 1,
-            ExpiresAt = DateTime.MaxValue,
+            ExpiresAt = DateTimeOffset.MaxValue,
             TokenId = 1,
             UserLocation = "127.0.0.1",
             UserToken = "unittest",

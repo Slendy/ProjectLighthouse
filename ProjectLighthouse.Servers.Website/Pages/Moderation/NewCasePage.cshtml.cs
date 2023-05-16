@@ -29,7 +29,7 @@ public class NewCasePage : BaseLayout
         return this.Page();
     }
 
-    public async Task<IActionResult> OnPost(CaseType? type, string? reason, string? modNotes, DateTime expires, int? affectedId)
+    public async Task<IActionResult> OnPost(CaseType? type, string? reason, string? modNotes, DateTimeOffset expires, int? affectedId)
     {
         UserEntity? user = this.Database.UserFromWebRequest(this.Request);
         if (user == null || !user.IsModerator) return this.Redirect("/login");
@@ -49,7 +49,7 @@ public class NewCasePage : BaseLayout
             Reason = reason,
             ModeratorNotes = modNotes,
             ExpiresAt = expires,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTimeOffset.UtcNow,
             CreatorId = user.UserId,
             CreatorUsername = user.Username,
             AffectedId = affectedId.Value,

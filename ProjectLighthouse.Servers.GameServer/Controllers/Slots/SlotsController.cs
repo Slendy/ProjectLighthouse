@@ -558,8 +558,8 @@ public class SlotsController : ControllerBase
 
         long oldestTime = _dateFilterType switch
         {
-            "thisWeek" => DateTimeOffset.Now.AddDays(-7).ToUnixTimeMilliseconds(),
-            "thisMonth" => DateTimeOffset.Now.AddDays(-31).ToUnixTimeMilliseconds(),
+            "thisWeek" => DateTimeOffset.UtcNow.AddDays(-7).ToUnixTimeMilliseconds(),
+            "thisMonth" => DateTimeOffset.UtcNow.AddDays(-31).ToUnixTimeMilliseconds(),
             _ => 0,
         };
 
