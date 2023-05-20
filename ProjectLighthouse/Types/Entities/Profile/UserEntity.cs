@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
@@ -6,6 +7,7 @@ using System.Linq;
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Types.Misc;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Users;
 
 namespace LBPUnion.ProjectLighthouse.Types.Entities.Profile;
@@ -92,17 +94,12 @@ public class UserEntity
     public long LastLogin { get; set; }
     public long LastLogout { get; set; }
 
-    public bool IsBanned => this.PermissionLevel is PermissionLevel.Banned;
+    public ICollection<RoleEntity> Roles { get; set; } = new HashSet<RoleEntity>();
 
-    public bool IsRestricted => this.PermissionLevel is PermissionLevel.Restricted or PermissionLevel.Banned;
+    [NotMapped]
+    public bool IsBanned => this.HasEntitlements(Entitlements.Banned);
 
-    public bool IsSilenced => this.PermissionLevel is PermissionLevel.Silenced or PermissionLevel.Restricted or PermissionLevel.Banned;
-
-    public bool IsModerator => this.PermissionLevel is PermissionLevel.Moderator or PermissionLevel.Administrator;
-
-    public bool IsAdmin => this.PermissionLevel is PermissionLevel.Administrator;
-
-    public PermissionLevel PermissionLevel { get; set; } = PermissionLevel.Default;
+    public bool HasEntitlements(Entitlements entitlements) => this.Roles.Any(r => (r.Permissions & entitlements) == entitlements);
 
     #nullable enable
     public string? BannedReason { get; set; }
@@ -116,8 +113,7 @@ public class UserEntity
 
     public PrivacyType ProfileVisibility { get; set; } = PrivacyType.All;
 
-    public bool TwoFactorRequired => ServerConfiguration.Instance.TwoFactorConfiguration.RequireTwoFactor && 
-                                     this.PermissionLevel >= ServerConfiguration.Instance.TwoFactorConfiguration.RequiredTwoFactorLevel;
+    public bool TwoFactorRequired => ServerConfiguration.Instance.TwoFactorConfiguration.RequireTwoFactor;
 
     public bool IsTwoFactorSetup => this.TwoFactorBackup?.Length > 0 && this.TwoFactorSecret?.Length > 0;
 
