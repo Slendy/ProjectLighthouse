@@ -9,6 +9,7 @@ using LBPUnion.ProjectLighthouse.Tickets;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Logging;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -174,6 +175,12 @@ public class LoginController : ControllerBase
             await this.database.SaveChangesAsync();
         }
 
+        if (user.IsBanned || !user.HasPermission(Entitlements.Login))
+        {
+            Logger.Error($"User {npTicket.Username} tried to login but does not have permission", LogArea.Login);
+            return this.Forbid();
+        }
+
         GameTokenEntity? token = await this.database.GameTokens.Include(t => t.User)
             .FirstOrDefaultAsync(t => t.UserLocation == ipAddress && t.User.Username == npTicket.Username && t.TicketHash == npTicket.TicketHash);
 
@@ -187,12 +194,6 @@ public class LoginController : ControllerBase
         if (token == null)
         {
             Logger.Warn($"Unable to find/generate a token for username {npTicket.Username}", LogArea.Login);
-            return this.Forbid();
-        }
-
-        if (user.IsBanned)
-        {
-            Logger.Error($"User {npTicket.Username} tried to login but is banned", LogArea.Login);
             return this.Forbid();
         }
 

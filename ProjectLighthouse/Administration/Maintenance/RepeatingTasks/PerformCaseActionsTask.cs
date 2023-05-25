@@ -10,7 +10,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Maintenance;
 using LBPUnion.ProjectLighthouse.Types.Moderation.Cases;
-using LBPUnion.ProjectLighthouse.Types.Users;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBPUnion.ProjectLighthouse.Administration.Maintenance.RepeatingTasks;
@@ -57,7 +57,7 @@ public class PerformCaseActionsTask : IRepeatingTask
                     case CaseType.UserRestriction:
                     case CaseType.UserSilence:
                     {
-                        user!.PermissionLevel = PermissionLevel.Default;
+                        user!.Permissions = user.Permissions & ~Entitlements.Banned;
                         break;
                     };
                     case CaseType.UserDisableComments:
@@ -86,17 +86,17 @@ public class PerformCaseActionsTask : IRepeatingTask
                 {
                     case CaseType.UserSilence:
                     {
-                        user!.PermissionLevel = PermissionLevel.Silenced;
+                        // user!.PermissionLevel = PermissionLevel.Silenced;
                         break;
                     }
                     case CaseType.UserRestriction:
                     {
-                        user!.PermissionLevel = PermissionLevel.Restricted;
+                        // user!.PermissionLevel = PermissionLevel.Restricted;
                         break;
                     }
                     case CaseType.UserBan:
                     {
-                        user!.PermissionLevel = PermissionLevel.Banned;
+                        user!.Permissions = user.Permissions | Entitlements.Banned;
                         user.BannedReason = @case.Reason;
                         
                         database.GameTokens.RemoveRange(database.GameTokens.Where(t => t.UserId == user.UserId));

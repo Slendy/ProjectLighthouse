@@ -6,6 +6,7 @@
 @using LBPUnion.ProjectLighthouse.Types.Entities.Level
 @using LBPUnion.ProjectLighthouse.Types.Entities.Profile
 @using LBPUnion.ProjectLighthouse.Types.Moderation.Cases
+@using LBPUnion.ProjectLighthouse.Types.Roles
 @model LBPUnion.ProjectLighthouse.Servers.Website.Pages.UserPage
 
 @{
@@ -24,7 +25,7 @@
 {
     <div class="ui inverted red segment">
         <h3 style="margin-bottom:3px;"><i class="ban icon"></i> This user is currently banned.</h3>
-        @if (Model.User != null && Model.User.IsModerator)
+        @if (Model.User != null && Model.User.HasPermission(Entitlements.ManageUsers))
         {
             <b>Reason:</b>
             <span>"@Model.ProfileUser.BannedReason"</span>

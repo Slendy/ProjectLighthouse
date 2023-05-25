@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Types.Misc;
@@ -96,10 +97,25 @@ public class UserEntity
 
     public ICollection<RoleEntity> Roles { get; set; } = new HashSet<RoleEntity>();
 
-    [NotMapped]
-    public bool IsBanned => this.HasEntitlements(Entitlements.Banned);
+    /// <summary>
+    /// This field by default is a a cache for a user's entitlements given by their roles
+    /// <p>
+    ///     It can also be used to override a singular users permissions, i.e. if someone is abusing a certain feature
+    ///     then their access can be revoked
+    /// </p>
+    /// </summary>
+    public Entitlements Permissions { get; set; } = Entitlements.Default;
 
-    public bool HasEntitlements(Entitlements entitlements) => this.Roles.Any(r => (r.Permissions & entitlements) == entitlements);
+    public bool IsModerator => (this.Permissions & Entitlements.Moderator) != 0;
+
+    public bool IsAdmin => this.Permissions == Entitlements.Admin;
+
+    [NotMapped]
+    public bool IsBanned => this.HasPermission(Entitlements.Banned);
+
+    public bool HasPermission(Entitlements entitlements) => (this.Permissions & entitlements) == entitlements;
+
+    public static Expression<Func<UserEntity, bool>> HasPerm(Entitlements entitlements) => u => (u.Permissions & entitlements) == entitlements;
 
     #nullable enable
     public string? BannedReason { get; set; }

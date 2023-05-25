@@ -1,5 +1,6 @@
 ﻿using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Misc;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Users;
 
 namespace LBPUnion.ProjectLighthouse.Servers.API.Responses;
@@ -20,7 +21,7 @@ public struct ApiUser
     public PrivacyType LevelVisibility { get; set; }
     public PrivacyType ProfileVisibility { get; set; }
     public bool CommentsEnabled { get; set; }
-    public PermissionLevel PermissionLevel { get; set; }
+    public Entitlements Permissions { get; set; }
 
     public static ApiUser CreateFromEntity(UserEntity entity) =>
         new()
@@ -39,6 +40,6 @@ public struct ApiUser
             LevelVisibility = entity.LevelVisibility,
             ProfileVisibility = entity.ProfileVisibility,
             CommentsEnabled = entity.CommentsEnabled,
-            PermissionLevel = entity.PermissionLevel,
+            Permissions = entity.Permissions,
         };
 }

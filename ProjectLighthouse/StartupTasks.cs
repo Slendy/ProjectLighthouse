@@ -20,6 +20,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Maintenance;
 using LBPUnion.ProjectLighthouse.Types.Misc;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Medallion.Threading.MySql;
 using Microsoft.EntityFrameworkCore;
@@ -103,7 +104,7 @@ public static class StartupTasks
             string password = CryptoHelper.BCryptHash(CryptoHelper.Sha256Hash(passwordClear));
             
             UserEntity admin = database.CreateUser("admin", password).Result;
-            admin.PermissionLevel = PermissionLevel.Administrator;
+            admin.Permissions = Entitlements.Admin;
             admin.PasswordResetRequired = true;
 
             database.SaveChanges();

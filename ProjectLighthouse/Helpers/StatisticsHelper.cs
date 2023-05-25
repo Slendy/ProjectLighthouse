@@ -2,8 +2,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
+using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Levels;
-using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,16 +13,16 @@ namespace LBPUnion.ProjectLighthouse.Helpers;
 public static class StatisticsHelper
 {
 
-    public static async Task<int> RecentMatches(DatabaseContext database) => await database.LastContacts.Where(l => TimeHelper.Timestamp - l.Timestamp < 300).CountAsync();
+    public static async Task<int> RecentMatches(DatabaseContext database) => await database.LastContacts.CountAsync(l => TimeHelper.Timestamp - l.Timestamp < 300);
 
     public static async Task<int> RecentMatchesForGame(DatabaseContext database, GameVersion gameVersion)
-        => await database.LastContacts.Where(l => TimeHelper.Timestamp - l.Timestamp < 300 && l.GameVersion == gameVersion).CountAsync();
+        => await database.LastContacts.CountAsync(l => TimeHelper.Timestamp - l.Timestamp < 300 && l.GameVersion == gameVersion);
 
-    public static async Task<int> SlotCount(DatabaseContext database) => await database.Slots.Where(s => s.Type == SlotType.User).CountAsync();
+    public static async Task<int> SlotCount(DatabaseContext database) => await database.Slots.CountAsync(s => s.Type == SlotType.User);
 
     public static async Task<int> SlotCountForGame(DatabaseContext database, GameVersion gameVersion, bool includeSublevels = false) => await database.Slots.ByGameVersion(gameVersion, includeSublevels).CountAsync();
 
-    public static async Task<int> UserCount(DatabaseContext database) => await database.Users.CountAsync(u => u.PermissionLevel != PermissionLevel.Banned);
+    public static async Task<int> UserCount(DatabaseContext database) => await database.Users.CountAsync(UserEntity.HasPerm(Entitlements.Banned));
 
     public static int RoomCountForPlatform(Platform targetPlatform) => RoomHelper.Rooms.Count(r => r.IsLookingForPlayers && r.RoomPlatform == targetPlatform);
 

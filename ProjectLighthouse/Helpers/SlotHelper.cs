@@ -7,7 +7,7 @@ using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Levels;
-using LBPUnion.ProjectLighthouse.Types.Users;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBPUnion.ProjectLighthouse.Helpers;
@@ -56,7 +56,7 @@ public static class SlotHelper
             UserEntity devCreator = new()
             {
                 Username = "",
-                PermissionLevel = PermissionLevel.Banned,
+                Permissions = Entitlements.None,
                 Biography = "Placeholder author of story levels",
                 BannedReason = "Banned to not show in users list",
             };
