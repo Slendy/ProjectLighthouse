@@ -10,6 +10,7 @@ using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.MatchCommands;
 using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,8 @@ public class MatchController : ControllerBase
 
         UserEntity? user = await this.database.UserFromGameToken(token);
         if (user == null) return this.Forbid();
+
+        if ((user.Permissions & Entitlements.MatchMake) == 0) return this.Unauthorized();
 
         #region Parse match data
 

@@ -11,6 +11,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Resources;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -42,6 +43,8 @@ public class PublishController : ControllerBase
 
         UserEntity? user = await this.database.UserFromGameToken(token);
         if (user == null) return this.Forbid();
+
+        if ((user.Permissions & Entitlements.PublishLevel) == 0) return this.Unauthorized();
 
         GameUserSlot? slot = await this.DeserializeBody<GameUserSlot>();
         if (slot == null)
@@ -105,6 +108,8 @@ public class PublishController : ControllerBase
 
         UserEntity? user = await this.database.UserFromGameToken(token);
         if (user == null) return this.Forbid();
+
+        if ((user.Permissions & Entitlements.PublishLevel) == 0) return this.Unauthorized();
 
         GameUserSlot? slot = await this.DeserializeBody<GameUserSlot>();
 
@@ -286,6 +291,9 @@ public class PublishController : ControllerBase
     public async Task<IActionResult> Unpublish(int id)
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.UnpublishLevel) == 0) return this.Unauthorized();
 
         SlotEntity? slot = await this.database.Slots.FirstOrDefaultAsync(s => s.SlotId == id);
         if (slot == null) return this.NotFound();

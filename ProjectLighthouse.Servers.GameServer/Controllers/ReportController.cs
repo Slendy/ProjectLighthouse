@@ -8,6 +8,7 @@ using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Types.Entities.Moderation;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Moderation.Reports;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +32,9 @@ public class ReportController : ControllerBase
     public async Task<IActionResult> Report()
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.SubmitReport) == 0) return this.Unauthorized();
 
         string username = await this.database.UsernameFromGameToken(token);
 

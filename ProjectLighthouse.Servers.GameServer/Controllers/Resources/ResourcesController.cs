@@ -1,13 +1,16 @@
 #nullable enable
 using System.Text;
+using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Files;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Servers.GameServer.Types.Misc;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Resources;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using IOFile = System.IO.File;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Resources;
@@ -18,6 +21,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Resources;
 [Route("LITTLEBIGPLANETPS3_XML")]
 public class ResourcesController : ControllerBase
 {
+    private readonly DatabaseContext database;
+
+    public ResourcesController(DatabaseContext database)
+    {
+        this.database = database;
+    }
 
     [HttpPost("showModerated")]
     public IActionResult ShowModerated() => this.Ok(new ResourceList());
@@ -54,6 +63,9 @@ public class ResourcesController : ControllerBase
     [HttpPost("upload/{hash}")]
     public async Task<IActionResult> UploadResource(string hash)
     {
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(this.GetToken());
+        if ((permissions & Entitlements.UploadResource) == 0) return this.Unauthorized();
+
         string assetsDirectory = FileHelper.ResourcePath;
         string path = FileHelper.GetResourcePath(hash);
         string fullPath = Path.GetFullPath(path);

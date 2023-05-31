@@ -14,38 +14,39 @@
 <div class="ui grid">
     @foreach (UserEntity user in Model.Users)
     {
-        string color;
-        string subtitle;
+        string color = "";
+        string subtitle = "";
+        // TODO: Show role with highest priority 
 
-        switch (user.PermissionLevel)
-        {
-            // jank but works
-            case PermissionLevel.Banned:
-            {
-                color = "red";
-                subtitle = $"Banned user! Reason: {user.BannedReason}";
-                break;
-            }
-            case PermissionLevel.Moderator:
-            {
-                color = "green";
-                subtitle = "Moderator";
-                break;
-            }
-            case PermissionLevel.Administrator:
-            {
-                color = "yellow";
-                subtitle = "Admin";       
-                break;
-            }
-            case PermissionLevel.Default:
-            default:
-            {
-                color = "blue";
-                subtitle = "User";
-                break;
-            }
-        }
+        // switch (user.PermissionLevel)
+        // {
+        //     // jank but works
+        //     case PermissionLevel.Banned:
+        //     {
+        //         color = "red";
+        //         subtitle = $"Banned user! Reason: {user.BannedReason}";
+        //         break;
+        //     }
+        //     case PermissionLevel.Moderator:
+        //     {
+        //         color = "green";
+        //         subtitle = "Moderator";
+        //         break;
+        //     }
+        //     case PermissionLevel.Administrator:
+        //     {
+        //         color = "yellow";
+        //         subtitle = "Admin";       
+        //         break;
+        //     }
+        //     case PermissionLevel.Default:
+        //     default:
+        //     {
+        //         color = "blue";
+        //         subtitle = "User";
+        //         break;
+        //     }
+        // }
 
         subtitle += $" (id: {user.UserId})";
 
@@ -58,11 +59,14 @@
                 <form method="post" action="/admin/user/@user.UserId/setPermissionLevel">
                     <div class="ui right action input">
                         <select name="role" class="ui selection dropdown">
+                            @* TODO fixme *@
                             @foreach (PermissionLevel level in Enum.GetValues<PermissionLevel>())
                             {
-                                if (level < 0) continue;
-                                string selected = level == user.PermissionLevel ? " selected" : "";
-                        
+                                if (level < 0)
+                                    continue;
+                                // string selected = level == user.PermissionLevel ? " selected" : "";
+                                string selected = "bruh";
+
                                 <option value="@((int)level)"@selected>@level.ToString()</option>
                             }
                         </select>

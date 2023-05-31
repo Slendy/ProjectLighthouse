@@ -16,7 +16,7 @@ namespace ProjectLighthouse.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.4")
+                .HasAnnotation("ProductVersion", "7.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Interaction.HeartedLevelEntity", b =>
@@ -761,6 +761,32 @@ namespace ProjectLighthouse.Migrations
                     b.ToTable("PlatformLinkAttempts");
                 });
 
+            modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Profile.RoleEntity", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<long>("Color")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("DisplayOnProfile")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("longtext");
+
+                    b.Property<ulong>("Permissions")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.HasKey("RoleId");
+
+                    b.ToTable("Roles");
+                });
+
             modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Profile.UserEntity", b =>
                 {
                     b.Property<int>("UserId")
@@ -821,8 +847,8 @@ namespace ProjectLighthouse.Migrations
                     b.Property<bool>("PasswordResetRequired")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int>("PermissionLevel")
-                        .HasColumnType("int");
+                    b.Property<ulong>("Permissions")
+                        .HasColumnType("bigint unsigned");
 
                     b.Property<string>("Pins")
                         .HasColumnType("longtext");
@@ -861,6 +887,27 @@ namespace ProjectLighthouse.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Profile.UserRoleEntity", b =>
+                {
+                    b.Property<int>("UserRoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserRoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserRoles");
                 });
 
             modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Token.ApiKeyEntity", b =>
@@ -1344,6 +1391,25 @@ namespace ProjectLighthouse.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Profile.UserRoleEntity", b =>
+                {
+                    b.HasOne("LBPUnion.ProjectLighthouse.Types.Entities.Profile.RoleEntity", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LBPUnion.ProjectLighthouse.Types.Entities.Profile.UserEntity", "User")
+                        .WithMany("Roles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Token.EmailSetTokenEntity", b =>
                 {
                     b.HasOne("LBPUnion.ProjectLighthouse.Types.Entities.Profile.UserEntity", "User")
@@ -1380,6 +1446,11 @@ namespace ProjectLighthouse.Migrations
             modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Profile.PhotoEntity", b =>
                 {
                     b.Navigation("PhotoSubjects");
+                });
+
+            modelBuilder.Entity("LBPUnion.ProjectLighthouse.Types.Entities.Profile.UserEntity", b =>
+                {
+                    b.Navigation("Roles");
                 });
 #pragma warning restore 612, 618
         }

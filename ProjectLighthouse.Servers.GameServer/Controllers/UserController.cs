@@ -10,6 +10,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Logging;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -75,7 +76,7 @@ public class UserController : ControllerBase
         {
             if (update.Biography.Length > 512) return this.BadRequest();
 
-            user.Biography = update.Biography;
+            if (user.HasPermission(Entitlements.UpdateBiography)) user.Biography = update.Biography;
         }
 
         if (update.Location != null) user.Location = update.Location;
@@ -91,7 +92,7 @@ public class UserController : ControllerBase
             }
         }
 
-        if (update.IconHash != null) user.IconHash = update.IconHash;
+        if (update.IconHash != null && user.HasPermission(Entitlements.UpdateProfilePicture)) user.IconHash = update.IconHash;
 
         if (update.YayHash != null) user.YayHash = update.YayHash;
 
@@ -115,38 +116,42 @@ public class UserController : ControllerBase
             }
         }
 
-        if (update.PlanetHashLBP2CC != null) user.PlanetHashLBP2CC = update.PlanetHashLBP2CC;
-
-        if (update.PlanetHash != null)
+        if (user.HasPermission(Entitlements.UpdatePlanetDecoration))
         {
-            switch (token.GameVersion)
+            if (update.PlanetHashLBP2CC != null) user.PlanetHashLBP2CC = update.PlanetHashLBP2CC;
+
+            if (update.PlanetHash != null)
             {
-                case GameVersion.LittleBigPlanet2: // LBP2 planets will apply to LBP3
+                switch (token.GameVersion)
                 {
-                    user.PlanetHashLBP2 = update.PlanetHash;
-                    user.PlanetHashLBP3 = update.PlanetHash;
-                    break;
-                }
-                case GameVersion.LittleBigPlanet3: // LBP3 and vita can only apply to their own games, only set 1 here
-                {
-                    user.PlanetHashLBP3 = update.PlanetHash;
-                    break;
-                }
-                case GameVersion.LittleBigPlanetVita:
-                {
-                    user.PlanetHashLBPVita = update.PlanetHash;
-                    break;
-                }
-                case GameVersion.LittleBigPlanet1:
-                case GameVersion.LittleBigPlanetPSP:
-                case GameVersion.Unknown:
-                default: // The rest do not support custom earths.
-                {
-                    string bodyString = await this.ReadBodyAsync();
-                    Logger.Warn($"User with invalid gameVersion '{token.GameVersion}' tried to set earth hash: \n" +
-                                $"body: '{bodyString}'",
-                        LogArea.Resources);
-                    break;
+                    case GameVersion.LittleBigPlanet2: // LBP2 planets will apply to LBP3
+                    {
+                        user.PlanetHashLBP2 = update.PlanetHash;
+                        user.PlanetHashLBP3 = update.PlanetHash;
+                        break;
+                    }
+                    case GameVersion.LittleBigPlanet3
+                        : // LBP3 and vita can only apply to their own games, only set 1 here
+                    {
+                        user.PlanetHashLBP3 = update.PlanetHash;
+                        break;
+                    }
+                    case GameVersion.LittleBigPlanetVita:
+                    {
+                        user.PlanetHashLBPVita = update.PlanetHash;
+                        break;
+                    }
+                    case GameVersion.LittleBigPlanet1:
+                    case GameVersion.LittleBigPlanetPSP:
+                    case GameVersion.Unknown:
+                    default: // The rest do not support custom earths.
+                    {
+                        string bodyString = await this.ReadBodyAsync();
+                        Logger.Warn($"User with invalid gameVersion '{token.GameVersion}' tried to set earth hash: \n" +
+                                    $"body: '{bodyString}'",
+                            LogArea.Resources);
+                        break;
+                    }
                 }
             }
         }

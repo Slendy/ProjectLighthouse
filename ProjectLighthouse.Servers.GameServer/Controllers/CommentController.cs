@@ -5,8 +5,8 @@ using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
-using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +30,9 @@ public class CommentController : ControllerBase
     public async Task<IActionResult> RateComment([FromQuery] int commentId, [FromQuery] int rating, string? username, string? slotType, int slotId)
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.RateComment) == 0) return this.Unauthorized();
 
         // Return bad request if both are true or both are false
         if ((slotId == 0 || SlotHelper.IsTypeInvalid(slotType)) == (username == null)) return this.BadRequest();
@@ -77,11 +80,11 @@ public class CommentController : ControllerBase
                 where blockedProfile.UserId == token.UserId
                 select blockedProfile.BlockedUserId).ToListAsync();
 
-        List<GameComment> comments = (await this.database.Comments.Where(p => p.TargetId == targetId && p.Type == type)
-            .OrderByDescending(p => p.Timestamp)
-            .Where(p => !blockedUsers.Contains(p.PosterUserId))
+        List<GameComment> comments = (await this.database.Comments.Where(c => c.TargetId == targetId && c.Type == type)
+            .OrderByDescending(c => c.Timestamp)
+            .Where(c => !blockedUsers.Contains(c.PosterUserId))
             .Include(c => c.Poster)
-            .Where(p => p.Poster.PermissionLevel != PermissionLevel.Banned)
+            .Where(c => (c.Poster.Permissions & (Entitlements.Banned | Entitlements.ShowInUsers)) == 0)
             .Skip(Math.Max(0, pageStart - 1))
             .Take(Math.Min(pageSize, 30))
             .ToListAsync()).ToSerializableList(c => GameComment.CreateFromEntity(c, token.UserId));
@@ -94,6 +97,9 @@ public class CommentController : ControllerBase
     public async Task<IActionResult> PostComment(string? username, string? slotType, int slotId)
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.PostComment) == 0) return this.Unauthorized();
 
         GameComment? comment = await this.DeserializeBody<GameComment>();
         if (comment?.Message == null) return this.BadRequest();
@@ -130,6 +136,9 @@ public class CommentController : ControllerBase
     public async Task<IActionResult> DeleteComment([FromQuery] int commentId, string? username, string? slotType, int slotId)
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.DeleteComment) == 0) return this.Unauthorized();
 
         if ((slotId == 0 || SlotHelper.IsTypeInvalid(slotType)) == (username == null)) return this.BadRequest();
 

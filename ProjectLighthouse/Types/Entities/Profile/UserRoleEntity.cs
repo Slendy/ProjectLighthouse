@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using StackExchange.Redis;
 
 namespace LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 
@@ -15,8 +14,7 @@ public class UserRoleEntity
     public int UserId { get; set; }
 
     [ForeignKey(nameof(RoleId))]
-    public Role Role { get; set; }
+    public RoleEntity Role { get; set; }
 
     public int RoleId { get; set; }
-
 }

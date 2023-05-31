@@ -9,6 +9,7 @@ using LBPUnion.ProjectLighthouse.Tests.Helpers;
 using LBPUnion.ProjectLighthouse.Tests.Integration;
 using LBPUnion.ProjectLighthouse.Tickets;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Xunit;
 
@@ -102,7 +103,7 @@ public class LoginTests : LighthouseServerTest<GameServerTestStartup>
 
         UserEntity user = await this.CreateRandomUser();
 
-        user.PermissionLevel = PermissionLevel.Banned;
+        user.Permissions = Entitlements.Default | Entitlements.Banned;
 
         database.Users.Update(user);
         await database.SaveChangesAsync();

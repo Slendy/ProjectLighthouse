@@ -22,7 +22,7 @@ public static class StatisticsHelper
 
     public static async Task<int> SlotCountForGame(DatabaseContext database, GameVersion gameVersion, bool includeSublevels = false) => await database.Slots.ByGameVersion(gameVersion, includeSublevels).CountAsync();
 
-    public static async Task<int> UserCount(DatabaseContext database) => await database.Users.CountAsync(UserEntity.HasPerm(Entitlements.Banned));
+    public static async Task<int> UserCount(DatabaseContext database) => await database.Users.InverseHasPermission(Entitlements.Banned | Entitlements.ShowInUsers).CountAsync();
 
     public static int RoomCountForPlatform(Platform targetPlatform) => RoomHelper.Rooms.Count(r => r.IsLookingForPlayers && r.RoomPlatform == targetPlatform);
 

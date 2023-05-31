@@ -1,8 +1,10 @@
 #nullable enable
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
+using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Servers.Website.Pages.Layouts;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -30,14 +32,16 @@ public class UsersPage : BaseLayout
 
         this.SearchValue = name.Replace(" ", string.Empty);
 
-        this.UserCount = await this.Database.Users.CountAsync(u => u.PermissionLevel != PermissionLevel.Banned && u.Username.Contains(this.SearchValue));
+        this.UserCount = await this.Database.Users.InverseHasPermission(Entitlements.Banned | Entitlements.ShowInUsers)
+            .CountAsync(u => u.Username.Contains(this.SearchValue));
 
         this.PageNumber = pageNumber;
         this.PageAmount = Math.Max(1, (int)Math.Ceiling((double)this.UserCount / ServerStatics.PageSize));
 
         if (this.PageNumber < 0 || this.PageNumber >= this.PageAmount) return this.Redirect($"/users/{Math.Clamp(this.PageNumber, 0, this.PageAmount - 1)}");
 
-        this.Users = await this.Database.Users.Where(u => u.PermissionLevel != PermissionLevel.Banned && u.Username.Contains(this.SearchValue))
+        this.Users = await this.Database.Users.InverseHasPermission(Entitlements.Banned | Entitlements.ShowInUsers)
+            .Where(u => u.Username.Contains(this.SearchValue))
             .Where(u => u.ProfileVisibility == PrivacyType.All) // TODO: change check for when user is logged in
             .OrderByDescending(b => b.UserId)
             .Skip(pageNumber * ServerStatics.PageSize)

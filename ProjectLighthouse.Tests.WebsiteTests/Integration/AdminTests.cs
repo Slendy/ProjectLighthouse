@@ -5,6 +5,7 @@ using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Tests.Helpers;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using OpenQA.Selenium;
 using Xunit;
@@ -32,7 +33,7 @@ public class AdminTests : LighthouseWebTest
         };
 
         database.WebTokens.Add(webToken);
-        user.PermissionLevel = PermissionLevel.Administrator;
+        user.Permissions = Entitlements.Admin;
         await database.SaveChangesAsync();
 
         this.Driver.Navigate().GoToUrl(this.BaseAddress + "/");
@@ -58,7 +59,7 @@ public class AdminTests : LighthouseWebTest
         };
 
         database.WebTokens.Add(webToken);
-        user.PermissionLevel = PermissionLevel.Default;
+        user.Permissions = Entitlements.Admin;
         await database.SaveChangesAsync();
 
         this.Driver.Navigate().GoToUrl(this.BaseAddress + "/");

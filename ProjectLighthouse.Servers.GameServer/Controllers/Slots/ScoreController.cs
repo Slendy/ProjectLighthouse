@@ -6,9 +6,11 @@ using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.StorableLists.Stores;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
+using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Logging;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -57,6 +59,9 @@ public class ScoreController : ControllerBase
     public async Task<IActionResult> SubmitScore(string slotType, int id, int childId)
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.SubmitScore) == 0) return this.Unauthorized();
 
         string username = await this.database.UsernameFromGameToken(token);
 

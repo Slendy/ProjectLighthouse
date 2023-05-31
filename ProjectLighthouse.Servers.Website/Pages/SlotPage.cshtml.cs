@@ -6,6 +6,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -76,7 +77,7 @@ public class SlotPage : BaseLayout
                 .Where(c => c.TargetId == id && c.Type == CommentType.Level)
                 .Where(c => !blockedUsers.Contains(c.PosterUserId))
                 .Include(c => c.Poster)
-                .Where(c => c.Poster.PermissionLevel != PermissionLevel.Banned)
+                .Where(c => (c.Poster.Permissions & Entitlements.Banned) == Entitlements.Banned)
                 .Take(50)
                 .ToDictionaryAsync(c => c,  _ => (RatedCommentEntity?)null);
         }

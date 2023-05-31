@@ -98,15 +98,17 @@ public class AdminUserController : ControllerBase
         UserEntity? targetedUser = await this.database.Users.FirstOrDefaultAsync(u => u.UserId == id);
         if (targetedUser == null) return this.NotFound();
 
-        if (role != PermissionLevel.Banned)
-        {
-            targetedUser.PermissionLevel = role;
-            await this.database.SaveChangesAsync();
-        }
-        else
-        {
-            return this.Redirect($"/moderation/newCase?type={(int)CaseType.UserBan}&affectedId={id}");
-        }
+        //TODO fixme setPermissionLevel
+
+        // if (role != PermissionLevel.Banned)
+        // {
+        //     targetedUser.PermissionLevel = role;
+        //     await this.database.SaveChangesAsync();
+        // }
+        // else
+        // {
+        //     return this.Redirect($"/moderation/newCase?type={(int)CaseType.UserBan}&affectedId={id}");
+        // }
 
         return this.Redirect("/admin/users");
     }

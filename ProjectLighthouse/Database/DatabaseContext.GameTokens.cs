@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,13 @@ public partial class DatabaseContext
         if (token == null) return "";
 
         return await this.Users.Where(u => u.UserId == token.UserId).Select(u => u.Username).FirstAsync();
+    }
+
+    public async Task<Entitlements> EntitlementsFromGameToken(GameTokenEntity? token)
+    {
+        if (token == null) return Entitlements.None;
+
+        return await this.Users.Where(u => u.UserId == token.UserId).Select(u => u.Permissions).FirstAsync();
     }
 
     public async Task<UserEntity?> UserFromGameToken(GameTokenEntity? token)

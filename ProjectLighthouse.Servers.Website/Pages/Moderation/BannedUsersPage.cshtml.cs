@@ -1,8 +1,10 @@
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
+using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Servers.Website.Pages.Layouts;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,12 +29,12 @@ public class BannedUsersPage : BaseLayout
         if (token == null) return this.Redirect("/login");
 
         this.Users = await this.Database.Users
-            .Where(u => u.PermissionLevel < 0)
+            .HasPermission(Entitlements.Banned)
             .Skip(pageNumber * ServerStatics.PageSize)
             .Take(ServerStatics.PageSize)
             .ToListAsync();
 
-        this.UserCount = await this.Database.Users.CountAsync(u => u.PermissionLevel < 0);
+        this.UserCount = await this.Database.Users.HasPermission(Entitlements.Banned).CountAsync();
 
         this.PageAmount = Math.Max(1, (int)Math.Ceiling((double)this.UserCount / ServerStatics.PageSize));
         

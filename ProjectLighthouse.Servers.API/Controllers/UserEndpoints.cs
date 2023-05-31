@@ -5,6 +5,7 @@ using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Servers.API.Responses;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -64,8 +65,8 @@ public class UserEndpoints : ApiEndpointController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SearchUsers(string query)
     {
-        List<ApiUser> users = (await this.database.Users
-            .Where(u => u.PermissionLevel != PermissionLevel.Banned && u.Username.Contains(query))
+        List<ApiUser> users = (await this.database.Users.InverseHasPermission(Entitlements.Banned | Entitlements.ShowInUsers)
+            .Where(u => u.Username.Contains(query))
             .Where(u => u.ProfileVisibility == PrivacyType.All) // TODO: change check for when user is logged in
             .OrderByDescending(b => b.UserId)
             .Take(20)

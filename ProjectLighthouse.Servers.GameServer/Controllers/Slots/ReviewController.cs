@@ -5,6 +5,7 @@ using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -61,6 +62,9 @@ public class ReviewController : ControllerBase
     {
         GameTokenEntity token = this.GetToken();
 
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.RateLevel) == 0) return this.Unauthorized();
+
         SlotEntity? slot = await this.database.Slots.FirstOrDefaultAsync(s => s.SlotId == slotId);
         if (slot == null) return this.Forbid();
 
@@ -91,6 +95,9 @@ public class ReviewController : ControllerBase
     public async Task<IActionResult> PostReview(int slotId)
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.PostReview) == 0) return this.Unauthorized();
 
         GameReview? newReview = await this.DeserializeBody<GameReview>();
         if (newReview == null) return this.BadRequest();
@@ -192,6 +199,9 @@ public class ReviewController : ControllerBase
     public async Task<IActionResult> RateReview(int slotId, string username, [FromQuery] int rating = 0)
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.RateReview) == 0) return this.Unauthorized();
 
         int reviewerId = await this.database.UserIdFromUsername(username);
         if (reviewerId == 0) return this.BadRequest();

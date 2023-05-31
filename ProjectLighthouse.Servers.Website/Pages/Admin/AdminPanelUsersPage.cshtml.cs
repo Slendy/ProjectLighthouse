@@ -22,7 +22,7 @@ public class AdminPanelUsersPage : BaseLayout
         if (!user.IsAdmin) return this.NotFound();
 
         this.Users = await this.Database.Users
-            .OrderByDescending(u => u.PermissionLevel)
+            .OrderByDescending(u => u.Permissions)
             .ThenByDescending(u => u.UserId)
             .ToListAsync();
         

@@ -10,6 +10,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Logging;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,8 @@ public class PhotosController : ControllerBase
     {
         UserEntity? user = await this.database.UserFromGameToken(this.GetToken());
         if (user == null) return this.Forbid();
+
+        if ((user.Permissions & Entitlements.PostPhoto) == 0) return this.Unauthorized();
 
         if (user.GetUploadedPhotoCount(this.database) >= ServerConfiguration.Instance.UserGeneratedContentLimits.PhotosQuota) return this.BadRequest();
 
@@ -216,6 +219,9 @@ public class PhotosController : ControllerBase
     public async Task<IActionResult> DeletePhoto(int id)
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.DeletePhoto) == 0) return this.Unauthorized();
 
         PhotoEntity? photo = await this.database.Photos.FirstOrDefaultAsync(p => p.PhotoId == id);
         if (photo == null) return this.NotFound();

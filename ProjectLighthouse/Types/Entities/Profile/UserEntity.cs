@@ -95,7 +95,7 @@ public class UserEntity
     public long LastLogin { get; set; }
     public long LastLogout { get; set; }
 
-    public ICollection<RoleEntity> Roles { get; set; } = new HashSet<RoleEntity>();
+    public ICollection<UserRoleEntity> Roles { get; set; } = new HashSet<UserRoleEntity>();
 
     /// <summary>
     /// This field by default is a a cache for a user's entitlements given by their roles
@@ -115,8 +115,6 @@ public class UserEntity
 
     public bool HasPermission(Entitlements entitlements) => (this.Permissions & entitlements) == entitlements;
 
-    public static Expression<Func<UserEntity, bool>> HasPerm(Entitlements entitlements) => u => (u.Permissions & entitlements) == entitlements;
-
     #nullable enable
     public string? BannedReason { get; set; }
     #nullable disable
@@ -129,7 +127,7 @@ public class UserEntity
 
     public PrivacyType ProfileVisibility { get; set; } = PrivacyType.All;
 
-    public bool TwoFactorRequired => ServerConfiguration.Instance.TwoFactorConfiguration.RequireTwoFactor;
+    public bool TwoFactorRequired => ServerConfiguration.Instance.TwoFactorConfiguration.RequireTwoFactor && this.HasPermission(Entitlements.RequireTwoFactor);
 
     public bool IsTwoFactorSetup => this.TwoFactorBackup?.Length > 0 && this.TwoFactorSecret?.Length > 0;
 

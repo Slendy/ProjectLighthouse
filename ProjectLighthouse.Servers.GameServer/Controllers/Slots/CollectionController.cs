@@ -9,6 +9,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Logging;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -52,6 +53,9 @@ public class CollectionController : ControllerBase
     public async Task<IActionResult> UpdatePlaylist(int playlistId, int slotId)
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.UpdatePlaylist) == 0) return this.Unauthorized();
 
         PlaylistEntity? targetPlaylist = await this.database.Playlists.FirstOrDefaultAsync(p => p.PlaylistId == playlistId);
         if (targetPlaylist == null) return this.BadRequest();
@@ -116,6 +120,9 @@ public class CollectionController : ControllerBase
     public async Task<IActionResult> CreatePlaylist()
     {
         GameTokenEntity token = this.GetToken();
+
+        Entitlements permissions = await this.database.EntitlementsFromGameToken(token);
+        if ((permissions & Entitlements.CreatePlaylist) == 0) return this.Unauthorized();
 
         int playlistCount = await this.database.Playlists.CountAsync(p => p.CreatorId == token.UserId);
 
