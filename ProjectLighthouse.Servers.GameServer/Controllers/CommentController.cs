@@ -4,6 +4,7 @@ using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
+using LBPUnion.ProjectLighthouse.Types.Filter;
 using LBPUnion.ProjectLighthouse.Types.Levels;
 using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
@@ -45,11 +46,9 @@ public class CommentController : ControllerBase
 
     [HttpGet("comments/{slotType}/{slotId:int}")]
     [HttpGet("userComments/{username}")]
-    public async Task<IActionResult> GetComments([FromQuery] int pageStart, [FromQuery] int pageSize, string? username, string? slotType, int slotId)
+    public async Task<IActionResult> GetComments(string? username, string? slotType, int slotId)
     {
         GameTokenEntity token = this.GetToken();
-
-        if (pageSize <= 0 || pageStart < 0) return this.BadRequest();
 
         if ((slotId == 0 || SlotHelper.IsTypeInvalid(slotType)) == (username == null)) return this.BadRequest();
 
@@ -57,6 +56,8 @@ public class CommentController : ControllerBase
 
         int targetId;
         CommentType type = username == null ? CommentType.Level : CommentType.Profile;
+
+        PaginationData pageData = this.Request.GetPaginationData();
 
         if (type == CommentType.Level)
         {
@@ -85,8 +86,7 @@ public class CommentController : ControllerBase
             .Where(c => !blockedUsers.Contains(c.PosterUserId))
             .Include(c => c.Poster)
             .Where(c => (c.Poster.Permissions & (Entitlements.Banned | Entitlements.ShowInUsers)) == 0)
-            .Skip(Math.Max(0, pageStart - 1))
-            .Take(Math.Min(pageSize, 30))
+            .ApplyPagination(pageData)
             .ToListAsync()).ToSerializableList(c => GameComment.CreateFromEntity(c, token.UserId));
 
         return this.Ok(new CommentListResponse(comments));

@@ -68,5 +68,4 @@ public class ReportController : ControllerBase
 
         return this.Ok();
     }
-
 }
