@@ -180,6 +180,29 @@ public class ControllerExtensionTests
     }
 
     [Fact]
+    public void FilterFromRequest_ShouldNotAddFirstUploadedFilter_WhenDateFilterInvalid()
+    {
+        GameTokenEntity token = MockHelper.GetUnitTestToken();
+        token.GameVersion = GameVersion.LittleBigPlanet2;
+        SlotsController controller = new(null!)
+        {
+            ControllerContext =
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    Request =
+                    {
+                        QueryString = new QueryString("?dateFilterType=thisMillenium"),
+                    },
+                },
+            },
+        };
+
+        SlotQueryBuilder queryBuilder = controller.FilterFromRequest(token);
+        Assert.Empty(queryBuilder.GetFilters(typeof(FirstUploadedFilter)));
+    }
+
+    [Fact]
     public void FilterFromRequest_ShouldAddExcludeMoveFilter_WhenMoveEqualsFalse()
     {
         GameTokenEntity token = MockHelper.GetUnitTestToken();
@@ -246,6 +269,52 @@ public class ControllerExtensionTests
 
         SlotQueryBuilder queryBuilder = controller.FilterFromRequest(token);
         Assert.NotEmpty(queryBuilder.GetFilters(typeof(CrossControlFilter)));
+    }
+
+    [Fact]
+    public void FilterFromRequest_ShouldAddExcludeCrossControlFilter_WhenCrossControlNotTrue()
+    {
+        GameTokenEntity token = MockHelper.GetUnitTestToken();
+        token.GameVersion = GameVersion.LittleBigPlanet2;
+        SlotsController controller = new(null!)
+        {
+            ControllerContext =
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    Request =
+                    {
+                        QueryString = new QueryString("?crosscontrol=false"),
+                    },
+                },
+            },
+        };
+
+        SlotQueryBuilder queryBuilder = controller.FilterFromRequest(token);
+        Assert.NotEmpty(queryBuilder.GetFilters(typeof(ExcludeCrossControlFilter)));
+    }
+
+    [Fact]
+    public void FilterFromRequest_ShouldAddExcludeCrossControlFilter_WhenCrossControlMissing()
+    {
+        GameTokenEntity token = MockHelper.GetUnitTestToken();
+        token.GameVersion = GameVersion.LittleBigPlanet2;
+        SlotsController controller = new(null!)
+        {
+            ControllerContext =
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    Request =
+                    {
+                        QueryString = new QueryString(),
+                    },
+                },
+            },
+        };
+
+        SlotQueryBuilder queryBuilder = controller.FilterFromRequest(token);
+        Assert.NotEmpty(queryBuilder.GetFilters(typeof(ExcludeCrossControlFilter)));
     }
 
     [Fact]

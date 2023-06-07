@@ -3,6 +3,7 @@ using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Filter;
 using LBPUnion.ProjectLighthouse.Filter.Filters;
+using LBPUnion.ProjectLighthouse.Filter.Sorts;
 using LBPUnion.ProjectLighthouse.Servers.GameServer.Extensions;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
@@ -26,10 +27,6 @@ public class SearchController : ControllerBase
         this.database = database;
     }
 
-    [HttpGet("searchLBP3")]
-    public Task<IActionResult> SearchSlotsLBP3([FromQuery] string textFilter) 
-        => this.SearchSlots(textFilter, "results");
-
     [HttpGet("search")]
     public async Task<IActionResult> SearchSlots([FromQuery] string query, string? keyName = "slots")
     {
@@ -45,8 +42,11 @@ public class SearchController : ControllerBase
 
         pageData.TotalElements = await this.database.Slots.Where(queryBuilder.Build()).CountAsync();
 
+        SlotSortBuilder<SlotEntity> sortBuilder = new();
+        sortBuilder.AddSort(new LastUpdatedSort());
+
         List<SlotBase> slots = await this.database.Slots.Include(s => s.Creator)
-            .GetSlots(token, queryBuilder, pageData, new SlotSortBuilder<SlotEntity>());
+            .GetSlots(token, queryBuilder, pageData, sortBuilder);
 
         return this.Ok(new GenericSlotResponse(keyName, slots, pageData));
     }
