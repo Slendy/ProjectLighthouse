@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Linq.Expressions;
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Types.Misc;
@@ -106,11 +105,10 @@ public class UserEntity
     /// </summary>
     public Entitlements Permissions { get; set; } = Entitlements.Default;
 
-    public bool IsModerator => (this.Permissions & Entitlements.Moderator) != 0;
+    public bool IsModerator => (this.Permissions & Entitlements.Admin) != 0;
 
     public bool IsAdmin => this.Permissions == Entitlements.Admin;
 
-    [NotMapped]
     public bool IsBanned => this.HasPermission(Entitlements.Banned);
 
     public bool HasPermission(Entitlements entitlements) => (this.Permissions & entitlements) == entitlements;

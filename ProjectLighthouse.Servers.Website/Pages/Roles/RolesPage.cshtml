@@ -1,0 +1,26 @@
+﻿@page "/roles"
+@using LBPUnion.ProjectLighthouse.Types.Entities.Profile
+@model LBPUnion.ProjectLighthouse.Servers.Website.Pages.Roles.RolesPage
+
+@{
+    Layout = "Layouts/BaseLayout";
+    Model.Title = "Roles";
+}
+
+<div>
+    <p>There are @Model.Roles.Count roles</p>
+    <a href="/roles/add" class="ui button green">Add role</a>
+    @foreach (RoleEntity role in Model.Roles)
+    {
+        <div>
+            <h2>@role.Name</h2>
+            <p>Role Id: @role.RoleId</p>
+            <p>Role color: @role.Color</p>
+            <button class="ui button" style="color: @role.Color.ToString("x")"></button>
+            <p>Role permissions: @role.Permissions</p>
+            <p>Role priority: @role.Priority</p>
+            <p>Display on profile? @role.DisplayOnProfile</p>
+        </div>
+        <div class="ui divider"></div>
+    }
+</div>

@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Types.Levels;
-using LBPUnion.ProjectLighthouse.Types.Roles;
 using LBPUnion.ProjectLighthouse.Filter;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +21,7 @@ public static class StatisticsHelper
 
     public static async Task<int> SlotCount(DatabaseContext database, SlotQueryBuilder queryBuilder) => await database.Slots.Where(queryBuilder.Build()).CountAsync();
 
-    public static async Task<int> UserCount(DatabaseContext database) => await database.Users.InverseHasPermission(Entitlements.Banned | Entitlements.ShowInUsers).CountAsync();
+    public static async Task<int> UserCount(DatabaseContext database) => await database.Users.RemoveHiddenUsers().CountAsync();
 
     public static int RoomCountForPlatform(Platform targetPlatform) => RoomHelper.Rooms.Count(r => r.IsLookingForPlayers && r.RoomPlatform == targetPlatform);
 

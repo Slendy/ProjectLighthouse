@@ -1,0 +1,31 @@
+﻿@page "/roles/add"
+@model LBPUnion.ProjectLighthouse.Servers.Website.Pages.Roles.AddRolePage
+
+@{
+    Layout = "Layouts/BaseLayout";
+    Model.Title = "Add role";
+}
+
+<form class="ui form">
+    <div class="field">
+        <label>Role Name</label>
+        <input type="text" name="role-name" placeholder="Name" />
+    </div>
+    <div class="field">
+        <label>Role Priority</label>
+        <input type="number" name="role-priority" placeholder="@Model.TotalRoles"/>
+    </div>
+    <div class="field">
+        <label>Role Color</label>
+        <input type="color" name="role-color"/>
+    </div>
+      <div class="field">
+        <div class="ui checkbox">
+          <input type="checkbox" tabindex="0" class="hidden">
+          <label>Display on profile</label>
+        </div>
+      </div>
+      <button class="ui button green" type="submit">Create Role</button>
+
+</form>
+

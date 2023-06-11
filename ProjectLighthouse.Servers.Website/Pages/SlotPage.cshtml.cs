@@ -1,6 +1,7 @@
 #nullable enable
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
+using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Servers.Website.Pages.Layouts;
 using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
@@ -29,7 +30,8 @@ public class SlotPage : BaseLayout
 
     public async Task<IActionResult> OnGet([FromRoute] int id)
     {
-        SlotEntity? slot = await this.Database.Slots.Include(s => s.Creator)
+        SlotEntity? slot = await this.Database.Slots.RemoveHiddenCreators()
+            .Include(s => s.Creator)
             .Where(s => s.Type == SlotType.User)
             .FirstOrDefaultAsync(s => s.SlotId == id);
         if (slot == null) return this.NotFound();

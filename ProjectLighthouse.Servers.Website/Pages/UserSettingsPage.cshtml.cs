@@ -19,7 +19,6 @@ public class UserSettingsPage : BaseLayout
     public UserSettingsPage(DatabaseContext database) : base(database)
     {}
 
-    [SuppressMessage("ReSharper", "SpecifyStringComparison")]
     public async Task<IActionResult> OnPost([FromRoute] int userId, [FromForm] string? avatar, [FromForm] string? username, [FromForm] string? email, [FromForm] string? biography, [FromForm] string? timeZone, [FromForm] string? language)
     {
         this.ProfileUser = await this.Database.Users.FirstOrDefaultAsync(u => u.UserId == userId);
@@ -45,7 +44,7 @@ public class UserSettingsPage : BaseLayout
             (this.User == this.ProfileUser || this.User.IsAdmin))
         {
             // if email hasn't already been used
-            if (!await this.Database.Users.AnyAsync(u => u.EmailAddress != null && u.EmailAddress.ToLower() == email!.ToLower()))
+            if (!await this.Database.Users.AnyAsync(u => u.EmailAddress != null && u.EmailAddress == email))
             {
                 if (this.ProfileUser.EmailAddress != email)
                 {

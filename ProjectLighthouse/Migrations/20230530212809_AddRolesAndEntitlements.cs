@@ -1,4 +1,5 @@
 ﻿using LBPUnion.ProjectLighthouse.Database;
+using LBPUnion.ProjectLighthouse.Types.Roles;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -24,7 +25,7 @@ namespace ProjectLighthouse.Migrations
                 table: "Users",
                 type: "bigint unsigned",
                 nullable: false,
-                defaultValue: 0ul);
+                defaultValue: Entitlements.Default);
 
             migrationBuilder.CreateTable(
                 name: "Roles",
@@ -35,7 +36,7 @@ namespace ProjectLighthouse.Migrations
                     Name = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Permissions = table.Column<ulong>(type: "bigint unsigned", nullable: false),
-                    Priority = table.Column<int>(type: "int", nullable: false),
+                    Priority = table.Column<int>(type: "int unsigned", nullable: false),
                     DisplayOnProfile = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     Color = table.Column<long>(type: "bigint", nullable: false)
                 },

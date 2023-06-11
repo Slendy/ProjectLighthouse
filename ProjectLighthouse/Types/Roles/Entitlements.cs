@@ -31,9 +31,8 @@ public enum Entitlements : ulong
     UpdatePlanetDecoration = 1ul << 20,
     MatchMake = 1ul << 21,
 
-    // First 18 bits set to one except for the banned bit,
-    // this is easier than manually OR'ing all the fields
-    Default = 0b111111111111111110,
+    // This sets the first 21 bits and unsets the banned bit
+    Default = (1ul << 22) - 1 & ~Banned,
 
     RequireTwoFactor = 1ul << 31,
 
@@ -47,18 +46,8 @@ public enum Entitlements : ulong
     ModifyLevelSettings = 1ul << 38,
     ManageLevels = 1ul << 39,
     ManageUsers = 1ul << 40,
-
-    Moderator = RunCommands |
-                RunMaintenanceJobs |
-                GenerateApiKeys |
-                ModifyUserSettings |
-                ManagePhotos |
-                ManageComments |
-                ModifyLevelSettings |
-                ManageLevels |
-                ManageUsers,
+    ManageRoles = 1ul << 41,
 
     // Admin has every permission except for Banned
     Admin = ulong.MaxValue & ~Banned,
-
 }

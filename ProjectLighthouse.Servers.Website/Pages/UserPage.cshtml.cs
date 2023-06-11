@@ -1,6 +1,7 @@
 #nullable enable
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
+using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Servers.Website.Pages.Layouts;
 using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
@@ -34,7 +35,8 @@ public class UserPage : BaseLayout
 
     public async Task<IActionResult> OnGet([FromRoute] int userId)
     {
-        this.ProfileUser = await this.Database.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+        this.ProfileUser = await this.Database.Users.RemoveHiddenUsers(this.User?.Permissions)
+            .FirstOrDefaultAsync(u => u.UserId == userId);
         if (this.ProfileUser == null) return this.NotFound();
 
         // Determine if user can view profile according to profileUser's privacy settings

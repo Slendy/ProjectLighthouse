@@ -22,10 +22,12 @@ public static class DatabaseContextExtensions
         PaginationData pageData,
         ISortBuilder<SlotEntity> sortBuilder
     ) =>
-        (await queryable.Where(queryBuilder.Build())
+        await queryable.RemoveHiddenCreators()
+            .Where(queryBuilder.Build())
             .ApplyOrdering(sortBuilder)
             .ApplyPagination(pageData)
-            .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
+            .Select(s => SlotBase.CreateFromEntity(s, token))
+            .ToListAsync();
 
     public static async Task<List<SlotBase>> GetSlots
     (
@@ -35,10 +37,12 @@ public static class DatabaseContextExtensions
         PaginationData pageData,
         ISortBuilder<SlotEntity> sortBuilder
     ) =>
-        (await database.Slots.Where(queryBuilder.Build())
+        await database.Slots.RemoveHiddenCreators()
+            .Where(queryBuilder.Build())
             .ApplyOrdering(sortBuilder)
             .ApplyPagination(pageData)
-            .ToListAsync()).ToSerializableList(s => SlotBase.CreateFromEntity(s, token));
+            .Select(s => SlotBase.CreateFromEntity(s, token))
+            .ToListAsync();
 
     public static async Task<List<SlotBase>> GetSlots
     (
@@ -49,7 +53,8 @@ public static class DatabaseContextExtensions
         ISortBuilder<SlotMetadata> sortBuilder,
         Expression<Func<SlotEntity, SlotMetadata>> selectorFunction
     ) =>
-        (await database.Slots.Where(queryBuilder.Build())
+        (await database.Slots.RemoveHiddenCreators()
+            .Where(queryBuilder.Build())
             .AsQueryable()
             .Select(selectorFunction)
             .ApplyOrdering(sortBuilder)

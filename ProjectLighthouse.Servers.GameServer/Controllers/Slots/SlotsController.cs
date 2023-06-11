@@ -40,14 +40,20 @@ public class SlotsController : ControllerBase
     {
         GameTokenEntity token = this.GetToken();
 
-        int targetUserId = await this.database.UserIdFromUsername(username);
-        if (targetUserId == 0) return this.NotFound();
+        var user = await this.database.Users.RemoveHiddenUsers().Where(u => u.Username == username)
+            .Select(u => new
+            {
+                u.UserId,
+            })
+            .FirstOrDefaultAsync();
+
+        if (user == null || user.UserId == 0) return this.NotFound();
 
         PaginationData pageData = this.Request.GetPaginationData();
 
-        pageData.TotalElements = await this.database.Slots.CountAsync(s => s.CreatorId == targetUserId);
+        pageData.TotalElements = await this.database.Slots.CountAsync(s => s.CreatorId == user.UserId);
 
-        SlotQueryBuilder queryBuilder = this.FilterFromRequest(token).AddFilter(new CreatorFilter(targetUserId));
+        SlotQueryBuilder queryBuilder = this.FilterFromRequest(token).AddFilter(new CreatorFilter(user.UserId));
 
         SlotSortBuilder<SlotEntity> sortBuilder = new SlotSortBuilder<SlotEntity>()
             .AddSort(new FirstUploadedSort())
@@ -66,7 +72,7 @@ public class SlotsController : ControllerBase
         List<SlotBase> slots = new();
         foreach (int slotId in slotIds)
         {
-            SlotEntity? slot = await this.database.Slots.Where(t => t.SlotId == slotId && t.Type == SlotType.User).FirstOrDefaultAsync();
+            SlotEntity? slot = await this.database.Slots.RemoveHiddenCreators().Where(t => t.SlotId == slotId && t.Type == SlotType.User).FirstOrDefaultAsync();
             if (slot == null)
             {
                 slot = await this.database.Slots.Where(t => t.InternalSlotId == slotId && t.Type == SlotType.Developer).FirstOrDefaultAsync();
@@ -122,7 +128,8 @@ public class SlotsController : ControllerBase
     {
         GameTokenEntity token = this.GetToken();
 
-        SlotEntity? slot = await this.database.Slots.Where(this.GetDefaultFilters(token).Build())
+        SlotEntity? slot = await this.database.Slots.RemoveHiddenCreators()
+            .Where(this.GetDefaultFilters(token).Build())
             .FirstOrDefaultAsync(s => s.SlotId == id);
 
         if (slot == null) return this.NotFound();
@@ -165,7 +172,9 @@ public class SlotsController : ControllerBase
 
         if (slotType != "user") return this.BadRequest();
 
-        SlotEntity? targetSlot = await this.database.Slots.FirstOrDefaultAsync(s => s.SlotId == slotId);
+        SlotEntity? targetSlot = await this.database.Slots
+            .RemoveHiddenCreators()
+            .FirstOrDefaultAsync(s => s.SlotId == slotId);
         if (targetSlot == null) return this.BadRequest();
 
         string[] tags = targetSlot.LevelTags(this.database);
@@ -370,12 +379,19 @@ public class SlotsController : ControllerBase
         pageData.TotalElements = playersBySlotId.Count;
 
         List<int> orderedPlayersBySlotId = playersBySlotId.OrderByDescending(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
-
         SlotQueryBuilder queryBuilder = this.FilterFromRequest(token);
-        queryBuilder.AddFilter(0, new SlotIdFilter(orderedPlayersBySlotId));
 
-        List<SlotBase> slots = await this.database.GetSlots(token, queryBuilder, pageData, new SlotSortBuilder<SlotEntity>());
+        List<SlotEntity> slots = new();
 
-        return this.Ok(new GenericSlotResponse(slots, pageData));
+        foreach (SlotQueryBuilder queryBuilderClone in orderedPlayersBySlotId.Select(slotId =>
+                     queryBuilder.Clone().AddFilter(0, new SlotIdFilter(new List<int>(slotId)))))
+        {
+            SlotEntity? slot = await this.database.Slots.Where(queryBuilderClone.Build()).FirstOrDefaultAsync();
+            if (slot == null) continue;
+
+            slots.Add(slot);
+        }
+
+        return this.Ok(new GenericSlotResponse(slots.ToSerializableList(s => SlotBase.CreateFromEntity(s, token)), pageData));
     }
 }

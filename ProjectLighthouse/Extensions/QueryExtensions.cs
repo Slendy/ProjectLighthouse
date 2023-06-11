@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using LBPUnion.ProjectLighthouse.Logging;
+using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Filter;
 using LBPUnion.ProjectLighthouse.Types.Filter.Sorts;
 using LBPUnion.ProjectLighthouse.Types.Logging;
@@ -30,6 +31,18 @@ public static class QueryExtensions
     public static IOrderedQueryable<T> ApplyOrdering<T>
         (this IQueryable<T> queryable, ISortBuilder<T> sortBuilder) =>
         sortBuilder.Build(queryable);
+
+    public static IQueryable<SlotEntity> RemoveHiddenCreators(this IQueryable<SlotEntity> queryable)
+    {
+        return queryable.Where(s => (s.Creator.Permissions & Entitlements.ShowInUsers) == Entitlements.ShowInUsers);
+    }
+
+    public static IQueryable<UserEntity> RemoveHiddenUsers(this IQueryable<UserEntity> queryable, Entitlements? userEntitlements = null)
+    {
+        return queryable.Where(s =>
+            (s.Permissions & Entitlements.ShowInUsers) == Entitlements.ShowInUsers ||
+            (userEntitlements & Entitlements.ManageUsers) == Entitlements.ManageUsers);
+    }
 
     public static IQueryable<UserEntity> InverseHasPermission
         (this IQueryable<UserEntity> queryable, Entitlements entitlements) =>
