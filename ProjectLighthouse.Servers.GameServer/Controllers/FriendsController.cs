@@ -2,7 +2,6 @@
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Servers.GameServer.Types.Users;
-using LBPUnion.ProjectLighthouse.StorableLists.Stores;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
@@ -10,6 +9,8 @@ using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Redis.OM.Contracts;
+using Redis.OM.Searching;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers;
 
@@ -20,10 +21,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers;
 public class FriendsController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly RedisCollection<UserFriendData> friendStore;
 
-    public FriendsController(DatabaseContext database)
+    public FriendsController(DatabaseContext database, IRedisConnectionProvider provider)
     {
         this.database = database;
+        this.friendStore = (RedisCollection<UserFriendData>)provider.RedisCollection<UserFriendData>();
     }
 
     [HttpPost("npdata")]
@@ -52,12 +55,16 @@ public class FriendsController : ControllerBase
             blockedUsers.Add(blockedUser.UserId);
         }
 
-        UserFriendData friendStore = UserFriendStore.GetUserFriendData(token.UserId) ?? UserFriendStore.CreateUserFriendData(token.UserId);
+        UserFriendData? friendData = await this.friendStore.FirstOrDefaultAsync(f => f.UserId == token.UserId);
+        friendData ??= new UserFriendData
+        {
+            UserId = token.UserId,
+        };
 
-        friendStore.FriendIds = friends.Select(u => u.UserId).ToList();
-        friendStore.BlockedIds = blockedUsers;
+        friendData.FriendIds = friends.Select(u => u.UserId).ToList();
+        friendData.BlockedIds = blockedUsers;
 
-        UserFriendStore.UpdateFriendData(friendStore);
+        await this.friendStore.UpdateAsync(friendData);
 
         List<MinimalUserProfile> minimalFriends =
             friends.Select(u => new MinimalUserProfile
@@ -73,14 +80,14 @@ public class FriendsController : ControllerBase
     {
         GameTokenEntity token = this.GetToken();
 
-        UserFriendData? friendStore = UserFriendStore.GetUserFriendData(token.UserId);
+        UserFriendData? friendData = await this.friendStore.FirstOrDefaultAsync(f => f.UserId == token.UserId);
 
         GenericUserResponse<GameUser> response = new("myFriends", new List<GameUser>());
 
-        if (friendStore == null)
+        if (friendData == null)
             return this.Ok(response);
 
-        foreach (int friendId in friendStore.FriendIds)
+        foreach (int friendId in friendData.FriendIds)
         {
             UserEntity? friend = await this.database.Users.FirstOrDefaultAsync(u => u.UserId == friendId);
             if (friend == null) continue;

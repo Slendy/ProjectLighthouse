@@ -2,8 +2,10 @@ using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Middlewares;
 using LBPUnion.ProjectLighthouse.Serialization;
+using LBPUnion.ProjectLighthouse.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Redis.OM;
 
 namespace LBPUnion.ProjectLighthouse.Servers.API.Startup;
 
@@ -33,6 +35,9 @@ public class ApiStartup
             builder.UseMySql(ServerConfiguration.Instance.DbConnectionString,
                 MySqlServerVersion.LatestSupportedServerVersion);
         });
+
+        services.AddSingleton(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
+        services.AddHostedService<IndexCreationService>();
 
         services.AddSwaggerGen
         (

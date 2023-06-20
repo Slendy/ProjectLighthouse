@@ -11,10 +11,12 @@ using LBPUnion.ProjectLighthouse.Servers.Website.Captcha;
 using LBPUnion.ProjectLighthouse.Servers.Website.Middlewares;
 using LBPUnion.ProjectLighthouse.Services;
 using LBPUnion.ProjectLighthouse.Types.Mail;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Redis.OM;
 
 #if !DEBUG
 using Microsoft.Extensions.Hosting.Internal;
@@ -55,6 +57,10 @@ public class WebsiteStartup
             builder.UseMySql(ServerConfiguration.Instance.DbConnectionString,
                 MySqlServerVersion.LatestSupportedServerVersion);
         });
+
+        services.AddSingleton(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
+
+        services.AddHostedService<IndexCreationService>();
 
         IMailService mailService = ServerConfiguration.Instance.Mail.MailEnabled
             ? new MailQueueService(new SmtpMailSender())

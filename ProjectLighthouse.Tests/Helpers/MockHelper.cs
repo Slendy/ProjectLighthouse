@@ -15,6 +15,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
+using Moq;
+using Redis.OM.Contracts;
+using Redis.OM.Searching;
 using Xunit;
 
 namespace LBPUnion.ProjectLighthouse.Tests.Helpers;
@@ -97,6 +100,12 @@ public static class MockHelper
         await context.SaveChangesAsync();
         await context.DisposeAsync();
         return new DatabaseContext(options);
+    }
+
+    public static IRedisConnectionProvider GetTestRedis()
+    {
+        Mock<IRedisConnectionProvider> providerMock = new();
+        new IRedisCollection();
     }
 
     public static async Task<DatabaseContext> GetTestDatabase(List<UserEntity>? users = null, List<GameTokenEntity>? tokens = null,

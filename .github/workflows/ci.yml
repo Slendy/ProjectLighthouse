@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - { prettyName: Linux, fullName: ubuntu-latest, database: true, webTest: true }
+          - { prettyName: Linux, fullName: ubuntu-latest, database: true, webTest: true, redis: true }
     timeout-minutes: 5
     env:
       DB_DATABASE: lighthouse_tests
@@ -29,6 +29,12 @@ jobs:
         with:
           mysql-version: '8.0'
           root-password: ${{ env.DB_PASSWORD }}
+      
+      - name: Setup Redis
+        if: ${{ matrix.os.redis }}
+        uses: supercharge/redis-github-action@1.5.0
+        with:
+          redis-image: redis/redis-stack-server 
 
       - name: Create Lighthouse Database
         if: ${{ matrix.os.database }}

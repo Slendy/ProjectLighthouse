@@ -7,17 +7,21 @@ using LBPUnion.ProjectLighthouse.Filter.Filters;
 using LBPUnion.ProjectLighthouse.Filter.Sorts;
 using LBPUnion.ProjectLighthouse.Filter.Sorts.Metadata;
 using LBPUnion.ProjectLighthouse.Helpers;
+using LBPUnion.ProjectLighthouse.Redis;
 using LBPUnion.ProjectLighthouse.Servers.GameServer.Extensions;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Filter;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Misc;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Redis.OM;
+using Redis.OM.Searching;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Slots;
 
@@ -344,13 +348,14 @@ public class SlotsController : ControllerBase
     
     // /slots/busiest?pageStart=1&pageSize=30&gameFilterType=both&players=1&move=true
     [HttpGet("slots/busiest")]
-    public async Task<IActionResult> BusiestLevels()
+    public async Task<IActionResult> BusiestLevels(IRedisCollection<Room> rooms)
     {
         GameTokenEntity token = this.GetToken();
 
         PaginationData pageData = this.Request.GetPaginationData();
 
-        List<int> busiestSlots = RoomHelper.Rooms.Where(r => r.Slot.SlotType == SlotType.User)
+        List<int> busiestSlots = rooms.Where(r => r.Slot.SlotType == SlotType.User)
+            .AsQueryable()
             .GroupBy(r => r.Slot.SlotId)
             .OrderByDescending(kvp => kvp.Count())
             .Select(kvp => kvp.Key)

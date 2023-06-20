@@ -14,6 +14,11 @@ using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
+using Moq;
+using Redis.OM;
+using Redis.OM.Contracts;
+using Redis.OM.Searching;
+using StackExchange.Redis;
 using Xunit;
 
 namespace ProjectLighthouse.Tests.GameApiTests.Unit.Controllers;
@@ -386,11 +391,12 @@ public class SlotControllerTests
     // we just make the unit tests take turns
     private static readonly Mutex roomMutex = new(false);
 
-    private static async Task AddRoom(int slotId, SlotType type, params int[] playerIds)
+    private static async Task AddRoom(IRedisCollection<Room> rooms, int slotId, SlotType type, params string[] players)
     {
-        await RoomHelper.Rooms.AddAsync(new Room
+        
+        await rooms.InsertAsync(new Room
         {
-            PlayerIds = new List<int>(playerIds),
+            Players = new List<string>(players),
             Slot = new RoomSlot
             {
                 SlotId = slotId,
@@ -406,6 +412,7 @@ public class SlotControllerTests
         try
         {
             DatabaseContext db = await MockHelper.GetTestDatabase(new[]
+            RedisConnectionProvider redis = await MockHelper.
             {
                 new List<SlotEntity>
                 {
@@ -496,6 +503,9 @@ public class SlotControllerTests
     [Fact]
     public async Task BusiestLevels_ShouldNotIncludeInvalidSlots()
     {
+        
+        
+        IRedisConnectionProvider provider = new RedisConnectionProvider()
         roomMutex.WaitOne();
         try
         {

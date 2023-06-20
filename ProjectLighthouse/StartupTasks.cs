@@ -13,7 +13,6 @@ using LBPUnion.ProjectLighthouse.Files;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Logging.Loggers;
-using LBPUnion.ProjectLighthouse.StorableLists;
 using LBPUnion.ProjectLighthouse.Types.Entities.Maintenance;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Logging;
@@ -22,6 +21,7 @@ using LBPUnion.ProjectLighthouse.Types.Misc;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Medallion.Threading.MySql;
 using Microsoft.EntityFrameworkCore;
+using Redis.OM;
 
 namespace LBPUnion.ProjectLighthouse;
 
@@ -87,7 +87,14 @@ public static class StartupTasks
         }
 
         Logger.Info("Initializing Redis...", LogArea.Startup);
-        RedisDatabase.Initialize().Wait();
+        RedisConnectionProvider provider = new(ServerConfiguration.Instance.RedisConnectionString);
+        RedisReply pingReply = await provider.Connection.ExecuteAsync("PING");
+        if (pingReply.Error)
+        {
+            Logger.Error("Failed to connect to Redis", LogArea.Startup);
+            Logger.Error("Ensure that redisConnectionString is set properly in lighthouse.yml", LogArea.Startup);
+            Environment.Exit(-1);
+        }
 
         // Create admin user if no users exist
         if (serverType == ServerType.Website && database.Users.CountAsync().Result == 0)

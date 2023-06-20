@@ -10,10 +10,13 @@ using LBPUnion.ProjectLighthouse.Servers.GameServer.Middlewares;
 using LBPUnion.ProjectLighthouse.Services;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Mail;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
+using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
+using Redis.OM;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Startup;
 
@@ -59,6 +62,15 @@ public class GameServerStartup
             builder.UseMySql(ServerConfiguration.Instance.DbConnectionString,
                 MySqlServerVersion.LatestSupportedServerVersion);
         });
+
+        RedisConnectionProvider redis = new(ServerConfiguration.Instance.RedisConnectionString);
+
+        services.AddSingleton(redis);
+        services.AddSingleton(redis.RedisCollection<Room>());
+        services.AddSingleton(redis.RedisCollection<UserFriendData>());
+
+        services.AddHostedService<IndexCreationService>();
+
 
         IMailService mailService = ServerConfiguration.Instance.Mail.MailEnabled
             ? new MailQueueService(new SmtpMailSender())
