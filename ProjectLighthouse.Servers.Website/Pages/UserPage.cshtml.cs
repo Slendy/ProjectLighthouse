@@ -23,28 +23,6 @@ public class UserPage : BaseLayout
         this.ProfileUser = await this.Database.Users.FirstOrDefaultAsync(u => u.UserId == userId);
         if (this.ProfileUser == null) return this.NotFound();
 
-        // Determine if user can view profile according to profileUser's privacy settings
-        if (this.User == null || !this.User.IsAdmin)
-        {
-            switch (this.ProfileUser.ProfileVisibility)
-            {
-                case PrivacyType.PSN:
-                {
-                    if (this.User != null) return this.NotFound();
-
-                    break;
-                }
-                case PrivacyType.Game:
-                {
-                    if (this.ProfileUser != this.User) return this.NotFound();
-
-                    break;
-                }
-                case PrivacyType.All: break;
-                default: throw new ArgumentOutOfRangeException();
-            }
-        }
-
         if (this.User == null) return this.Page();
 
         this.IsProfileUserHearted = await this.Database.HeartedProfiles

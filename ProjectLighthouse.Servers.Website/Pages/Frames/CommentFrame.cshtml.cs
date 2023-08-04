@@ -23,6 +23,7 @@ public class CommentFrame : PaginatedFrame
     public string Type { get; set; } = "";
 
     public bool CommentsEnabled { get; set; }
+    public bool CanViewComments { get; set; }
 
     public int PageOwner { get; set; }
 
@@ -41,9 +42,10 @@ public class CommentFrame : PaginatedFrame
         {
             case CommentType.Level:
             {
-                SlotEntity? slot = await this.Database.Slots.FindAsync(id);
-                if (slot == null) return this.BadRequest();
+                SlotEntity? slot = await this.Database.Slots.Include(s => s.Creator).Where(s => s.SlotId == id).FirstOrDefaultAsync();
+                if (slot == null || slot.Creator == null) return this.BadRequest();
                 this.PageOwner = slot.CreatorId;
+                this.CanViewComments = slot.Creator.LevelVisibility.CanAccess(this.User != null, this.User?.UserId == this.PageOwner);
                 this.CommentsEnabled = ServerConfiguration.Instance.UserGeneratedContentLimits.LevelCommentsEnabled &&
                                        slot.CommentsEnabled;
                 break;
@@ -53,6 +55,7 @@ public class CommentFrame : PaginatedFrame
                 UserEntity? user = await this.Database.Users.FindAsync(id);
                 if (user == null) return this.BadRequest();
                 this.PageOwner = user.UserId;
+                this.CanViewComments = user.ProfileVisibility.CanAccess(this.User != null, this.User?.UserId == this.PageOwner);
                 this.CommentsEnabled = ServerConfiguration.Instance.UserGeneratedContentLimits.ProfileCommentsEnabled &&
                                        user.CommentsEnabled;
                 break;
@@ -60,7 +63,7 @@ public class CommentFrame : PaginatedFrame
             default: return this.BadRequest();
         }
 
-        if (this.CommentsEnabled)
+        if (this.CommentsEnabled && this.CanViewComments)
         {
             List<int> blockedUsers = await this.Database.GetBlockedUsers(this.User?.UserId);
 

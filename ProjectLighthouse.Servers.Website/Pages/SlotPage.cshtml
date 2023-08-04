@@ -57,7 +57,7 @@
 @await Model.Slot.ToHtml(Html, ViewData, Model.User, $"~/slot/{Model.Slot?.SlotId}", language, timeZone, isMobile)
 <br>
 
-<div class="@(isMobile ? "" : "ui grid")">
+<div class="@(isMobile ? "" : "ui equal height stretched grid")">
     <div class="eight wide column">
         <div class="ui blue segment">
             <h2>Description</h2>
@@ -142,7 +142,7 @@
             @await Html.PartialAsync("Partials/FramePartial", ($"/comments/slot/{Model.Slot?.SlotId}", "Comments"))
         </div>
         <div class="lh-content hidden" id="lh-photos">
-            @await Html.PartialAsync("Partials/FramePartial", ($"/photos/user/{Model.Slot?.SlotId}", "Photos"))
+            @await Html.PartialAsync("Partials/FramePartial", ($"/photos/slot/{Model.Slot?.SlotId}", "Photos"))
         </div>
         <div class="lh-content hidden" id="lh-reviews">
             @await Html.PartialAsync("Partials/FramePartial", ($"/reviews/{Model.Slot?.SlotId}", "Reviews"))

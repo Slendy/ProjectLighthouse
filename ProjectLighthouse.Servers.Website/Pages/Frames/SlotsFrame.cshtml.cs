@@ -1,6 +1,8 @@
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
+using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
+using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +17,7 @@ public class SlotsFrame : PaginatedFrame
     public string Color { get; set; } = "";
     public string SlotsPresentText { get; set; } = "";
     public string SlotsEmptyText { get; set; } = "";
+    public bool CanViewSlots { get; set; }
 
     public SlotsFrame(DatabaseContext database) : base(database)
     {
@@ -26,6 +29,19 @@ public class SlotsFrame : PaginatedFrame
         this.Type = route;
         this.Id = id;
         this.CurrentPage = page;
+
+        UserEntity? user = await this.Database.Users.FindAsync(id);
+        if (user == null) return this.NotFound();
+
+        this.CanViewSlots = user.ProfileVisibility.CanAccess(this.User != null, this.User?.UserId == user.UserId);
+
+        if (!this.CanViewSlots)
+        {
+            this.Color = "green";
+            this.ClampPage();
+            return this.Page();
+        }
+
         IQueryable<SlotEntity> slotsQuery = this.Database.Slots.AsQueryable();
 
         switch (route)
@@ -39,9 +55,10 @@ public class SlotsFrame : PaginatedFrame
                 this.SlotsPresentText = "This user has published {0} level{1}";
                 break;
             case "hearted":
-                slotsQuery = this.Database.HeartedLevels.Where(h => h.UserId == id).
-                    OrderByDescending(h => h.HeartedLevelId)
+                slotsQuery = this.Database.HeartedLevels.Where(h => h.UserId == id)
+                    .OrderByDescending(h => h.HeartedLevelId)
                     .Include(h => h.Slot)
+                    .ThenInclude(h => h.Creator)
                     .Select(h => h.Slot);
                 this.Color = "pink";
                 this.SlotsEmptyText = "You haven't hearted any levels";
@@ -51,6 +68,7 @@ public class SlotsFrame : PaginatedFrame
                 slotsQuery = this.Database.QueuedLevels.Where(q => q.UserId == id)
                     .OrderByDescending(q => q.QueuedLevelId)
                     .Include(q => q.Slot)
+                    .ThenInclude(q => q.Creator)
                     .Select(q => q.Slot);
                 this.Color = "yellow";
                 this.SlotsEmptyText = "You haven't queued any levels";
