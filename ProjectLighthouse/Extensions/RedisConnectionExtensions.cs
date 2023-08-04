@@ -1,23 +1,35 @@
 using System;
-using System.Threading.Tasks;
-using LBPUnion.ProjectLighthouse.Logging;
-using LBPUnion.ProjectLighthouse.Types.Logging;
+using System.Reflection;
 using Redis.OM;
-using Redis.OM.Contracts;
+using StackExchange.Redis;
 
 namespace LBPUnion.ProjectLighthouse.Extensions;
 
 public static class RedisConnectionExtensions
 {
-    public static async Task RecreateIndexAsync(this IRedisConnection connection, Type type)
+    public static string[] SerializeTypeIndex(Type type)
     {
-        Logger.Debug("Recreating index for " + type.Name, LogArea.Redis);
-        
-        // TODO: use `await connection.DropIndexAndAssociatedRecordsAsync(type);` here instead when that becomes a thing
-        bool dropped = await connection.DropIndexAsync(type);
-        Logger.Debug("Dropped index: " + dropped, LogArea.Redis);
-        
-        bool created = await connection.CreateIndexAsync(type);
-        Logger.Debug("Created index: " + created, LogArea.Redis);
+        Assembly redisAssembly = typeof(RedisConnectionProvider).Assembly;
+        Type indexType = redisAssembly.GetType("Redis.OM.Modeling.RedisIndex");
+        if (indexType == null) return null;
+        MethodInfo methodInfo = indexType.GetMethod("SerializeIndex", BindingFlags.Static | BindingFlags.NonPublic);
+        if (methodInfo == null) return null;
+        object result = methodInfo.Invoke(null,
+            new object[]
+            {
+                type,
+            });
+        return result as string[];
+    }
+
+    public static bool CloseRedisConnection(this RedisConnectionProvider provider)
+    {
+        FieldInfo muxerField = provider.GetType().GetField("_mux", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (muxerField == null) return false;
+
+        if (muxerField.GetValue(provider) is not IConnectionMultiplexer multiplexer) return false;
+
+        multiplexer.Close();
+        return true;
     }
 }

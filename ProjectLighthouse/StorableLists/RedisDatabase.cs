@@ -29,11 +29,11 @@ public static class RedisDatabase
     public static async Task Initialize()
     {
         if (Initialized) throw new InvalidOperationException("Redis has already been initialized.");
-
+    
         try
         {
             IRedisConnection connection = getConnection();
-
+    
             string pong = (await connection.ExecuteAsync("PING")).ToString(CultureInfo.InvariantCulture);
             if (pong != "PONG")
             {
@@ -41,7 +41,7 @@ public static class RedisDatabase
                     LogArea.Redis);
                 return;
             }
-
+    
             await createIndexes(connection);
         }
         catch(Exception e)
@@ -49,24 +49,20 @@ public static class RedisDatabase
             Logger.Error("Could not initialize Redis:\n" + e, LogArea.Redis);
             return;
         }
-
+    
         Initialized = true;
         Logger.Success("Initialized Redis.", LogArea.Redis);
     }
-
+    
     public static async Task FlushAll()
     {
         IRedisConnection connection = getConnection();
         await connection.ExecuteAsync("FLUSHALL");
-
+    
         await createIndexes(connection);
     }
 
-    private static async Task createIndexes(IRedisConnection connection)
-    {
-        await connection.RecreateIndexAsync(typeof(Room));
-        await connection.RecreateIndexAsync(typeof(UserFriendData));
-    }
+    private static Task createIndexes(IRedisConnection connection) => Task.CompletedTask;
 
     private static IRedisConnection getConnection()
     {

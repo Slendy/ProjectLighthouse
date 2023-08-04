@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Redis.OM;
 
 #if !DEBUG
 using Microsoft.Extensions.Hosting.Internal;
@@ -60,6 +61,14 @@ public class WebsiteStartup
             ? new MailQueueService(new SmtpMailSender())
             : new NullMailService();
         services.AddSingleton(mailService);
+
+        services.AddSingleton(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
+
+        services.AddHostedService<IndexCreationService>(provider =>
+        {
+            RedisConnectionProvider redis = provider.GetRequiredService<RedisConnectionProvider>();
+            return new IndexCreationService(redis);
+        });
 
         services.AddHostedService(provider => new RepeatingTaskService(provider, MaintenanceHelper.RepeatingTasks));
 

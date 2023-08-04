@@ -12,8 +12,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        redis-version: [6.2.12]
         os:
-          - { prettyName: Linux, fullName: ubuntu-latest, database: true, webTest: true }
+          - { prettyName: Linux, fullName: ubuntu-latest, database: true, redis: true, webTest: true }
     timeout-minutes: 5
     env:
       DB_DATABASE: lighthouse_tests
@@ -33,6 +34,14 @@ jobs:
       - name: Create Lighthouse Database
         if: ${{ matrix.os.database }}
         run: mysql -u${{ env.DB_USER }} -p${{ env.DB_PASSWORD }} -h 127.0.0.1 -e "CREATE DATABASE ${{ env.DB_DATABASE }};";
+
+      - name: Start Redis
+        if: ${{ matrix.os.redis }}
+        uses: supercharge/redis-github-action@1.6.0
+        with:
+          redis-image: redis/redis-stack-server
+          redis-version: ${{ matrix.redis-version }}
+          redis-remove-container: true
 
       - name: Install .NET 7.0
         uses: actions/setup-dotnet@v3
@@ -59,7 +68,7 @@ jobs:
         if: ${{ matrix.os.webTest }}
         continue-on-error: true
         run: dotnet test -c Release --no-build --logger "trx;LogFileName=${{github.workspace}}/TestResults-${{matrix.os.prettyName}}-WebsiteTests.trx" ProjectLighthouse.Tests.WebsiteTests
-      
+
       # Attempt to upload results even if test fails.
       # https://docs.github.com/en/actions/reference/context-and-expression-syntax-for-github-actions#always
       - name: Upload Test Results

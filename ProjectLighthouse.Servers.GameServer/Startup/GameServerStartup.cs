@@ -10,10 +10,13 @@ using LBPUnion.ProjectLighthouse.Servers.GameServer.Middlewares;
 using LBPUnion.ProjectLighthouse.Services;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Mail;
+using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
+using Redis.OM;
+using Redis.OM.Searching;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Startup;
 
@@ -64,6 +67,21 @@ public class GameServerStartup
             ? new MailQueueService(new SmtpMailSender())
             : new NullMailService();
         services.AddSingleton(mailService);
+
+        services.AddSingleton(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
+
+        services.AddHostedService<IndexCreationService>(provider =>
+        {
+            RedisConnectionProvider redis = provider.GetRequiredService<RedisConnectionProvider>();
+            return new IndexCreationService(redis);
+        });
+
+        services.AddSingleton<IFriendService>(provider =>
+        {
+            RedisConnectionProvider redis = provider.GetRequiredService<RedisConnectionProvider>();
+            IRedisCollection<UserFriendData> friendData = redis.RedisCollection<UserFriendData>();
+            return new RedisFriendService(friendData);
+        });
 
         services.AddHostedService(provider => new RepeatingTaskService(provider, MaintenanceHelper.RepeatingTasks));
 
