@@ -10,6 +10,7 @@ using LBPUnion.ProjectLighthouse.Servers.GameServer.Middlewares;
 using LBPUnion.ProjectLighthouse.Services;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Mail;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -81,6 +82,13 @@ public class GameServerStartup
             RedisConnectionProvider redis = provider.GetRequiredService<RedisConnectionProvider>();
             IRedisCollection<UserFriendData> friendData = redis.RedisCollection<UserFriendData>();
             return new RedisFriendService(friendData);
+        });
+
+        services.AddSingleton<IRoomService>(provider =>
+        {
+            RedisConnectionProvider redis = provider.GetRequiredService<RedisConnectionProvider>();
+            IRedisCollection<NewRoom> rooms = redis.RedisCollection<NewRoom>();
+            return new RedisRoomService(rooms);
         });
 
         services.AddHostedService(provider => new RepeatingTaskService(provider, MaintenanceHelper.RepeatingTasks));

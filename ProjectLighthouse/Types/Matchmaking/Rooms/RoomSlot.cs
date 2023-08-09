@@ -2,7 +2,7 @@ using LBPUnion.ProjectLighthouse.Types.Levels;
 
 namespace LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 
-public class RoomSlot
+public struct RoomSlot
 {
     public int SlotId { get; set; }
     public SlotType SlotType { get; set; }

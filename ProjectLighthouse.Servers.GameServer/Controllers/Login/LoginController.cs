@@ -1,4 +1,3 @@
-#nullable enable
 using System.Net;
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Database;
@@ -57,13 +56,7 @@ public class LoginController : ControllerBase
 
         string ipAddress = remoteIpAddress.ToString();
 
-        string? username = npTicket.Username;
-
-        if (username == null)
-        {
-            Logger.Warn("Unable to determine username, rejecting login", LogArea.Login);
-            return this.Forbid();
-        }
+        string username = npTicket.Username;
 
         await this.database.RemoveExpiredTokens();
 
@@ -201,9 +194,6 @@ public class LoginController : ControllerBase
         user.LastLogin = TimeHelper.TimestampMillis;
 
         await this.database.SaveChangesAsync();
-
-        // Create a new room on LBP2/3/Vita
-        if (token.GameVersion != GameVersion.LittleBigPlanet1) RoomHelper.CreateRoom(user.UserId, token.GameVersion, token.Platform);
 
         return this.Ok
         (

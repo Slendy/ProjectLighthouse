@@ -69,6 +69,7 @@ public class IndexCreationService : IHostedService
     {
         await this.CreateIndexIfNull(typeof(UserFriendData));
         await this.CreateIndexIfNull(typeof(Room));
+        await this.CreateIndexIfNull(typeof(NewRoom));
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

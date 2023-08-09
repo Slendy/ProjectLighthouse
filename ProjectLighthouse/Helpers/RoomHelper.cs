@@ -45,9 +45,9 @@ public static class RoomHelper
         // If the user is in the pod while trying to look for a room, then they're diving in.
         // Otherwise they're looking for people to play with in a particular level.
         // We handle that here:
-        if (slot != null && slot.SlotType != SlotType.Pod && slot.SlotId != 0)
+        if (slot != null && slot.Value.SlotType != SlotType.Pod && slot.Value.SlotId != 0)
         {
-            rooms = rooms.Where(r => r.Slot.SlotType == slot.SlotType && r.Slot.SlotId == slot.SlotId).ToList();
+            rooms = rooms.Where(r => r.Slot.SlotType == slot.Value.SlotType && r.Slot.SlotId == slot.Value.SlotId).ToList();
         }
 
         // Don't attempt to dive into the current room the player is in.
@@ -98,7 +98,7 @@ public static class RoomHelper
                     }
                 );
 
-                response.Locations.Add(relevantUserLocations.GetValueOrDefault(player.UserId)); // Already validated to exist
+                // response.Locations.Add(relevantUserLocations.GetValueOrDefault(player.UserId)); // Already validated to exist
             }
 
             if (user != null)

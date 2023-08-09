@@ -22,7 +22,7 @@ public class PhotoEntity
 
     public string PlanHash { get; set; } = "";
 
-    public virtual ICollection<PhotoSubjectEntity> PhotoSubjects { get; set; } = new HashSet<PhotoSubjectEntity>();
+    public ICollection<PhotoSubjectEntity> PhotoSubjects { get; set; } = new HashSet<PhotoSubjectEntity>();
 
     public int CreatorId { get; set; }
 

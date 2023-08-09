@@ -38,12 +38,45 @@ public static partial class MatchHelper
 
     public static void ClearUserRecentDiveIns(int userId) => UserRecentlyDivedIn.TryRemove(userId, out _);
 
-    [GeneratedRegex("^\\[([^,]*),\\[(.*)\\]\\]")]
+    [GeneratedRegex("^\\[([^,]*),\\[(.*)]]")]
     private static partial Regex MatchJsonRegex();
 
-    [GeneratedRegex(@"0x[a-fA-F0-9]{7,8}")]
+    [GeneratedRegex("0x[a-fA-F0-9]{7,8}")]
     private static partial Regex LocationHexRegex();
 
+    public static (string Type, string Data)? ParseRoomCommand(string data)
+    {
+        Match match = MatchJsonRegex().Match(data);
+
+        if (!match.Success) return null;
+
+        string matchType = match.Groups[1].Value;
+        // Wraps the actual match data in curly braces to parse it as a json object
+        string matchData = $"{{{match.Groups[2].Value}}}";
+
+        // JSON does not like the hex value that location comes in (0x7f000001) so, convert it to int
+        matchData = LocationHexRegex().Replace(matchData, m => Convert.ToInt32(m.Value, 16).ToString());
+
+        return (matchType, matchData);
+    }
+
+    // This is the function used to show people how laughably awful LBP's protocol is. Beware.
+    public static RoomCommandData? DeserializeRoomCommandData(string data)
+    {
+        Match match = MatchJsonRegex().Match(data);
+
+        if (!match.Success) return null;
+
+        string matchType = match.Groups[1].Value;
+        // Wraps the actual match data in curly braces to parse it as a json object
+        string matchData = $"{{{match.Groups[2].Value}}}";
+
+        // JSON does not like the hex value that location comes in (0x7f000001) so, convert it to int
+        matchData = LocationHexRegex().Replace(matchData, m => Convert.ToInt32(m.Value, 16).ToString());
+
+        return JsonSerializer.Deserialize<RoomCommandData>(data);
+    }
+    
     // This is the function used to show people how laughably awful LBP's protocol is. Beware.
     public static IMatchCommand? Deserialize(string data)
     {
@@ -65,10 +98,9 @@ public static partial class MatchHelper
     {
         return matchType switch
         {
-            "UpdateMyPlayerData" => JsonSerializer.Deserialize<UpdateMyPlayerData>(matchData),
-            "UpdatePlayersInRoom" => JsonSerializer.Deserialize<UpdatePlayersInRoom>(matchData),
-            "CreateRoom" => JsonSerializer.Deserialize<CreateRoom>(matchData),
-            "FindBestRoom" => JsonSerializer.Deserialize<FindBestRoom>(matchData),
+            "UpdateMyPlayerData" => JsonSerializer.Deserialize<UpdateRoomDataCommand>(matchData),
+            "UpdatePlayersInRoom" => JsonSerializer.Deserialize<UpdatePlayersInRoomCommand>(matchData),
+            "FindBestRoom" => JsonSerializer.Deserialize<FindRoomCommand>(matchData),
             _ => null,
         };
     }
