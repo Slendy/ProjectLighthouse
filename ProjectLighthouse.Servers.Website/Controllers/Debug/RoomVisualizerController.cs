@@ -1,5 +1,7 @@
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Helpers;
+using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +13,12 @@ namespace LBPUnion.ProjectLighthouse.Servers.Website.Controllers.Debug;
 public class RoomVisualizerController : ControllerBase
 {
     private readonly DatabaseContext database;
+    private readonly IRoomService roomService;
 
-    public RoomVisualizerController(DatabaseContext database)
+    public RoomVisualizerController(DatabaseContext database, IRoomService roomService)
     {
         this.database = database;
+        this.roomService = roomService;
     }
 
     [HttpGet("createFakeRoom")]
@@ -24,24 +28,32 @@ public class RoomVisualizerController : ControllerBase
         await Task.FromResult(0);
         return this.NotFound();
         #else
-        List<int> users = await this.database.Users.OrderByDescending(_ => EF.Functions.Random()).Take(2).Select(u => u.UserId).ToListAsync();
-        RoomHelper.CreateRoom(users, GameVersion.LittleBigPlanet2, Platform.PS3);
-
-        foreach (int user in users)
+        List<UserEntity> users = await this.database.Users.OrderByDescending(_ => EF.Functions.Random()).Take(2).ToListAsync();
+        await this.roomService.InsertRoom(new NewRoom
         {
-            MatchHelper.SetUserLocation(user, "127.0.0.1");
-        }
+            RoomVersion = GameVersion.LittleBigPlanet2,
+            RoomPlatform = Platform.PS3,
+            Users = users.Select(u => u.Username).ToList(),
+            RoomState = RoomState.Idle,
+            RoomMood = RoomMood.AllowingAll,
+            RoomSlot = RoomSlot.PodSlot,
+        });
+
         return this.Redirect("/debug/roomVisualizer");
         #endif
     }
 
     [HttpGet("deleteRooms")]
-    public IActionResult DeleteRooms()
+    public async Task<IActionResult> DeleteRooms()
     {
         #if !DEBUG
         return this.NotFound();
         #else
-        lock(RoomHelper.RoomLock) RoomHelper.Rooms.RemoveAll();
+        foreach (NewRoom room in await this.roomService.GetRooms())
+        {
+            await this.roomService.RemoveRoom(room);
+        }
+
         return this.Redirect("/debug/roomVisualizer");
         #endif
     }

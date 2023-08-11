@@ -1,18 +1,22 @@
 @page "/debug/roomVisualizer"
 @using LBPUnion.ProjectLighthouse.Database
-@using LBPUnion.ProjectLighthouse.Extensions
-@using LBPUnion.ProjectLighthouse.Helpers
-@using LBPUnion.ProjectLighthouse.Types.Entities.Profile
+@using LBPUnion.ProjectLighthouse.Types.Entities.Token
+@using LBPUnion.ProjectLighthouse.Types.Matchmaking
+@using LBPUnion.ProjectLighthouse.Types.Matchmaking.MatchCommands
 @using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms
 @using LBPUnion.ProjectLighthouse.Types.Users
+@using Redis.OM.Contracts
 @model LBPUnion.ProjectLighthouse.Servers.Website.Pages.Debug.RoomVisualizerPage
 @inject DatabaseContext Database
+@inject IRoomService RoomService
+@inject IRedisConnectionProvider Redis
 
 @{
     Layout = "Layouts/BaseLayout";
     Model.Title = "Debug - Room Visualizer";
 
     const int refreshSeconds = 5;
+    IList<NewRoom> rooms = await RoomService.GetRooms();
 }
 
 <script>
@@ -39,7 +43,7 @@
     <meta http-equiv="refresh" content="@refreshSeconds">
 </noscript>
 
-<p>@RoomHelper.Rooms.Count() rooms</p>
+<p>@rooms.Count rooms</p>
 
 <a href="/debug/roomVisualizer/createFakeRoom">
     <div class="ui blue button">Create Fake Room</div>
@@ -55,23 +59,41 @@
 
 <button class="ui blue button" onclick="stopRefreshing()" id="stop-refresh-button">Stop refreshing</button>
 
-<h2>Best rooms for each game version</h2>
-@foreach (GameVersion version in Enum.GetValues<GameVersion>())
+@if (Model.User != null)
 {
-#nullable enable
-    if (version == GameVersion.LittleBigPlanet1 || version == GameVersion.LittleBigPlanetPSP || version == GameVersion.Unknown) continue;
+    <h2>Best rooms for each game version</h2>
+    foreach (GameVersion version in Enum.GetValues<GameVersion>())
+    {
+        if (version is GameVersion.LittleBigPlanet1 or GameVersion.LittleBigPlanetPSP or GameVersion.Unknown)
+            continue;
 
-    FindBestRoomResponse? response = RoomHelper.FindBestRoom(Database, null, version, null, null, null);
-    string text = response == null ? "No room found." : "Room " + response.RoomId;
+        FindRoomCommand findRoomCommand = new(new GameTokenEntity
+        {
+            GameVersion = version,
+        });
 
-    <p><b>Best room for @version.ToPrettyString()</b>: @text</p>
+        // IActionResult result = await findRoomCommand.ProcessCommand(Database, RoomService, Model.User, new RoomCommandData());
+        IActionResult result = new OkResult();
+        string text = result switch
+        {
+            BadRequestResult => "You are not currently in a room",
+            OkObjectResult okObject when okObject.Value is FindRoomResponse roomResponse => $"Found a room with {roomResponse.Players.Count} players",
+            _ => "Unable to find a room",
+            };
+
+        // FindBestRoomResponse? response = RoomHelper.FindBestRoom(Database, null, version, null, null, null);
+        // string text = response == null ? "No room found." : "Room " + response.RoomId;
+
+        <p><b>Best room for @version.ToPrettyString()</b>: @text</p>
+    }
 }
 
 <h2>Room display</h2>
 
-@foreach (Room room in RoomHelper.Rooms)
+@foreach (NewRoom room in rooms)
 {
-    bool userInRoom = room.PlayerIds.Contains(Model.User?.UserId ?? -1);
+    int expirationSeconds = await Redis.Connection.ExecuteAsync("TTL", $"NewRoom:{room.RoomId}");
+    bool userInRoom = room.Users.Any(u => Model.User != null && u == Model.User.Username);
     string color = userInRoom ? "green" : "blue";
     <div class="ui @color inverted segment">
         <h3>Room @room.RoomId</h3>
@@ -81,11 +103,27 @@
                 <b>You are currently in this room.</b>
             </p>
         }
-        <p>@room.PlayerIds.Count players, state is @room.State, version is @room.RoomVersion.ToPrettyString() on platform @room.RoomPlatform</p>
-        <p>Slot type: @room.Slot.SlotType, slot id: @room.Slot.SlotId</p>
-        @foreach (UserEntity player in room.GetPlayers(Model.Database))
+        <p>@room.Users.Count players, state is @room.RoomState, version is @room.RoomVersion.ToPrettyString() on platform @room.RoomPlatform</p>
+        <p>Slot type: @room.RoomSlot.SlotType, slot id: @room.RoomSlot.SlotId</p>
+        <p>Room mood is @room.RoomMood, room expires in @expirationSeconds seconds</p>
+
+        <h4>Room users</h4>
+        @foreach (string user in room.Users)
         {
-            <div class="ui segment">@player.Username</div>
+            <div class="ui segment">@user</div>
         }
+        <div class="ui divider"></div>
+        <h4>Recently left</h4>
+        @foreach (UserExpiry user in room.RecentlyLeft)
+        {
+            <div class="ui segment">@user.Username - expires at @user.Expiration</div>
+        }
+        <div class="ui divider"></div>
+        <h4>Failed to join</h4>
+        @foreach (UserExpiry user in room.RecentlyLeft)
+        {
+            <div class="ui segment">@user.Username - expires at @user.Expiration</div>
+        }
+        <div class="ui divider"></div>
     </div>
 }

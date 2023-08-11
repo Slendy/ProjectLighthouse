@@ -12,6 +12,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Filter;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Misc;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Users;
@@ -86,17 +87,23 @@ public class SlotsController : ControllerBase
     }
 
     [HttpGet("slots/developer")]
-    public async Task<IActionResult> StoryPlayers()
+    public async Task<IActionResult> StoryPlayers(IRoomService roomService)
     {
         GameTokenEntity token = this.GetToken();
 
-        List<int> activeSlotIds = RoomHelper.Rooms.Where(r => r.Slot.SlotType == SlotType.Developer).Select(r => r.Slot.SlotId).ToList();
+        IList<NewRoom> developerRooms = await roomService.GetRooms(r => r.RoomSlot.SlotType == SlotType.Developer);
+
+        // Order slots by number of rooms
+        List<int> roomCounts = developerRooms.GroupBy(r => r.RoomSlot.SlotId)
+            .OrderByDescending(g => g.Sum(r => r.Users.Count))
+            .Select(g => g.Key)
+            .ToList();
 
         List<SlotBase> slots = new();
 
-        foreach (int id in activeSlotIds)
+        foreach (int slotId in roomCounts)
         {
-            int placeholderSlotId = await SlotHelper.GetPlaceholderSlotId(this.database, id, SlotType.Developer);
+            int placeholderSlotId = await SlotHelper.GetPlaceholderSlotId(this.database, slotId, SlotType.Developer);
             SlotEntity slot = await this.database.Slots.FirstAsync(s => s.SlotId == placeholderSlotId);
 
             slots.Add(SlotBase.CreateFromEntity(slot, token));
@@ -344,16 +351,17 @@ public class SlotsController : ControllerBase
     
     // /slots/busiest?pageStart=1&pageSize=30&gameFilterType=both&players=1&move=true
     [HttpGet("slots/busiest")]
-    public async Task<IActionResult> BusiestLevels()
+    public async Task<IActionResult> BusiestLevels(IRoomService roomService)
     {
         GameTokenEntity token = this.GetToken();
 
         PaginationData pageData = this.Request.GetPaginationData();
 
-        List<int> busiestSlots = RoomHelper.Rooms.Where(r => r.Slot.SlotType == SlotType.User)
-            .GroupBy(r => r.Slot.SlotId)
-            .OrderByDescending(kvp => kvp.Count())
-            .Select(kvp => kvp.Key)
+        IList<NewRoom> levelRooms = await roomService.GetRooms(r => r.RoomSlot.SlotType == SlotType.User);
+
+        List<int> busiestSlots = levelRooms.GroupBy(r => r.RoomSlot.SlotId)
+            .OrderByDescending(g => g.Sum(r => r.Users.Count))
+            .Select(g => g.Key)
             .AsQueryable()
             .ApplyPagination(pageData)
             .ToList();

@@ -5,6 +5,7 @@ using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBPUnion.ProjectLighthouse.Types.Serialization;
@@ -30,7 +31,7 @@ public class GameDeveloperSlot : SlotBase, INeedsPreparationForSerialization
     [XmlElement("photoCount")]
     public int PhotoCount { get; set; }
 
-    public async Task PrepareSerialization(DatabaseContext database)
+    public async Task PrepareSerialization(DatabaseContext database, IRoomService roomService)
     {
         if (this.SlotId == 0 || this.InternalSlotId == 0) return;
 
@@ -43,8 +44,7 @@ public class GameDeveloperSlot : SlotBase, INeedsPreparationForSerialization
             .OrderBy(_ => 1)
             .FirstAsync();
         ReflectionHelper.CopyAllFields(stats, this);
-        this.PlayerCount = RoomHelper.Rooms
-            .Where(r => r.Slot.SlotType == SlotType.Developer && r.Slot.SlotId == this.InternalSlotId)
-            .Sum(r => r.PlayerIds.Count);
+
+        this.PlayerCount = await roomService.GetPlayerCountForSlotAsync(SlotType.Developer, this.InternalSlotId);
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.Json.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Redis.OM.Modeling;
 
@@ -21,14 +23,21 @@ public class NewRoom
     [Indexed]
     public RoomState RoomState { get; set; }
 
-    [Indexed]
+    [Indexed(Sortable = true)]
     public RoomMood RoomMood { get; set; }
-
+    
     [Indexed]
     public RoomSlot RoomSlot { get; set; }
 
     [Indexed]
-    public List<RoomUser> Users { get; set; }
-    
-    public RoomUser Host => this.Users.First();
+    public List<string> Users { get; set; } = new();
+
+    [Indexed(CascadeDepth = 2)]
+    public List<UserExpiry> FailedJoin { get; set; } = new();
+
+    [Indexed(CascadeDepth = 2)]
+    public List<UserExpiry> RecentlyLeft { get; set; } = new();
+
+    [JsonIgnore]
+    public string Host => this.Users.First();
 }

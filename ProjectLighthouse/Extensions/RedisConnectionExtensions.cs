@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using Redis.OM;
+using Redis.OM.Contracts;
 using StackExchange.Redis;
 
 namespace LBPUnion.ProjectLighthouse.Extensions;
@@ -9,7 +10,7 @@ public static class RedisConnectionExtensions
 {
     public static string[] SerializeTypeIndex(Type type)
     {
-        Assembly redisAssembly = typeof(RedisConnectionProvider).Assembly;
+        Assembly redisAssembly = typeof(IRedisConnectionProvider).Assembly;
         Type indexType = redisAssembly.GetType("Redis.OM.Modeling.RedisIndex");
         if (indexType == null) return null;
         MethodInfo methodInfo = indexType.GetMethod("SerializeIndex", BindingFlags.Static | BindingFlags.NonPublic);
@@ -22,7 +23,7 @@ public static class RedisConnectionExtensions
         return result as string[];
     }
 
-    public static bool CloseRedisConnection(this RedisConnectionProvider provider)
+    public static bool CloseRedisConnection(this IRedisConnectionProvider provider)
     {
         FieldInfo muxerField = provider.GetType().GetField("_mux", BindingFlags.Instance | BindingFlags.NonPublic);
         if (muxerField == null) return false;

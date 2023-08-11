@@ -13,6 +13,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Levels;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Misc;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.EntityFrameworkCore;
@@ -233,7 +234,7 @@ public class GameUserSlot : SlotBase, INeedsPreparationForSerialization
     public int ResourcesSize { get; set; }
     public bool ShouldSerializeResourcesSize() => this.TargetGame == GameVersion.LittleBigPlanetVita;
 
-    public async Task PrepareSerialization(DatabaseContext database)
+    public async Task PrepareSerialization(DatabaseContext database, IRoomService roomService)
     {
         var stats = await database.Slots.Where(s => s.SlotId == this.SlotId)
             .Select(_ => new
@@ -295,7 +296,7 @@ public class GameUserSlot : SlotBase, INeedsPreparationForSerialization
         }
         #nullable disable
 
-        this.PlayerCount = RoomHelper.Rooms.Count(r => r.Slot.SlotType == SlotType.User && r.Slot.SlotId == this.SlotId);
+        this.PlayerCount = await roomService.GetPlayerCountForSlotAsync(SlotType.User, this.SlotId);
     }
 
 }

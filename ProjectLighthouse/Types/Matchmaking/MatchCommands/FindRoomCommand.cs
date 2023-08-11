@@ -22,7 +22,7 @@ public class FindRoomCommand : IMatchCommand
 
     public async Task<IActionResult> ProcessCommand(DatabaseContext database, IRoomService roomService, UserEntity user, RoomCommandData commandData)
     {
-        NewRoom? room = await roomService.GetRoomForUser(user.UserId);
+        NewRoom? room = await roomService.GetRoomForUser(user.Username);
         if (room == null) return new BadRequestResult();
         
         //TODO check room state and if the room has enough space for new players
@@ -40,10 +40,10 @@ public class FindRoomCommand : IMatchCommand
         targetRoom.Users = targetRoom.Users.Union(room.Users).ToList();
         FindRoomResponse roomResponse = new()
         {
-            Players = targetRoom.Users.Select(u => new RoomPlayerResponse()
+            Players = targetRoom.Users.Select(username => new RoomPlayerResponse
             {
-                Username = u.Username,
-                MatchingRes = Convert.ToByte(u.Username == user.Username),
+                Username = username,
+                MatchingRes = Convert.ToByte(username == user.Username),
             }).ToList(),
             Slots = new List<List<int>>
             {
@@ -56,8 +56,11 @@ public class FindRoomCommand : IMatchCommand
             RoomState = (byte)targetRoom.RoomState,
         };
 
-        // TODO: Don't join rooms we recently joined
-        // TODO: implement recentlyLeft and failedJoin
+        // This will be removed the next time the host sends an UpdatePlayersInRoom
+        // Otherwise if they never join they will remain in the failed to join list
+        targetRoom.FailedJoin.Add(new UserExpiry(user.Username, DateTime.UtcNow.AddMinutes(5)));
+
+        await roomService.UpdateRoom(targetRoom);
 
         return IMatchCommand.CreateResponse(200, roomResponse);
     }

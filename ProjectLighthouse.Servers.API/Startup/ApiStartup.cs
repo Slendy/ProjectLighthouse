@@ -6,6 +6,7 @@ using LBPUnion.ProjectLighthouse.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Redis.OM;
+using Redis.OM.Contracts;
 
 namespace LBPUnion.ProjectLighthouse.Servers.API.Startup;
 
@@ -36,11 +37,11 @@ public class ApiStartup
                 MySqlServerVersion.LatestSupportedServerVersion);
         });
 
-        services.AddSingleton(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
+        services.AddSingleton<IRedisConnectionProvider>(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
 
         services.AddHostedService<IndexCreationService>(provider =>
         {
-            RedisConnectionProvider redis = provider.GetRequiredService<RedisConnectionProvider>();
+            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
             return new IndexCreationService(redis);
         });
 

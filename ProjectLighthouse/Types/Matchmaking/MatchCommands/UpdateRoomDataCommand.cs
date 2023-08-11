@@ -14,7 +14,7 @@ public class UpdateRoomDataCommand : IMatchCommand
     public async Task<IActionResult> ProcessCommand(DatabaseContext database, IRoomService roomService, UserEntity user, RoomCommandData commandData)
     {
         NewRoom room = await roomService.GetOrCreateRoomForUser(user);
-        if (room.Host.UserId != user.UserId) return new BadRequestResult();
+        // if (room.Host.UserId != user.UserId) return new BadRequestResult();
 
         if (commandData.RoomState == null) return new BadRequestResult();
 

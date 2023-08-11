@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Redis.OM;
+using Redis.OM.Contracts;
 using Redis.OM.Searching;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Startup;
@@ -73,22 +74,22 @@ public class GameServerStartup
 
         services.AddHostedService<IndexCreationService>(provider =>
         {
-            RedisConnectionProvider redis = provider.GetRequiredService<RedisConnectionProvider>();
+            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
             return new IndexCreationService(redis);
         });
 
         services.AddSingleton<IFriendService>(provider =>
         {
-            RedisConnectionProvider redis = provider.GetRequiredService<RedisConnectionProvider>();
+            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
             IRedisCollection<UserFriendData> friendData = redis.RedisCollection<UserFriendData>();
             return new RedisFriendService(friendData);
         });
 
         services.AddSingleton<IRoomService>(provider =>
         {
-            RedisConnectionProvider redis = provider.GetRequiredService<RedisConnectionProvider>();
+            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
             IRedisCollection<NewRoom> rooms = redis.RedisCollection<NewRoom>();
-            return new RedisRoomService(rooms);
+            return new RedisRoomService(rooms, TimeSpan.FromMinutes(5));
         });
 
         services.AddHostedService(provider => new RepeatingTaskService(provider, MaintenanceHelper.RepeatingTasks));

@@ -11,11 +11,14 @@ using LBPUnion.ProjectLighthouse.Servers.Website.Captcha;
 using LBPUnion.ProjectLighthouse.Servers.Website.Middlewares;
 using LBPUnion.ProjectLighthouse.Services;
 using LBPUnion.ProjectLighthouse.Types.Mail;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Redis.OM;
+using Redis.OM.Contracts;
+using Redis.OM.Searching;
 
 #if !DEBUG
 using Microsoft.Extensions.Hosting.Internal;
@@ -62,12 +65,20 @@ public class WebsiteStartup
             : new NullMailService();
         services.AddSingleton(mailService);
 
-        services.AddSingleton(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
+        services.AddSingleton<IRedisConnectionProvider>(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
 
         services.AddHostedService<IndexCreationService>(provider =>
         {
-            RedisConnectionProvider redis = provider.GetRequiredService<RedisConnectionProvider>();
+            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
             return new IndexCreationService(redis);
+        });
+
+        services.AddSingleton<IRoomService>(provider =>
+        {
+            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
+            IRedisCollection<NewRoom> rooms = redis.RedisCollection<NewRoom>();
+            //TODO change back
+            return new RedisRoomService(rooms, TimeSpan.FromHours(5));
         });
 
         services.AddHostedService(provider => new RepeatingTaskService(provider, MaintenanceHelper.RepeatingTasks));

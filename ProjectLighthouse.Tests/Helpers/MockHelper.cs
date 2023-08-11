@@ -54,8 +54,6 @@ public static class MockHelper
 
     public static async Task<DatabaseContext> GetTestDatabase(IEnumerable<IList> sets, [CallerMemberName] string caller = "", [CallerLineNumber] int lineNum = 0)
     {
-        await RoomHelper.Rooms.RemoveAllAsync();
-
         Dictionary<Type, IList> setDict = new();
         foreach (IList list in sets)
         {
@@ -103,8 +101,6 @@ public static class MockHelper
         [CallerMemberName] string caller = "", [CallerLineNumber] int lineNum = 0
     )
     {
-        await RoomHelper.Rooms.RemoveAllAsync();
-
         users ??= new List<UserEntity>
         {
             GetUnitTestUser(),

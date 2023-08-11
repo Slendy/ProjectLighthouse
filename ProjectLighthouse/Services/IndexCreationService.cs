@@ -10,14 +10,15 @@ using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.Extensions.Hosting;
 using Redis.OM;
+using Redis.OM.Contracts;
 
 namespace LBPUnion.ProjectLighthouse.Services;
 
 public class IndexCreationService : IHostedService
 {
-    private readonly RedisConnectionProvider provider;
+    private readonly IRedisConnectionProvider provider;
 
-    public IndexCreationService(RedisConnectionProvider provider)
+    public IndexCreationService(IRedisConnectionProvider provider)
     {
         this.provider = provider;
     }

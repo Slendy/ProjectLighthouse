@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Slots;
+using LBPUnion.ProjectLighthouse.Services;
 using LBPUnion.ProjectLighthouse.Tests.Helpers;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
@@ -444,7 +446,7 @@ public class SlotControllerTests
 
             await AddRoom(10, SlotType.Developer, 7);
 
-            IActionResult result = await controller.BusiestLevels();
+            IActionResult result = await controller.BusiestLevels(new RedisRoomService(null, TimeSpan.Zero));
             GenericSlotResponse slotResponse = result.CastTo<OkObjectResult, GenericSlotResponse>();
             Assert.Equal(3, slotResponse.Slots.Count);
             Assert.IsType<GameUserSlot>(slotResponse.Slots[0]);
@@ -483,7 +485,7 @@ public class SlotControllerTests
 
             await AddRoom(10, SlotType.Developer, 1);
 
-            IActionResult result = await controller.BusiestLevels();
+            IActionResult result = await controller.BusiestLevels(new RedisRoomService(null, TimeSpan.Zero));
             GenericSlotResponse slotResponse = result.CastTo<OkObjectResult, GenericSlotResponse>();
             Assert.Empty(slotResponse.Slots);
         }
@@ -505,7 +507,7 @@ public class SlotControllerTests
 
             await AddRoom(1, SlotType.User, 1);
 
-            IActionResult result = await controller.BusiestLevels();
+            IActionResult result = await controller.BusiestLevels(new RedisRoomService(null, TimeSpan.Zero));
             GenericSlotResponse slotResponse = result.CastTo<OkObjectResult, GenericSlotResponse>();
             Assert.Empty(slotResponse.Slots);
         }

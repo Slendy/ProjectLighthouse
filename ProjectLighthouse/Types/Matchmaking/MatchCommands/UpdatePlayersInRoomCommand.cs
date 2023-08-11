@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,13 +17,25 @@ public class UpdatePlayersInRoomCommand : IMatchCommand
     {
         if (commandData.Players == null) return new BadRequestResult();
         if (commandData.Players.Count is < 1 or > 4) return new BadRequestResult();
+        if (!commandData.Players.Contains(user.Username)) return new BadRequestResult();
 
         NewRoom room = await roomService.GetOrCreateRoomForUser(user);
-        if (room.Host.UserId != user.UserId) return new BadRequestResult();
+        if (room.Host != user.Username) return new BadRequestResult();
 
-        List<string> roomUsers = room.Users.Select(u => u.Username).ToList();
+        List<string> currentUsers = room.Users.ToList();
 
-        foreach (string username in commandData.Players.Where(username => !roomUsers.Contains(username)))
+        List<string> removedUsers = currentUsers.Except(commandData.Players).ToList();
+        List<string> newUsers = commandData.Players.Except(currentUsers).ToList();
+
+        room.FailedJoin.RemoveAll(r => newUsers.Contains(r.Username));
+        foreach (string username in removedUsers.Where(username => room.RecentlyLeft.All(u => u.Username != username)))
+        {
+            room.RecentlyLeft.Add(new UserExpiry(username, DateTime.UtcNow.AddMinutes(5)));
+        }
+
+        await roomService.UpdateRoom(room);
+
+        foreach (string username in newUsers)
         {
             int userId = await database.Users.Where(u => u.Username == username)
                 .Select(u => u.UserId)

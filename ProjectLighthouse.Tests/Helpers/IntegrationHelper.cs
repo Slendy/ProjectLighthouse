@@ -27,17 +27,11 @@ public static class IntegrationHelper
                                 "Please ensure that the database is running and that the connection string is correct.\n" +
                                 $"Connection string: {ServerConfiguration.Instance.DbConnectionString}");
         }
-        await ClearRooms();
         await using DatabaseContext database = DatabaseContext.CreateNewInstance();
         await database.Database.EnsureDeletedAsync();
         await database.Database.EnsureCreatedAsync();
 
         return DatabaseContext.CreateNewInstance();
-    }
-
-    private static async Task ClearRooms()
-    {
-        await RoomHelper.Rooms.RemoveAllAsync();
     }
 
 }

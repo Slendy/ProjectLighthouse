@@ -6,6 +6,8 @@ using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Filter;
 using LBPUnion.ProjectLighthouse.Filter.Filters;
 using LBPUnion.ProjectLighthouse.Servers.GameServer.Extensions;
+using LBPUnion.ProjectLighthouse.Types.Entities.Token;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.Rooms;
 using LBPUnion.ProjectLighthouse.Types.Serialization;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers;
@@ -24,10 +26,23 @@ public class StatisticsController : ControllerBase
     }
 
     [HttpGet("playersInPodCount")]
-    public IActionResult PlayersInPodCount() => this.Ok(StatisticsHelper.RoomCountForPlatform(this.GetToken().Platform).ToString());
+    public async Task<IActionResult> PlayersInPodCount(IRoomService roomService)
+    {
+        GameTokenEntity token = this.GetToken();
+        IList<NewRoom> rooms = await roomService.GetRooms(r => r.RoomPlatform == token.Platform);
+        int totalPlayers = rooms.Sum(r => r.Users.Count);
+
+        return this.Ok(totalPlayers.ToString());
+    }
 
     [HttpGet("totalPlayerCount")]
-    public async Task<IActionResult> TotalPlayerCount() => this.Ok((await StatisticsHelper.RecentMatchesForGame(this.database, this.GetToken().GameVersion)).ToString());
+    public async Task<IActionResult> TotalPlayerCount()
+    {
+        GameTokenEntity token = this.GetToken();
+        int recentMatches = await StatisticsHelper.RecentMatchesForGame(this.database, token.GameVersion);
+
+        return this.Ok(recentMatches.ToString());
+    }
 
     [HttpGet("planetStats")]
     [Produces("text/xml")]
@@ -46,6 +61,7 @@ public class StatisticsController : ControllerBase
     {
         SlotQueryBuilder defaultFilter = this.GetDefaultFilters(this.GetToken());
         int totalSlotCount = await StatisticsHelper.SlotCount(this.database, defaultFilter);
+
         return this.Ok(totalSlotCount.ToString());
     }
 }
