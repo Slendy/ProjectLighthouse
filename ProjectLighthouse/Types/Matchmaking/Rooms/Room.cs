@@ -23,7 +23,7 @@ public class Room
     [RedisIdField] 
     public string RedisId { get; set; }
 
-    [Indexed]
+    [Indexed(Sortable = true)]
     public List<int> PlayerIds { get; set; }
 
     [Indexed]

@@ -14,6 +14,7 @@ using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Logging.Loggers;
 using LBPUnion.ProjectLighthouse.Types.Entities.Maintenance;
+using LBPUnion.ProjectLighthouse.Types.Entities.Matching;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Maintenance;
@@ -69,36 +70,6 @@ public static class StartupTasks
             Environment.Exit(-1);
         }
         Logger.Success("Successfully connected to the database.", LogArea.Startup);
-
-        Logger.Info("Connecting to Redis...", LogArea.Startup);
-
-        RedisConnectionProvider redis = null;
-        try
-        {
-            redis = new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString);
-            if (await redis.Connection.ExecuteAsync("PING") != "PONG")
-            {
-                Logger.Error("Redis unavailable! Exiting.", LogArea.Redis);
-                Logger.Error("Ensure that you have set the redisConnectionString field in lighthouse.yaml",
-                    LogArea.Startup);
-                Environment.Exit(-1);
-                return;
-            }
-        }
-        catch (Exception e)
-        {
-            Logger.Error("There was an error connecting to Redis:", LogArea.Startup);
-            Logger.Error(e.ToDetailedException(), LogArea.Startup);
-            Environment.Exit(-1);
-        }
-        finally
-        {
-            if (!redis?.CloseRedisConnection() ?? true)
-            {
-                Logger.Warn("Failed to cleanup Redis connection", LogArea.Startup);
-            }
-        }
-        Logger.Success("Successfully connected to Redis.", LogArea.Startup);
 
         await MigrateDatabase(database);
 

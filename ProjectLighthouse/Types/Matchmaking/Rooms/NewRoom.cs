@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text.Json.Serialization;
 using LBPUnion.ProjectLighthouse.Types.Users;
@@ -31,6 +30,10 @@ public class NewRoom
 
     [Indexed]
     public List<string> Users { get; set; } = new();
+
+    [Indexed(JsonPath = "$.Username", Aggregatable = true)]
+    [Indexed(JsonPath = "$.UserId", Sortable = true)]
+    public List<RoomUser> TestUsers { get; set; } = new();
 
     [Indexed(CascadeDepth = 2)]
     public List<UserExpiry> FailedJoin { get; set; } = new();

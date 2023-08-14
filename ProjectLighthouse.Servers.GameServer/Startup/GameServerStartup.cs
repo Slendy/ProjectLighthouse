@@ -15,6 +15,7 @@ using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Redis.OM;
 using Redis.OM.Contracts;
@@ -65,32 +66,39 @@ public class GameServerStartup
                 MySqlServerVersion.LatestSupportedServerVersion);
         });
 
+        services.AddDbContext<MemoryContext>(builder =>
+        {
+            SqliteConnection connection = new("DataSource=Lighthouse;Mode=Memory;Cache=Shared");
+            connection.Open();
+            builder.UseSqlite(connection);
+        });
+
         IMailService mailService = ServerConfiguration.Instance.Mail.MailEnabled
             ? new MailQueueService(new SmtpMailSender())
             : new NullMailService();
         services.AddSingleton(mailService);
 
-        services.AddSingleton(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
-
-        services.AddHostedService<IndexCreationService>(provider =>
-        {
-            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
-            return new IndexCreationService(redis);
-        });
-
-        services.AddSingleton<IFriendService>(provider =>
-        {
-            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
-            IRedisCollection<UserFriendData> friendData = redis.RedisCollection<UserFriendData>();
-            return new RedisFriendService(friendData);
-        });
-
-        services.AddSingleton<IRoomService>(provider =>
-        {
-            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
-            IRedisCollection<NewRoom> rooms = redis.RedisCollection<NewRoom>();
-            return new RedisRoomService(rooms, TimeSpan.FromMinutes(5));
-        });
+        // services.AddSingleton(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
+        //
+        // services.AddHostedService<IndexCreationService>(provider =>
+        // {
+        //     IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
+        //     return new IndexCreationService(redis);
+        // });
+        //
+        // services.AddSingleton<IFriendService>(provider =>
+        // {
+        //     IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
+        //     IRedisCollection<UserFriendData> friendData = redis.RedisCollection<UserFriendData>();
+        //     return new RedisFriendService(friendData);
+        // });
+        //
+        // services.AddSingleton<IRoomService>(provider =>
+        // {
+        //     IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
+        //     IRedisCollection<NewRoom> rooms = redis.RedisCollection<NewRoom>();
+        //     return new RedisRoomService(rooms, TimeSpan.FromMinutes(5));
+        // });
 
         services.AddHostedService(provider => new RepeatingTaskService(provider, MaintenanceHelper.RepeatingTasks));
 

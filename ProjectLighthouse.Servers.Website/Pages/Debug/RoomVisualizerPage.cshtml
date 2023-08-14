@@ -16,6 +16,7 @@
     Model.Title = "Debug - Room Visualizer";
 
     const int refreshSeconds = 5;
+    Console.WriteLine(await RoomService.GetRoomCountAsync());
     IList<NewRoom> rooms = await RoomService.GetRooms();
 }
 
@@ -64,8 +65,7 @@
     <h2>Best rooms for each game version</h2>
     foreach (GameVersion version in Enum.GetValues<GameVersion>())
     {
-        if (version is GameVersion.LittleBigPlanet1 or GameVersion.LittleBigPlanetPSP or GameVersion.Unknown)
-            continue;
+        if (version is GameVersion.LittleBigPlanet1 or GameVersion.LittleBigPlanetPSP or GameVersion.Unknown) continue;
 
         FindRoomCommand findRoomCommand = new(new GameTokenEntity
         {
@@ -111,6 +111,10 @@
         @foreach (string user in room.Users)
         {
             <div class="ui segment">@user</div>
+        }
+        @foreach (RoomUser user in room.TestUsers)
+        {
+            <div class="ui segment">@user.Username</div>
         }
         <div class="ui divider"></div>
         <h4>Recently left</h4>

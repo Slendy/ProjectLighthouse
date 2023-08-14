@@ -65,22 +65,6 @@ public class WebsiteStartup
             : new NullMailService();
         services.AddSingleton(mailService);
 
-        services.AddSingleton<IRedisConnectionProvider>(new RedisConnectionProvider(ServerConfiguration.Instance.RedisConnectionString));
-
-        services.AddHostedService<IndexCreationService>(provider =>
-        {
-            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
-            return new IndexCreationService(redis);
-        });
-
-        services.AddSingleton<IRoomService>(provider =>
-        {
-            IRedisConnectionProvider redis = provider.GetRequiredService<IRedisConnectionProvider>();
-            IRedisCollection<NewRoom> rooms = redis.RedisCollection<NewRoom>();
-            //TODO change back
-            return new RedisRoomService(rooms, TimeSpan.FromHours(5));
-        });
-
         services.AddHostedService(provider => new RepeatingTaskService(provider, MaintenanceHelper.RepeatingTasks));
 
         services.AddHttpClient<ICaptchaService, CaptchaService>("CaptchaAPI",

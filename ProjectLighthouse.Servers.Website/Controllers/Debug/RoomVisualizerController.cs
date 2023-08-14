@@ -34,6 +34,11 @@ public class RoomVisualizerController : ControllerBase
             RoomVersion = GameVersion.LittleBigPlanet2,
             RoomPlatform = Platform.PS3,
             Users = users.Select(u => u.Username).ToList(),
+            TestUsers = new List<RoomUser>
+            {
+                new("yeet", 12),
+                new("test", 0),
+            },
             RoomState = RoomState.Idle,
             RoomMood = RoomMood.AllowingAll,
             RoomSlot = RoomSlot.PodSlot,
