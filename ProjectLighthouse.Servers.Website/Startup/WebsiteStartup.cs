@@ -38,9 +38,11 @@ public class WebsiteStartup
     {
         services.AddControllers();
         #if DEBUG
-        services.AddRazorPages().WithRazorPagesAtContentRoot().AddRazorRuntimeCompilation((options) =>
+        services.AddRazorPages().WithRazorPagesAtContentRoot().AddRazorRuntimeCompilation(options =>
         {
-            // jank but works
+            // This is for hot reload to work with Razor pages
+            // the file provider needs to be at the ProjectLighthouse.Servers.Website folder
+            // BaseDirectory should be in /bin/Debug/net so we need to go back 3 levels
             string projectDir = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", ".."));
 
             options.FileProviders.Clear();
@@ -123,6 +125,8 @@ public class WebsiteStartup
         app.UseMiddleware<UserRequiredRedirectMiddleware>();
 
         app.UseRouting();
+
+        Console.WriteLine(env.ContentRootPath);
 
         app.UseStaticFiles(new StaticFileOptions
         {

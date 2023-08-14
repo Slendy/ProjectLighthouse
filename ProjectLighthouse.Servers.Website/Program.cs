@@ -11,7 +11,6 @@ builder.ConfigureWebHostDefaults(webBuilder =>
 {
     webBuilder.UseStartup<WebsiteStartup>();
     webBuilder.UseUrls(ServerConfiguration.Instance.WebsiteListenUrl);
-    webBuilder.UseWebRoot("StaticFiles");
 });
 
 builder.ConfigureLogging(logging =>

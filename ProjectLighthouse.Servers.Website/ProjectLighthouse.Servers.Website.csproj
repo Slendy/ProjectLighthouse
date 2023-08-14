@@ -16,9 +16,4 @@
         <PackageReference Include="QRCoder" Version="1.4.3" />
     </ItemGroup>
 
-    <ItemGroup>
-        <None Include="StaticFiles\**" />
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </ItemGroup>
-
 </Project>
