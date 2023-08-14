@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using LBPUnion.ProjectLighthouse.Configuration;
 using LBPUnion.ProjectLighthouse.Logging;
 using LBPUnion.ProjectLighthouse.Types.Logging;
@@ -11,14 +14,19 @@ public static class VersionHelper
     {
         try
         {
-            CommitHash = ResourceHelper.ReadManifestFile("gitVersion.txt");
-            Branch = ResourceHelper.ReadManifestFile("gitBranch.txt");
+            List<AssemblyMetadataAttribute> assemblyAttributes = Assembly.GetExecutingAssembly()
+                .GetCustomAttributes<AssemblyMetadataAttribute>()
+                .Where(a => a.Key.StartsWith("Git"))
+                .ToList();
+            CommitHash = assemblyAttributes.FirstOrDefault(attr => attr.Key == "GitHash")?.Value ?? "invalid";
+            Branch = assemblyAttributes.FirstOrDefault(attr => attr.Key == "GitBranch")?.Value ?? "invalid";
+
             string commitNumber = $"{CommitHash}_{Build}";
             FullRevision = Branch == "main" ? $"r{commitNumber}" : $"{Branch}_r{commitNumber}";
 
-            string remotesFile = ResourceHelper.ReadManifestFile("gitRemotes.txt");
+            string remotesFile = assemblyAttributes.FirstOrDefault(attr => attr.Key == "GitRemotes")?.Value ?? "";
 
-            string[] lines = remotesFile.Split('\n');
+            string[] lines = remotesFile.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             // line[0] line[1]                                        line[2]
             // origin  git@github.com:LBPUnion/project-lighthouse.git (fetch)
@@ -26,7 +34,9 @@ public static class VersionHelper
             // linq is a serious and painful catastrophe but its useful so i'm gonna keep using it
             Remotes = lines.Select(line => line.Split("\t")[1]).ToArray();
 
-            CommitsOutOfDate = ResourceHelper.ReadManifestFile("gitUnpushed.txt").Split('\n').Length;
+            CommitsOutOfDate = (assemblyAttributes.FirstOrDefault(attr => attr.Key == "GitUnpushed")?.Value ?? "invalid")
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Length;
 
             CanCheckForUpdates = true;
         }

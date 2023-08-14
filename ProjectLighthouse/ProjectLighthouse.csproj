@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
+
     <PropertyGroup>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <TargetFramework>net7.0</TargetFramework>
@@ -30,32 +31,44 @@
     </ItemGroup>
 
     <ItemGroup>
-		<None Remove="gitVersion.txt" />
-		<EmbeddedResource Include="gitVersion.txt">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</EmbeddedResource>
-		<None Remove="gitBranch.txt" />
-		<EmbeddedResource Include="gitBranch.txt">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</EmbeddedResource>
-		<None Remove="gitRemotes.txt" />
-		<EmbeddedResource Include="gitRemotes.txt">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</EmbeddedResource>
-		<None Remove="gitUnpushed.txt" />
-		<EmbeddedResource Include="gitUnpushed.txt">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</EmbeddedResource>
+        <ProjectReference Include="..\ProjectLighthouse.Localization\ProjectLighthouse.Localization.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\ProjectLighthouse.Localization\ProjectLighthouse.Localization.csproj" />
-    </ItemGroup>
 
-    <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="git describe --long --always --dirty --exclude=\* --abbrev=8 &gt; &quot;$(ProjectDir)/gitVersion.txt&quot;" />
-		<Exec Command="git branch --show-current &gt; &quot;$(ProjectDir)/gitBranch.txt&quot;" />
-		<Exec Command="git remote -v &gt; &quot;$(ProjectDir)/gitRemotes.txt&quot;" />
-		<Exec Command="git log --branches --not --remotes --oneline &gt; &quot;$(ProjectDir)/gitUnpushed.txt&quot;" />
+    <!--  Embed git information into the application assembly  -->
+    <Target Name="SetGitInformation" BeforeTargets="InitializeSourceControlInformation">
+        <Exec Command="git describe --long --always --dirty --exclude=* --abbrev=8" ConsoleToMSBuild="True" IgnoreExitCode="False">
+            <Output PropertyName="GitHash" TaskParameter="ConsoleOutput"/>
+        </Exec>
+        <Exec Command="git branch --show-current" ConsoleToMSBuild="True" IgnoreExitCode="False">
+            <Output PropertyName="GitBranch" TaskParameter="ConsoleOutput"/>
+        </Exec>
+        <Exec Command="git remote -v" ConsoleToMSBuild="True" IgnoreExitCode="False">
+            <Output PropertyName="GitRemotes" TaskParameter="ConsoleOutput"/>
+        </Exec>
+        <Exec Command="git log --branches --not --remotes --oneline" ConsoleToMSBuild="True" IgnoreExitCode="False">
+            <Output PropertyName="GitUnpushed" TaskParameter="ConsoleOutput"/>
+        </Exec>
     </Target>
+    <Target Name="SetGitAssemblyMetadata" AfterTargets="InitializeSourceControlInformation">
+        <ItemGroup>
+            <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+                <_Parameter1>GitHash</_Parameter1>
+                <_Parameter2>$(GitHash)</_Parameter2>
+            </AssemblyAttribute>
+            <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+                <_Parameter1>GitBranch</_Parameter1>
+                <_Parameter2>$(GitBranch)</_Parameter2>
+            </AssemblyAttribute>
+            <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+                <_Parameter1>GitRemotes</_Parameter1>
+                <_Parameter2>$(GitRemotes)</_Parameter2>
+            </AssemblyAttribute>
+            <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+                <_Parameter1>GitUnpushed</_Parameter1>
+                <_Parameter2>$(GitUnpushed)</_Parameter2>
+            </AssemblyAttribute>
+        </ItemGroup>
+    </Target>
+
 </Project>

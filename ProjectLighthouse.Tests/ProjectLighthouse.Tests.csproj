@@ -2,13 +2,9 @@
 
     <PropertyGroup>
         <Nullable>enable</Nullable>
-
         <IsPackable>false</IsPackable>
-
         <TargetFramework>net7.0</TargetFramework>
-
         <AssemblyName>LBPUnion.ProjectLighthouse.Tests</AssemblyName>
-
         <RootNamespace>LBPUnion.ProjectLighthouse.Tests</RootNamespace>
     </PropertyGroup>
 
@@ -39,4 +35,5 @@
         </Content>
         <ProjectReference Include="..\ProjectLighthouse\ProjectLighthouse.csproj" />
     </ItemGroup>
+
 </Project>
