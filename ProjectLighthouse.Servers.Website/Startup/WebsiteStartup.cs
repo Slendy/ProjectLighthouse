@@ -126,8 +126,6 @@ public class WebsiteStartup
 
         app.UseRouting();
 
-        Console.WriteLine(env.ContentRootPath);
-
         app.UseStaticFiles(new StaticFileOptions
         {
             ServeUnknownFileTypes = true,
