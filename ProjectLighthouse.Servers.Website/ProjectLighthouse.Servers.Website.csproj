@@ -16,4 +16,10 @@
         <PackageReference Include="QRCoder" Version="1.4.3" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="wwwroot\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>

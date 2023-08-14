@@ -18,8 +18,11 @@ public static class VersionHelper
                 .GetCustomAttributes<AssemblyMetadataAttribute>()
                 .Where(a => a.Key.StartsWith("Git"))
                 .ToList();
-            CommitHash = assemblyAttributes.FirstOrDefault(attr => attr.Key == "GitHash")?.Value ?? "invalid";
-            Branch = assemblyAttributes.FirstOrDefault(attr => attr.Key == "GitBranch")?.Value ?? "invalid";
+            CommitHash = assemblyAttributes.FirstOrDefault(attr => attr.Key == "GitHash")?.Value ?? "";
+            Branch = assemblyAttributes.FirstOrDefault(attr => attr.Key == "GitBranch")?.Value ?? "";
+
+            if (string.IsNullOrWhiteSpace(CommitHash) || string.IsNullOrWhiteSpace(Branch))
+                throw new NullReferenceException("Git information is null");
 
             string commitNumber = $"{CommitHash}_{Build}";
             FullRevision = Branch == "main" ? $"r{commitNumber}" : $"{Branch}_r{commitNumber}";

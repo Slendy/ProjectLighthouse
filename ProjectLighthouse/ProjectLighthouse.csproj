@@ -34,19 +34,18 @@
         <ProjectReference Include="..\ProjectLighthouse.Localization\ProjectLighthouse.Localization.csproj"/>
     </ItemGroup>
 
-
     <!--  Embed git information into the application assembly  -->
     <Target Name="SetGitInformation" BeforeTargets="InitializeSourceControlInformation">
-        <Exec Command="git describe --long --always --dirty --exclude=* --abbrev=8" ConsoleToMSBuild="True" IgnoreExitCode="False">
+        <Exec Command="git describe --long --always --dirty --exclude=* --abbrev=8" ConsoleToMSBuild="true" IgnoreExitCode="false" StandardOutputImportance="low">
             <Output PropertyName="GitHash" TaskParameter="ConsoleOutput"/>
         </Exec>
-        <Exec Command="git branch --show-current" ConsoleToMSBuild="True" IgnoreExitCode="False">
+        <Exec Command="git branch --show-current" ConsoleToMSBuild="true" IgnoreExitCode="false" StandardOutputImportance="low">
             <Output PropertyName="GitBranch" TaskParameter="ConsoleOutput"/>
         </Exec>
-        <Exec Command="git remote -v" ConsoleToMSBuild="True" IgnoreExitCode="False">
+        <Exec Command="git remote -v" ConsoleToMSBuild="true" IgnoreExitCode="false" StandardOutputImportance="low">
             <Output PropertyName="GitRemotes" TaskParameter="ConsoleOutput"/>
         </Exec>
-        <Exec Command="git log --branches --not --remotes --oneline" ConsoleToMSBuild="True" IgnoreExitCode="False">
+        <Exec Command="git log --branches --not --remotes --oneline" ConsoleToMSBuild="true" IgnoreExitCode="false" StandardOutputImportance="low">
             <Output PropertyName="GitUnpushed" TaskParameter="ConsoleOutput"/>
         </Exec>
     </Target>
