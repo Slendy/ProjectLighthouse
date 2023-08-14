@@ -126,9 +126,11 @@ public class WebsiteStartup
 
         app.UseRouting();
 
+        string staticFilesPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "StaticFiles"));
+
         app.UseStaticFiles(new StaticFileOptions
         {
-            ServeUnknownFileTypes = true,
+            FileProvider = new PhysicalFileProvider(staticFilesPath),
         });
 
         app.UseRequestLocalization();

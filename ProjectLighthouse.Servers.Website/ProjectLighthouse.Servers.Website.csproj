@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="wwwroot\**">
+        <None Include="StaticFiles\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
