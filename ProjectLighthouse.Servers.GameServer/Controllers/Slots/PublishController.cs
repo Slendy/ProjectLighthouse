@@ -74,6 +74,15 @@ public class PublishController : ControllerBase
             return this.BadRequest();
         }
 
+        if (!ServerConfiguration.Instance.UserGeneratedContentLimits.DuplicateSlotUploadingEnabled 
+            && await this.database.Slots.AnyAsync(s => s.RootLevel == slot.RootLevel))
+        {
+            Logger.Warn("Rejecting level upload, rootlevel is duplicate", LogArea.Publish);
+            await this.database.SendNotification(user.UserId,
+                $"{slot.Name} failed to publish. (LH-PUB-0011)");
+            return this.BadRequest();
+        }
+
         int usedSlots = await this.database.Slots.CountAsync(s => s.CreatorId == token.UserId && s.GameVersion == token.GameVersion);
 
         // Republish logic
