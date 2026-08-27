@@ -150,7 +150,7 @@ public class GameEvent : ILbpSerializable, INeedsPreparationForSerialization
             EventType.Score => new GameScoreEvent
             {
                 ScoreId = ((ScoreActivityEntity)activity.Activity).ScoreId,
-                Score = ((ScoreActivityEntity)activity.Activity).Points,
+                Score = (int)activity.Activity.Data,
                 Slot = new ReviewSlot
                 {
                     SlotId = targetId,
@@ -160,7 +160,7 @@ public class GameEvent : ILbpSerializable, INeedsPreparationForSerialization
             {
                 Slot = new ReviewSlot
                 {
-                    SlotId = targetId
+                    SlotId = targetId,
                 },
             },
             EventType.CommentOnLevel => new GameSlotCommentEvent
@@ -204,7 +204,9 @@ public class GameEvent : ILbpSerializable, INeedsPreparationForSerialization
                 {
                     SlotId = targetId,
                 },
-                Count = 1,
+                Count = (int)activity.Activity.Data,
+                // 1 for republish, 0 for initial publish
+                IsRepublish = Convert.ToInt32(activity.Activity.Data > 1),
             },
             EventType.NewsPost => new GameNewsEvent
             {

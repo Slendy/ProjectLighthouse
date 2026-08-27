@@ -26,8 +26,5 @@ public class GamePublishLevelEvent : GameEvent
         if (slot == null) return;
 
         this.Slot = ReviewSlot.CreateFromEntity(slot);
-        // TODO does this work?
-        bool republish = Math.Abs(this.Timestamp - slot.FirstUploaded) > 5000;
-        this.IsRepublish = Convert.ToInt32(republish);
     }
 }

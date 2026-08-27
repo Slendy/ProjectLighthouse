@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LBPUnion.ProjectLighthouse.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20240514032620_AddPublishedAtToWebAnnouncement")]
+    [Migration("20260827032620_AddPublishedAtToWebAnnouncement")]
     public partial class AddPublishedAtToWebAnnouncement : Migration
     {
         /// <inheritdoc />

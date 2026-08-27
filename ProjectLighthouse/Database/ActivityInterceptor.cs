@@ -22,7 +22,7 @@ public class ActivityInterceptor : SaveChangesInterceptor
         public required object OldEntity { get; init; }
     }
 
-    private struct TrackedEntityKey
+    private record struct TrackedEntityKey
     {
         public Type Type { get; set; }
         public int HashCode { get; set; }

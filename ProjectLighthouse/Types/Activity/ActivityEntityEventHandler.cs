@@ -30,6 +30,7 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                     Type = EventType.PublishLevel,
                     SlotId = slot.SlotId,
                     UserId = slot.CreatorId,
+                    Data = 1,
                 },
                 _ => null,
             },
@@ -82,7 +83,7 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                     ScoreId = score.ScoreId,
                     UserId = score.UserId,
                     SlotId = score.SlotId,
-                    Points = score.Points,
+                    Data = (ulong)score.Points,
                 },
                 _ => null,
             },
@@ -246,7 +247,7 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                     ScoreId = score.ScoreId,
                     SlotId = score.SlotId,
                     UserId = score.UserId,
-                    Points = score.Points,
+                    Data = (ulong)score.Points,
                 };
 
                 break;
@@ -287,6 +288,7 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                                 Type = EventType.PublishLevel,
                                 SlotId = slotEntity.SlotId,
                                 UserId = slotEntity.CreatorId,
+                                Data = 2,
                             };
                         }
 

@@ -28,4 +28,9 @@ public class ActivityEntity
     /// The type of this event.
     /// </summary>
     public EventType Type { get; set; }
+
+    /// <summary>
+    /// Miscellaneous data store for event types to use (i.e. to store the score value or determining whether a level is a republish)
+    /// </summary>
+    public ulong Data { get; set; }
 }

@@ -7,6 +7,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Entities.Activity;
 /// <summary>
 /// Supported event types: <see cref="EventType.PlayLevel"/>, <see cref="EventType.HeartLevel"/>, <see cref="EventType.PublishLevel"/>,
 /// <see cref="EventType.UnheartLevel"/>, and <see cref="EventType.MMPickLevel"/>.
+/// <see cref="ActivityEntity.Data"/> field is used for storing whether an <see cref="EventType.PublishLevel"/> event was a republish.
 /// </summary>
 public class LevelActivityEntity : ActivityEntity
 {

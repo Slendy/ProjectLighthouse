@@ -6,6 +6,7 @@ namespace LBPUnion.ProjectLighthouse.Types.Entities.Activity;
 
 /// <summary>
 /// Supported event types: <see cref="EventType.Score"/>.
+/// <see cref="ActivityEntity.Data"/> field is used for storing score points at time of event
 /// </summary>
 public class ScoreActivityEntity : ActivityEntity
 {
@@ -22,6 +23,4 @@ public class ScoreActivityEntity : ActivityEntity
 
     [ForeignKey(nameof(SlotId))]
     public SlotEntity Slot { get; set; }
-
-    public int Points { get; set; }
 }
