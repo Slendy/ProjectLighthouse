@@ -146,6 +146,9 @@ else
                 <a class="item lh-sidebar" target="lh-scores">
                     Scores
                 </a>
+                <a class="item lh-sidebar" target="lh-activity">
+                    Activity
+                </a>
             </div>
         </div>
 
@@ -201,6 +204,11 @@ else
             <div class="lh-content" id="lh-scores">
                 <div class="eight wide column">
                     @await Html.PartialAsync("Partials/LeaderboardPartial", ViewData.WithLang(language).WithTime(timeZone).CanDelete(Model.User?.IsModerator ?? false))
+                </div>
+            </div>
+            <div class="lh-content" id="lh-activity">
+                <div class="eight wide column">
+                    @await Html.PartialAsync("Partials/LevelActivityPartial", ViewData.WithLang(language).WithTime(timeZone))
                 </div>
             </div>
         </div>

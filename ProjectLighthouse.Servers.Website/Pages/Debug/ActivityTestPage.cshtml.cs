@@ -1,4 +1,5 @@
-﻿using LBPUnion.ProjectLighthouse.Database;
+﻿using System.Diagnostics;
+using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Servers.Website.Pages.Layouts;
 using LBPUnion.ProjectLighthouse.Types.Activity;
@@ -19,8 +20,21 @@ public class ActivityTestPage : BaseLayout
     public async Task<IActionResult> OnGet(bool groupByActor = false)
     {
         Console.WriteLine(groupByActor);
-        List<OuterActivityGroup>? events = (await this.Database.Activities.ToActivityDto(true).ToActivityGroups(groupByActor).ToListAsync())
+
+        Stopwatch timer = new();
+        timer.Start();
+
+        List<IGrouping<ActivityGroup, ActivityDto>> eventList =
+            (await this.Database.Activities.ToActivityDto(true).ToActivityGroups(groupByActor).ToListAsync());
+
+        Console.WriteLine($@"Fetching from database took {timer.ElapsedMilliseconds}ms");
+
+        timer.Restart();
+
+        List<OuterActivityGroup>? events = eventList 
             .ToOuterActivityGroups(groupByActor);
+
+        Console.WriteLine($@"Local grouping took {timer.ElapsedMilliseconds}ms");
 
         if (events == null) return this.Page();
 

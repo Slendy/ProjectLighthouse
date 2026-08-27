@@ -47,7 +47,7 @@ public struct OuterActivityGroup
     public List<IGrouping<InnerActivityGroup, ActivityDto>> Groups { get; set; }
 }
 
-public struct InnerActivityGroup
+public record struct InnerActivityGroup
 {
     public ActivityGroupType Type { get; set; }
     public int UserId { get; set; }

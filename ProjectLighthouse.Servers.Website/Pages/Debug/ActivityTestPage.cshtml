@@ -20,7 +20,7 @@
 @foreach (OuterActivityGroup activity in Model.ActivityGroups)
 {
     <h4 class="ui top attached header">@activity.Key.GroupType, Timestamp: @activity.Key.Timestamp.ToString(CultureInfo.InvariantCulture)</h4>
-    <div class="ui attached segment">
+    <div class="ui attached grey inverted segment">
         
         @if (activity.Key.UserId != -1)
         {
@@ -50,7 +50,7 @@
 
             @foreach (IGrouping<InnerActivityGroup, ActivityDto>? eventGroup in activity.Groups)
             {
-                <div class="ui segment">
+                <div class="ui blue inverted segment">
                     <h5>Nested Group Type: @eventGroup.Key.Type</h5>
 
                     @foreach (ActivityDto gameEvent in eventGroup.ToList())
