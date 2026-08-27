@@ -10,6 +10,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Logging;
+using LBPUnion.ProjectLighthouse.Types.Filter;
 using LBPUnion.ProjectLighthouse.Types.Resources;
 using LBPUnion.ProjectLighthouse.Types.Serialization.Slot;
 using LBPUnion.ProjectLighthouse.Types.Users;
@@ -70,6 +71,15 @@ public class PublishController : ControllerBase
             Logger.Warn("Rejecting level upload, resource list is null", LogArea.Publish);
             await this.database.SendNotification(user.UserId,
                 $"{slot.Name} failed to publish. (LH-PUB-0003)");
+            return this.BadRequest();
+        }
+
+        if (!ServerConfiguration.Instance.UserGeneratedContentLimits.DuplicateSlotUploadingEnabled 
+            && await this.database.Slots.AnyAsync(s => s.RootLevel == slot.RootLevel))
+        {
+            Logger.Warn("Rejecting level upload, rootlevel is duplicate", LogArea.Publish);
+            await this.database.SendNotification(user.UserId,
+                $"{slot.Name} failed to publish. (LH-PUB-0011)");
             return this.BadRequest();
         }
 
@@ -142,7 +152,7 @@ public class PublishController : ControllerBase
         // Yes Rider, this isn't null
         Debug.Assert(slot.Resources != null, "slot.ResourceList != null");
 
-        slot.Name = CensorHelper.FilterMessage(slot.Name);
+        slot.Name = CensorHelper.FilterMessage(slot.Name, FilterLocation.SlotName, user.Username);
 
         if (slot.Name.Length > 64)
         {
@@ -153,7 +163,7 @@ public class PublishController : ControllerBase
             return this.BadRequest();
         }
 
-        slot.Description = CensorHelper.FilterMessage(slot.Description);
+        slot.Description = CensorHelper.FilterMessage(slot.Description, FilterLocation.SlotDescription, user.Username);
 
         if (slot.Description.Length > 512)
         {

@@ -24,4 +24,6 @@ public class UserGeneratedContentLimitConfiguration
     public bool LevelReviewsEnabled { get; set; } = true;
 
     public bool BooingEnabled { get; set; } = true;
+
+    public bool DuplicateSlotUploadingEnabled { get; set; } = true;
 }

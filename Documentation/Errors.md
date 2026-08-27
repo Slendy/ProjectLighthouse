@@ -16,11 +16,12 @@ website notifications to indicate what went wrong.
   - **Fix:** Shorten the level description to something below 512 characters.
 - `LH-PUB-0006`: The level failed to publish because the server is missing resources required by the level.
   - **Potential Fix:** Remove any resources that are not available on the server from the level.
-- `LH-PUB-0007`: The level failed to publish because the root level is not a valid level.
-- `LH-PUB-0008`: The level failed to publish because the root level is not an LBP3 Adventure level.
+- `LH-PUB-0007`: The level failed to publish because the `rootlevel` is not a valid level.
+- `LH-PUB-0008`: The level failed to publish because the `rootlevel` is not an LBP3 Adventure level.
 - `LH-PUB-0009`: The level failed to publish because the the user has reached their level publishing limit.
   - **Fix:** Delete some of your previously published levels to make room for new ones.
-- `LH-PUB-0010`: THe level failed to publish because the icon of the level is not a valid texture or image.
+- `LH-PUB-0010`: The level failed to publish because the icon of the level is not a valid texture or image.
+- `LH-PUB-0011`: The level failed to publish because the `rootlevel` is a duplicate
 
 ## Level Republishing
 
