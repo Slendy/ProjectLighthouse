@@ -31,6 +31,7 @@ lighthouse.config.json
 **/logs
 npTicket*
 r.tar.gz
+data/
 
 # MSBuild stuff
 bin/

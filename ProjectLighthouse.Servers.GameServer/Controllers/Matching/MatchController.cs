@@ -5,6 +5,7 @@ using LBPUnion.ProjectLighthouse.Database;
 using LBPUnion.ProjectLighthouse.Extensions;
 using LBPUnion.ProjectLighthouse.Helpers;
 using LBPUnion.ProjectLighthouse.Logging;
+using LBPUnion.ProjectLighthouse.Servers.GameServer.Helpers;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
 using LBPUnion.ProjectLighthouse.Types.Entities.Token;
 using LBPUnion.ProjectLighthouse.Types.Logging;
@@ -45,8 +46,21 @@ public class MatchController : ControllerBase
 
         await LastContactHelper.SetLastContact(this.database, user, token.GameVersion, token.Platform);
 
-        // Do not allow matchmaking if it has been disabled
-        if (!ServerConfiguration.Instance.Matchmaking.MatchmakingEnabled) return this.BadRequest();
+        // Do not allow matchmaking if it has been disabled, or if Patchwork matchmaking is enabled and if user does not have Patchwork
+        if (!ServerConfiguration.Instance.Matchmaking.MatchmakingEnabled &&
+            !ServerConfiguration.Instance.Matchmaking.PatchworkMatchmakingEnabled)
+        {
+            return this.BadRequest();
+        }
+
+        if (ServerConfiguration.Instance.Authentication.RequirePatchworkUserAgent &&
+            (token.PatchworkMajor == null || token.PatchworkMinor == null))
+        {
+            return this.BadRequest();
+        }
+
+        // Do not allow users with different join keys to match at all
+        if (token.PatchworkJoinKeyEnabled == true) return this.BadRequest();
 
         #region Parse match data
 

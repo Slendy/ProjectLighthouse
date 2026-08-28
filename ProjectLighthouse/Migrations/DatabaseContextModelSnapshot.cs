@@ -17,7 +17,7 @@ namespace ProjectLighthouse.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("ProductVersion", "8.0.18")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -1044,6 +1044,15 @@ namespace ProjectLighthouse.Migrations
                     b.Property<string>("LocationHash")
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)");
+
+                    b.Property<bool?>("PatchworkJoinKeyEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("PatchworkMajor")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PatchworkMinor")
+                        .HasColumnType("int");
 
                     b.Property<int>("Platform")
                         .HasColumnType("int");
