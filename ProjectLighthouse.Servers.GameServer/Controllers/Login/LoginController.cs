@@ -12,6 +12,7 @@ using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.MatchCommands;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Login;
 
@@ -232,10 +233,13 @@ public class LoginController : ControllerBase
 
         await database.SaveChangesAsync();
 
+        bool canCreateRoom = ServerConfiguration.Instance.Matchmaking.MatchmakingEnabled || 
+            (ServerConfiguration.Instance.Matchmaking.PatchworkMatchmakingEnabled && hasValidPatchworkUserAgent);
+
         // Create a new room on LBP2/3/Vita
-        //if (token.GameVersion != GameVersion.LittleBigPlanet1) RoomHelper.CreateRoom(user.UserId, token.GameVersion, token.Platform);
-        // FIXME: tetra is holding me hostage and forcing me to commit to main
-        
+        if (token.GameVersion != GameVersion.LittleBigPlanet1 && 
+            canCreateRoom && token.PatchworkJoinKeyEnabled != true)
+            RoomHelper.CreateRoom(user.UserId, token.GameVersion, token.Platform);
         
         return this.Ok
         (
