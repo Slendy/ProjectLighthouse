@@ -233,8 +233,10 @@ public class LoginController : ControllerBase
         await database.SaveChangesAsync();
 
         // Create a new room on LBP2/3/Vita
-        if (token.GameVersion != GameVersion.LittleBigPlanet1) RoomHelper.CreateRoom(user.UserId, token.GameVersion, token.Platform);
-
+        //if (token.GameVersion != GameVersion.LittleBigPlanet1) RoomHelper.CreateRoom(user.UserId, token.GameVersion, token.Platform);
+        // FIXME: tetra is holding me hostage and forcing me to commit to main
+        
+        
         return this.Ok
         (
             new LoginResult
