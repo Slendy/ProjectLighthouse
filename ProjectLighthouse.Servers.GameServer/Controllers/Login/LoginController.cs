@@ -12,6 +12,7 @@ using LBPUnion.ProjectLighthouse.Types.Logging;
 using LBPUnion.ProjectLighthouse.Types.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using LBPUnion.ProjectLighthouse.Types.Matchmaking.MatchCommands;
 
 namespace LBPUnion.ProjectLighthouse.Servers.GameServer.Controllers.Login;
 
@@ -213,12 +214,17 @@ public class LoginController : ControllerBase
             return this.Forbid();
         }
 
-        if (ServerConfiguration.Instance.Authentication.RequirePatchworkUserAgent)
+        bool hasValidPatchworkUserAgent = PatchworkHelper.IsValidPatchworkUserAgent(
+            this.Request.Headers.UserAgent.ToString(), 
+            out int? major, out int? minor, out bool? hasKey);
+        token.PatchworkMajor = major;
+        token.PatchworkMinor = minor;
+        token.PatchworkJoinKeyEnabled = hasKey;
+
+        if (ServerConfiguration.Instance.Authentication.RequirePatchworkUserAgent && !hasValidPatchworkUserAgent)
         {
-            if (!PatchworkHelper.IsValidPatchworkUserAgent(this.Request.Headers.UserAgent.ToString()))
-            {
-                return this.Forbid();
-            }
+            Logger.Error($"User {npTicket.Username} tried to login with invalid Patchwork user agent", LogArea.Login);
+            return this.Forbid();
         }
 
         Logger.Success($"Successfully logged in user {user.Username} as {token.GameVersion} client", LogArea.Login);
@@ -227,9 +233,14 @@ public class LoginController : ControllerBase
 
         await database.SaveChangesAsync();
 
-        // Create a new room on LBP2/3/Vita
-        if (token.GameVersion != GameVersion.LittleBigPlanet1) RoomHelper.CreateRoom(user.UserId, token.GameVersion, token.Platform);
+        bool canCreateRoom = ServerConfiguration.Instance.Matchmaking.MatchmakingEnabled || 
+            (ServerConfiguration.Instance.Matchmaking.PatchworkMatchmakingEnabled && hasValidPatchworkUserAgent);
 
+        // Create a new room on LBP2/3/Vita
+        if (token.GameVersion != GameVersion.LittleBigPlanet1 && 
+            canCreateRoom && token.PatchworkJoinKeyEnabled != true)
+            RoomHelper.CreateRoom(user.UserId, token.GameVersion, token.Platform);
+        
         return this.Ok
         (
             new LoginResult

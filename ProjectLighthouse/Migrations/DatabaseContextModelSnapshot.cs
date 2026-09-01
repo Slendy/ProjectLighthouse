@@ -1081,6 +1081,15 @@ namespace ProjectLighthouse.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("varchar(64)");
 
+                    b.Property<bool?>("PatchworkJoinKeyEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int?>("PatchworkMajor")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PatchworkMinor")
+                        .HasColumnType("int");
+
                     b.Property<int>("Platform")
                         .HasColumnType("int");
 
