@@ -50,6 +50,6 @@ public class PlaylistWithSlotActivityEntity : ActivityEntity
     [Column("SlotId")]
     public int SlotId { get; set; }
 
-    [ForeignKey(nameof(PlaylistId))]
+    [ForeignKey(nameof(SlotId))]
     public SlotEntity Slot { get; set; }
 }

@@ -1302,6 +1302,8 @@ namespace ProjectLighthouse.Migrations
 
                     b.HasIndex("PlaylistId");
 
+                    b.HasIndex("SlotId");
+
                     b.HasDiscriminator().HasValue("PlaylistWithSlotActivityEntity");
                 });
 
