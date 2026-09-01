@@ -49,4 +49,7 @@ public class PlaylistWithSlotActivityEntity : ActivityEntity
     /// </summary>
     [Column("SlotId")]
     public int SlotId { get; set; }
+
+    [ForeignKey(nameof(PlaylistId))]
+    public SlotEntity Slot { get; set; }
 }

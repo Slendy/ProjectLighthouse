@@ -10,13 +10,13 @@ using Xunit;
 namespace ProjectLighthouse.Tests.GameApiTests.Unit.Activity;
 
 [Trait("Category", "Unit")]
-public class ActivityInterceptorTests
+public class DatabaseActivityInterceptorTests
 {
     private static async Task<DatabaseContext> GetTestDatabase(IMock<IEntityEventHandler> eventHandlerMock)
     {
         DbContextOptionsBuilder<DatabaseContext> optionsBuilder = await MockHelper.GetInMemoryDbOptions();
         
-        optionsBuilder.AddInterceptors(new ActivityInterceptor(eventHandlerMock.Object));
+        optionsBuilder.AddInterceptors(new DatabaseActivityInterceptor(eventHandlerMock.Object));
         DatabaseContext database = new(optionsBuilder.Options);
         await database.Database.EnsureCreatedAsync();
         return database;

@@ -111,7 +111,13 @@ public class SlotPage : BaseLayout
             .Take(10)
             .ToListAsync();
 
-        this.Activity = await this.Database.Activities
+        this.Activity = await this.Database.Activities.Include("Slot")
+            .Include("Comment")
+            .Include("Photo")
+            .Include("Playlist")
+            .Include("Review")
+            .Include("Score")
+            .Include("TargetUser")
             .ToActivityDto()
             .Where(d => d.TargetSlotId == id)
             .OrderByDescending(d => d.Activity.Timestamp)

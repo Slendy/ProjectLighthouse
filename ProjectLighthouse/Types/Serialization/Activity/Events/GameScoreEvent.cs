@@ -32,7 +32,7 @@ public class GameScoreEvent : GameEvent
         SlotEntity slot = await database.Slots.FindAsync(score.SlotId);
         if (slot == null) return;
 
-        this.UserCount = score.Type;
+        this.UserCount = score.Type != 7 ? score.Type : 1;
 
         this.Slot = ReviewSlot.CreateFromEntity(slot);
     }

@@ -5,7 +5,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 namespace LBPUnion.ProjectLighthouse.Types.Entities.Activity;
 
 /// <summary>
-/// Supported event types: <see cref="EventType.DpadRateLevel"/>, <see cref="EventType.ReviewLevel"/>, <see cref="EventType.RateLevel"/>, and <see cref="EventType.TagLevel"/>.
+/// Supported event types: <see cref="EventType.ReviewLevel"/>.
 /// </summary>
 public class ReviewActivityEntity : ActivityEntity
 {

@@ -101,7 +101,7 @@ public partial class DatabaseContext : DbContext
         {
             builder.UseMySql(ServerConfiguration.Instance.DbConnectionString,
                 MySqlServerVersion.LatestSupportedServerVersion);
-            builder.AddInterceptors(new ActivityInterceptor(new ActivityEntityEventHandler()));
+            builder.AddInterceptors(new DatabaseActivityInterceptor(new ActivityEntityEventHandler()));
         };
     }
 

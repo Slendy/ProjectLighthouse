@@ -134,7 +134,10 @@ else
         }
         <div class="@outerDiv">
             <div class="@innerDiv">
-                <a class="item active lh-sidebar" target="lh-comments">
+                <a class="item active lh-sidebar" target="lh-activity">
+                    Activity
+                </a>
+                <a class="item lh-sidebar" target="lh-comments">
                     Comments
                 </a>
                 <a class="item lh-sidebar" target="lh-photos">
@@ -146,9 +149,6 @@ else
                 <a class="item lh-sidebar" target="lh-scores">
                     Scores
                 </a>
-                <a class="item lh-sidebar" target="lh-activity">
-                    Activity
-                </a>
             </div>
         </div>
 
@@ -156,13 +156,19 @@ else
             string divLength = isMobile ? "sixteen" : "thirteen";
         }
         <div class="@divLength wide stretched column">
+            <div class="lh-content" id="lh-activity">
+                <div class="eight wide column">
+                    @await Html.PartialAsync("Partials/RecentActivityPartial", ViewData.WithLang(language).WithTime(timeZone))
+                </div>
+            </div>
             <div class="lh-content" id="lh-comments">
-                @await Html.PartialAsync("Partials/CommentsPartial", new ViewDataDictionary(ViewData.WithLang(language).WithTime(timeZone))
-                       {
-                           {
-                               "PageOwner", Model.Slot?.CreatorId
-                           },
-                       })
+                @await Html.PartialAsync("Partials/CommentsPartial",
+                    new ViewDataDictionary(ViewData.WithLang(language).WithTime(timeZone))
+                    {
+                        {
+                            "PageOwner", Model.Slot?.CreatorId
+                        },
+                    })
             </div>
             <div class="lh-content" id="lh-photos">
                 <div class="ui purple segment" id="photos">
@@ -191,24 +197,20 @@ else
                 </div>
             </div>
             <div class="lh-content" id="lh-reviews">
-                @await Html.PartialAsync("Partials/ReviewPartial", new ViewDataDictionary(ViewData)
-                       {
-                           {
-                               "isMobile", isMobile
-                           },
-                           {
-                               "CanDelete", Model.User?.IsModerator ?? false
-                           },
-                       })
+                @await Html.PartialAsync("Partials/ReviewPartial",
+                    new ViewDataDictionary(ViewData)
+                    {
+                        {
+                            "isMobile", isMobile
+                        },
+                        {
+                            "CanDelete", Model.User?.IsModerator ?? false
+                        },
+                    })
             </div>
             <div class="lh-content" id="lh-scores">
                 <div class="eight wide column">
                     @await Html.PartialAsync("Partials/LeaderboardPartial", ViewData.WithLang(language).WithTime(timeZone).CanDelete(Model.User?.IsModerator ?? false))
-                </div>
-            </div>
-            <div class="lh-content" id="lh-activity">
-                <div class="eight wide column">
-                    @await Html.PartialAsync("Partials/LevelActivityPartial", ViewData.WithLang(language).WithTime(timeZone))
                 </div>
             </div>
         </div>

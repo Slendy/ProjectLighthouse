@@ -77,7 +77,7 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                     .FirstOrDefault() switch
             {
                 // Don't add story scores or versus scores
-                SlotType.User when score.Type != 7 => new ScoreActivityEntity
+                SlotType.User  => new ScoreActivityEntity
                 {
                     Type = EventType.Score,
                     ScoreId = score.ScoreId,
@@ -216,11 +216,24 @@ public class ActivityEntityEventHandler : IEntityEventHandler
 
                 if (Plays(oldVisitedLevel) >= Plays(visitedLevel)) break;
 
+                LevelActivityEntity? oldActivity = database.Activities
+                    .OfType<LevelActivityEntity>()
+                    .Where(a => a.Type == EventType.PlayLevel)
+                    .FirstOrDefault(a => a.Timestamp < DateTime.Now.AddDays(-1));
+
+                // Replace old activity with new one with an additional play
+                if (oldActivity != null)
+                {
+                    database.Activities.Where(a => a.ActivityId == oldActivity.ActivityId)
+                        .ExecuteDelete();
+                }
+                
                 activity = new LevelActivityEntity
                 {
                     Type = EventType.PlayLevel,
                     SlotId = visitedLevel.SlotId,
                     UserId = visitedLevel.UserId,
+                    Data = (oldActivity?.Data ?? 0) + 1, 
                 };
                 break;
 
@@ -341,17 +354,17 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                 // we need multiple, so we have to do the inserting ourselves.
                 foreach (int slotId in addedSlots)
                 {
-                    ActivityEntity entity = new PlaylistWithSlotActivityEntity
+                    ActivityEntity playlistActivity = new PlaylistWithSlotActivityEntity
                     {
                         Type = EventType.AddLevelToPlaylist,
                         PlaylistId = playlist.PlaylistId,
                         SlotId = slotId,
                         UserId = playlist.CreatorId,
                     };
-                    InsertActivity(database, entity);
+                    InsertActivity(database, playlistActivity);
                 }
 
-                break;
+                return;
             }
         }
 

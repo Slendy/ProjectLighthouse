@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace LBPUnion.ProjectLighthouse.Database;
 
-public class ActivityInterceptor : SaveChangesInterceptor
+public class DatabaseActivityInterceptor : SaveChangesInterceptor
 {
     private class CustomTrackedEntity
     {
@@ -32,7 +32,7 @@ public class ActivityInterceptor : SaveChangesInterceptor
     private readonly ConcurrentDictionary<TrackedEntityKey, CustomTrackedEntity> unsavedEntities;
     private readonly IEntityEventHandler eventHandler;
 
-    public ActivityInterceptor(IEntityEventHandler eventHandler)
+    public DatabaseActivityInterceptor(IEntityEventHandler eventHandler)
     {
         this.eventHandler = eventHandler;
         this.unsavedEntities = new ConcurrentDictionary<TrackedEntityKey, CustomTrackedEntity>();
@@ -100,13 +100,13 @@ public class ActivityInterceptor : SaveChangesInterceptor
         }
     }
 
-    private void ParseInsertedEntities(DbContextEventData eventData)
+    private void ParseInsertedEntities(SaveChangesCompletedEventData eventData)
     {
         if (eventData.Context is not DatabaseContext context) return;
 
         HashSet<CustomTrackedEntity> entities = [];
 
-        List<EntityEntry> entries = context.ChangeTracker.Entries().ToList();
+        List<EntityEntry> entries = [.. context.ChangeTracker.Entries(),];
 
         foreach (KeyValuePair<TrackedEntityKey, CustomTrackedEntity> kvp in this.unsavedEntities)
         {
