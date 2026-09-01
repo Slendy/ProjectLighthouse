@@ -46,14 +46,13 @@
     }
 }
 
-<div class="ui blue segment" id="activity">
+<div class="ui red segment" id="activity">
     @if (Model.Activity.Count == 0)
     {
         <p>There is no recent activity.</p>
     }
     else
     {
-        <b>Recent activity</b>
         @foreach (IGrouping<ActivityGroup, ActivityDto> group in Model.Activity)
         {
             <div class="ui gray segment">
@@ -62,7 +61,7 @@
                 }
                 <span>@await user.ToLink(Html, ViewData, language)</span>
                 @{
-                    RenderRelativeTime(group.Key.Timestamp);
+                    RenderRelativeTime(group.MaxBy(g => g.Activity.Timestamp)?.Activity.Timestamp ?? group.Key.Timestamp);
                 }
                 <div class="list">
                     @foreach (ActivityDto activity in group)

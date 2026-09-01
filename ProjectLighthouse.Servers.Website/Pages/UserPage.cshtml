@@ -3,6 +3,7 @@
 @using LBPUnion.ProjectLighthouse.Extensions
 @using LBPUnion.ProjectLighthouse.Localization.StringLists
 @using LBPUnion.ProjectLighthouse.Servers.Website.Extensions
+@using LBPUnion.ProjectLighthouse.Types.Activity
 @using LBPUnion.ProjectLighthouse.Types.Entities.Level
 @using LBPUnion.ProjectLighthouse.Types.Entities.Profile
 @using LBPUnion.ProjectLighthouse.Types.Moderation.Cases
@@ -135,7 +136,13 @@
         <div class="eight wide column">
             <div class="ui red segment">
                 <h2>@Model.Translate(GeneralStrings.RecentActivity)</h2>
-                <p>@Model.Translate(GeneralStrings.Soon)</p>
+                
+                @foreach (ActivityDto activity in Model.Activity.SelectMany(g => g).Take(5))
+                {
+                    await Html.RenderPartialAsync("Partials/ActivityPartial", activity);
+                }
+                <a class="" target="lh-activity">Show more</a>
+                
             </div>
         </div>
         @if (isMobile)
@@ -163,7 +170,7 @@ else
         <div class="@outerDiv">
             <div class="@innerDiv">
                 <a class="item active lh-sidebar" target="lh-activity">
-                    Activity
+                    @Model.Translate(GeneralStrings.RecentActivity)
                 </a>
                 <a class="item lh-sidebar" target="lh-comments">
                     Comments
@@ -198,7 +205,7 @@ else
                     @await Html.PartialAsync("Partials/RecentActivityPartial", ViewData.WithLang(language).WithTime(timeZone))
                 </div>
             </div>
-            <div class="lh-content" id="lh-comments">
+            <div class="lh-content" id="lh-comments" style="display: none">
                 @if (Model.ProfileUser.IsBanned)
                 {
                     <div class="ui yellow segment" id="comments">
@@ -217,7 +224,7 @@ else
                            })
                 }
             </div>
-            <div class="lh-content" id="lh-photos">
+            <div class="lh-content" id="lh-photos" style="display: none">
                 <div class="ui purple segment" id="photos">
                     @if (Model.Photos != null && Model.Photos.Count != 0)
                     {
@@ -242,7 +249,7 @@ else
                     }
                 </div>
             </div>
-            <div class="lh-content" id="lh-levels">
+            <div class="lh-content" id="lh-levels" style="display: none">
                 @if (!Model.CanViewSlots)
                 {
                     <div class="ui red segment">
@@ -267,14 +274,14 @@ else
                     </div>
                 }
             </div>
-            <div class="lh-content" id="lh-playlists">
+            <div class="lh-content" id="lh-playlists" style="display: none">
                 <div class="ui purple segment">
                     <p>@Model.Translate(GeneralStrings.Soon)</p>
                 </div>
             </div>
             @if (Model.User == Model.ProfileUser)
             {
-                <div class="lh-content" id="lh-hearted">
+                <div class="lh-content" id="lh-hearted" style="display: none">
                     <div class="ui pink segment" id="hearted">
                         @if (Model.HeartedSlots?.Count == 0)
                         {
@@ -292,7 +299,7 @@ else
                         }
                     </div>
                 </div>
-                <div class="lh-content" id="lh-queued">
+                <div class="lh-content" id="lh-queued" style="display: none">
                     <div class="ui yellow segment" id="queued">
                         @if (Model.QueuedSlots?.Count == 0)
                         {

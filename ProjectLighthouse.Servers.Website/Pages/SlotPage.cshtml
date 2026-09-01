@@ -135,7 +135,7 @@ else
         <div class="@outerDiv">
             <div class="@innerDiv">
                 <a class="item active lh-sidebar" target="lh-activity">
-                    Activity
+                    @Model.Translate(GeneralStrings.RecentActivity)
                 </a>
                 <a class="item lh-sidebar" target="lh-comments">
                     Comments
@@ -161,7 +161,7 @@ else
                     @await Html.PartialAsync("Partials/RecentActivityPartial", ViewData.WithLang(language).WithTime(timeZone))
                 </div>
             </div>
-            <div class="lh-content" id="lh-comments">
+            <div class="lh-content" id="lh-comments" style="display: none">
                 @await Html.PartialAsync("Partials/CommentsPartial",
                     new ViewDataDictionary(ViewData.WithLang(language).WithTime(timeZone))
                     {
@@ -170,7 +170,7 @@ else
                         },
                     })
             </div>
-            <div class="lh-content" id="lh-photos">
+            <div class="lh-content" id="lh-photos" style="display: none">
                 <div class="ui purple segment" id="photos">
                     @if (Model.Photos.Count != 0)
                     {
@@ -196,7 +196,7 @@ else
 
                 </div>
             </div>
-            <div class="lh-content" id="lh-reviews">
+            <div class="lh-content" id="lh-reviews" style="display: none">
                 @await Html.PartialAsync("Partials/ReviewPartial",
                     new ViewDataDictionary(ViewData)
                     {
@@ -208,7 +208,7 @@ else
                         },
                     })
             </div>
-            <div class="lh-content" id="lh-scores">
+            <div class="lh-content" id="lh-scores" style="display: none">
                 <div class="eight wide column">
                     @await Html.PartialAsync("Partials/LeaderboardPartial", ViewData.WithLang(language).WithTime(timeZone).CanDelete(Model.User?.IsModerator ?? false))
                 </div>
