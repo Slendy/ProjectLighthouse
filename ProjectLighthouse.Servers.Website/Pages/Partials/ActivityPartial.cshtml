@@ -36,7 +36,9 @@
                 case EventType.TagLevel:
                     <span>added a tag on @await levelActivity.Slot.ToLink(Html, ViewData, language)</span>
                     break;
-                case EventType.MMPickLevel: <span>MM pick???</span> break;
+                case EventType.MMPickLevel: 
+                    <span>team picked @await levelActivity.Slot.ToLink(Html, ViewData, language)</span> 
+                    break;
                 default: throw new ArgumentOutOfRangeException(nameof(Model.Activity.Type), Model.Activity.Type, @"Invalid level activity type");
             }
 
