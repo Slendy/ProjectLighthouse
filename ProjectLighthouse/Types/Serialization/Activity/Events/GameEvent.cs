@@ -56,43 +56,6 @@ public class GameEvent : ILbpSerializable, INeedsPreparationForSerialization
         this.Username = user.Username;
     }
 
-    public static IEnumerable<GameEvent> CreateFromActivities(IEnumerable<ActivityDto> activities)
-    {
-        List<GameEvent> events = [];
-        List<IGrouping<EventType, ActivityDto>> typeGroups = activities.GroupBy(g => g.Activity.Type).ToList();
-        foreach (IGrouping<EventType, ActivityDto> typeGroup in typeGroups)
-        {
-            // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-            // Events with Count need special treatment
-            switch (typeGroup.Key)
-            {
-                case EventType.PlayLevel:
-                {
-                    if (typeGroup.First().Activity is not LevelActivityEntity levelActivity) break;
-
-                    events.Add(new GamePlayLevelEvent
-                    {
-                        Slot = new ReviewSlot
-                        {
-                            SlotId = levelActivity.SlotId,
-                        },
-                        Count = typeGroup.Count(),
-                        UserId = levelActivity.UserId,
-                        Timestamp = levelActivity.Timestamp.ToUnixTimeMilliseconds(),
-                        Type = levelActivity.Type,
-                    });
-                    break;
-                }
-                // Everything else can be handled as normal
-                default:
-                    events.AddRange(typeGroup.Select(CreateFromActivity).Where(a => a != null));
-                    break;
-            }
-        }
-
-        return events.AsEnumerable();
-    }
-
     private static bool IsValidActivity(ActivityEntity activity)
     {
         return activity switch
@@ -114,7 +77,7 @@ public class GameEvent : ILbpSerializable, INeedsPreparationForSerialization
         };
     }
 
-    private static GameEvent CreateFromActivity(ActivityDto activity)
+    public static GameEvent CreateFromActivity(ActivityDto activity)
     {
         if (!IsValidActivity(activity.Activity))
         {

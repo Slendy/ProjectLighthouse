@@ -55,7 +55,7 @@ public class GameStreamGroup : ILbpSerializable
                 streamGroup =>
                 {
                     streamGroup.Timestamp = g.Max(a => a.Activity.Timestamp).ToUnixTimeMilliseconds();
-                    streamGroup.Events = GameEvent.CreateFromActivities(g).ToList();
+                    streamGroup.Events = g.Select(GameEvent.CreateFromActivity).ToList();
                 }))
             .ToList());
 

@@ -338,6 +338,7 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                     Type = EventType.DeleteLevelComment,
                     CommentId = comment.CommentId,
                     UserId = comment.PosterUserId,
+                    SlotId = comment.TargetSlotId ?? throw new NullReferenceException("SlotId in Level comment is null, this shouldn't happen."),
                 };
                 break;
             }

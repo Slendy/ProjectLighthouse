@@ -916,10 +916,19 @@ public class ActivityEventHandlerTests
             },
         });
 
+        SlotEntity slot = new()
+        {
+            SlotId = 1,
+            CreatorId = 1,
+        };
+
+        database.Slots.Add(slot);
+
         CommentEntity oldComment = new()
         {
             CommentId = 1,
             PosterUserId = 1,
+            TargetSlotId = 1,
             Type = CommentType.Level,
         };
 
@@ -930,6 +939,7 @@ public class ActivityEventHandlerTests
         {
             CommentId = 1,
             PosterUserId = 1,
+            TargetSlotId = 1,
             Type = CommentType.Level,
             Deleted = true,
         };

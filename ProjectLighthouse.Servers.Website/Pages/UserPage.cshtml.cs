@@ -33,7 +33,7 @@ public class UserPage : BaseLayout
     public List<SlotEntity>? HeartedSlots;
     public List<SlotEntity>? QueuedSlots;
 
-    public List<IGrouping<ActivityGroup, ActivityDto>> Activity;
+    public List<IGrouping<ActivityGroup, ActivityDto>> Activity = [];
 
     public UserEntity? ProfileUser;
 
