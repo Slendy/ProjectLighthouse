@@ -43,7 +43,7 @@
 
             break;
         case LevelPhotoActivity levelPhoto:
-            <span>left a comment on @await levelPhoto.Slot.ToLink(Html, ViewData, language)</span>
+            <span>uploaded a photo on @await levelPhoto.Slot.ToLink(Html, ViewData, language)</span>
             break;
         case LevelCommentActivityEntity levelComment:
             <span>left a comment on @await levelComment.Slot.ToLink(Html, ViewData, language)</span>
@@ -71,7 +71,7 @@
             }
             break;
         case UserPhotoActivity userPhoto:
-            <span>left a comment on @await userPhoto.TargetUser.ToLink(Html, ViewData, language)</span>
+            <span>uploaded a photo on @await userPhoto.TargetUser.ToLink(Html, ViewData, language)</span>
             break;
         case PlaylistActivityEntity playlistActivity:
             switch (Model.Activity.Type)
