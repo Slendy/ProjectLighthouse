@@ -226,6 +226,8 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                 LevelActivityEntity? oldActivity = database.Activities
                     .OfType<LevelActivityEntity>()
                     .Where(a => a.Type == EventType.PlayLevel)
+                    .Where(a => a.SlotId == visitedLevel.SlotId)
+                    .Where(a => a.UserId == visitedLevel.UserId)
                     .FirstOrDefault(a => a.Timestamp > DateTime.UtcNow.AddDays(-1));
 
                 // Replace old activity with new one with an additional play

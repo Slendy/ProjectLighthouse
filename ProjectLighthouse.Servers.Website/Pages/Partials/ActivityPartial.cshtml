@@ -110,7 +110,7 @@
             <span>added @await playlistWithLevel.Slot.ToLink(Html, ViewData, language) to playlist <i>@playlistWithLevel.Playlist.Name</i></span>
             break;
         case ScoreActivityEntity score:
-            <span>completed @await score.Slot.ToLink(Html, ViewData, language) with @score.Score.Points points in @(score.Score.Type == 7 ? "versus" : score.Score.Type + "-player") mode</span>
+            <span>completed @await score.Slot.ToLink(Html, ViewData, language) with @score.Data points in @(score.Score.Type == 7 ? "versus" : score.Score.Type + "-player") mode</span>
             break;
         case NewsActivityEntity: 
             <span>created a news post</span> 
