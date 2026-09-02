@@ -1,5 +1,4 @@
-﻿@using System.Diagnostics
-@using LBPUnion.ProjectLighthouse.Localization
+﻿@using LBPUnion.ProjectLighthouse.Localization
 @using LBPUnion.ProjectLighthouse.Servers.Website.Extensions
 @using LBPUnion.ProjectLighthouse.Types.Activity
 @using LBPUnion.ProjectLighthouse.Types.Entities.Activity
@@ -43,6 +42,9 @@
             }
 
             break;
+        case LevelPhotoActivity levelPhoto:
+            <span>left a comment on @await levelPhoto.Slot.ToLink(Html, ViewData, language)</span>
+            break;
         case LevelCommentActivityEntity levelComment:
             <span>left a comment on @await levelComment.Slot.ToLink(Html, ViewData, language)</span>
             break;
@@ -67,7 +69,9 @@
                     break;
                 default: throw new ArgumentOutOfRangeException(nameof(Model.Activity.Type), Model.Activity.Type, @"Invalid user activity type");
             }
-
+            break;
+        case UserPhotoActivity userPhoto:
+            <span>left a comment on @await userPhoto.TargetUser.ToLink(Html, ViewData, language)</span>
             break;
         case PlaylistActivityEntity playlistActivity:
             switch (Model.Activity.Type)
@@ -88,7 +92,7 @@
             <span>completed @await score.Slot.ToLink(Html, ViewData, language) with @score.Score.Points points in @(score.Score.Type == 7 ? "versus" : score.Score.Type + "-player") mode</span>
             break;
         default:
-            <p>Unhandled activity type: @Model.Activity.Type</p>
+            <span>Unhandled activity type: @Model.Activity.Type</span>
             break;
     }
 </div>

@@ -69,6 +69,13 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                         UserId = photo.CreatorId,
                         SlotId = photo.SlotId ?? throw new NullReferenceException("SlotId in Photo is null"),
                     },
+                    SlotType.Local or SlotType.Pod or SlotType.Unknown => new UserPhotoActivity()
+                    {
+                        Type = EventType.UploadPhoto,
+                        PhotoId = photo.PhotoId,
+                        UserId = photo.CreatorId,
+                        TargetUserId = photo.CreatorId,
+                    },
                     // All other photos (story, moon, pod, etc.)
                     _ => null,
             },
