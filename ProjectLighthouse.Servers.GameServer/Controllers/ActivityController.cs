@@ -149,7 +149,7 @@ public class ActivityController : ControllerBase
         if (endTime == null)
         {
             end = await this.GetMostRecentEventTime(activityQuery, start);
-            // If there is no recent event then set it to the the start
+            // If there is no recent event then set it to the start
             if (end == DateTime.MinValue) end = start;
             end = end.Subtract(TimeSpan.FromDays(7));
         }
@@ -167,7 +167,7 @@ public class ActivityController : ControllerBase
     }
 
     private static DateTime GetOldestTime
-        (IReadOnlyCollection<IGrouping<ActivityGroup, ActivityDto>> groups, DateTime defaultTimestamp) =>
+        (List<IGrouping<ActivityGroup, ActivityDto>> groups, DateTime defaultTimestamp) =>
         groups.Count != 0
             ? groups.Min(g => g.MinBy(a => a.Activity.Timestamp)?.Activity.Timestamp ?? defaultTimestamp)
             : defaultTimestamp;
@@ -321,6 +321,11 @@ public class ActivityController : ControllerBase
         // User and Level activity will never contain news posts or MM pick events.
         IQueryable<ActivityDto> activityQuery = this.database.Activities.ToActivityDto()
             .Where(a => a.Activity.Type != EventType.NewsPost && a.Activity.Type != EventType.MMPickLevel);
+
+        // Handle version filtering (don't show unplayable/incompatible levels)
+        activityQuery = token.GameVersion == GameVersion.LittleBigPlanetVita
+            ? activityQuery.Where(dto => dto.TargetSlotGameVersion == null || dto.TargetSlotGameVersion == token.GameVersion)
+            : activityQuery.Where(dto => dto.TargetSlotGameVersion == null || dto.TargetSlotGameVersion <= token.GameVersion);
 
         if (token.GameVersion != GameVersion.LittleBigPlanet3)
         {

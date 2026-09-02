@@ -25,7 +25,7 @@ public static class ActivityQueryExtensions
                 .SelectMany(g => g.Groups.Select(a => a.Key.UserId)));
         }
 
-        return ids.Distinct().ToList();
+        return [.. ids.Distinct(),];
     }
 
     /// <summary>

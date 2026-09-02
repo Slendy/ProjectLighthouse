@@ -35,8 +35,8 @@
                 case EventType.TagLevel:
                     <span>added a tag on @await levelActivity.Slot.ToLink(Html, ViewData, language)</span>
                     break;
-                case EventType.MMPickLevel: 
-                    <span>team picked @await levelActivity.Slot.ToLink(Html, ViewData, language)</span> 
+                case EventType.MMPickLevel:
+                    <span>team picked @await levelActivity.Slot.ToLink(Html, ViewData, language)</span>
                     break;
                 default: throw new ArgumentOutOfRangeException(nameof(Model.Activity.Type), Model.Activity.Type, @"Invalid level activity type");
             }
@@ -46,7 +46,26 @@
             <span>uploaded a photo in @await levelPhoto.Slot.ToLink(Html, ViewData, language)</span>
             break;
         case LevelCommentActivityEntity levelComment:
-            <span>left a comment on @await levelComment.Slot.ToLink(Html, ViewData, language)</span>
+            switch (Model.Activity.Type)
+            {
+                case EventType.CommentOnLevel:
+                    <span>left a comment on @await levelComment.Slot.ToLink(Html, ViewData, language)</span>
+                    break;
+                case EventType.DeleteLevelComment:
+                    switch (levelComment.Comment.DeletedType)
+                    {
+                        case "user":
+                            <span>deleted their comment on @await levelComment.Slot.ToLink(Html, ViewData, language)</span>
+                            break;
+                        case "moderator":
+                            <span>had their comment deleted on @await levelComment.Slot.ToLink(Html, ViewData, language)</span>
+                            break;
+                    }
+
+                    break;
+                default: throw new ArgumentOutOfRangeException(nameof(Model.Activity.Type), Model.Activity.Type, @"Invalid level comment activity type");
+            }
+
             break;
         case UserCommentActivityEntity userComment:
             <span>left a comment on @await userComment.TargetUser.ToLink(Html, ViewData, language)</span>
@@ -69,6 +88,7 @@
                     break;
                 default: throw new ArgumentOutOfRangeException(nameof(Model.Activity.Type), Model.Activity.Type, @"Invalid user activity type");
             }
+
             break;
         case UserPhotoActivity userPhoto:
             <span>uploaded a photo on @await userPhoto.TargetUser.ToLink(Html, ViewData, language)</span>
@@ -84,6 +104,7 @@
                     break;
                 default: throw new ArgumentOutOfRangeException(nameof(Model.Activity.Type), Model.Activity.Type, @"Invalid playlist activity type");
             }
+
             break;
         case PlaylistWithSlotActivityEntity playlistWithLevel:
             <span>added @await playlistWithLevel.Slot.ToLink(Html, ViewData, language) to playlist <i>@playlistWithLevel.Playlist.Name</i></span>
@@ -91,7 +112,9 @@
         case ScoreActivityEntity score:
             <span>completed @await score.Slot.ToLink(Html, ViewData, language) with @score.Score.Points points in @(score.Score.Type == 7 ? "versus" : score.Score.Type + "-player") mode</span>
             break;
-        case NewsActivityEntity: break;
+        case NewsActivityEntity: 
+            <span>created a news post</span> 
+            break;
         default:
             <span>Unhandled activity type: @Model.Activity.Type</span>
             break;

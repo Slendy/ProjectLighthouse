@@ -9,6 +9,7 @@ using LBPUnion.ProjectLighthouse.Types.Entities.Activity;
 using LBPUnion.ProjectLighthouse.Types.Entities.Interaction;
 using LBPUnion.ProjectLighthouse.Types.Entities.Level;
 using LBPUnion.ProjectLighthouse.Types.Entities.Profile;
+using LBPUnion.ProjectLighthouse.Types.Entities.Website;
 using Xunit;
 
 namespace ProjectLighthouse.Tests.GameApiTests.Unit.Activity;
@@ -178,6 +179,48 @@ public class ActivityEventHandlerTests
 
         Assert.NotNull(database.Activities.OfType<ScoreActivityEntity>()
             .FirstOrDefault(a => a.Type == EventType.Score && a.ScoreId == 1));
+    }
+
+    [Fact]
+    public async Task Score_Update_ShouldCreateScoreActivity()
+    {
+        ActivityEntityEventHandler eventHandler = new();
+        DatabaseContext database = await MockHelper.GetTestDatabase(new List<UserEntity>
+        {
+            new()
+            {
+                Username = "test",
+                UserId = 1,
+            },
+        });
+
+        SlotEntity slot = new()
+        {
+            SlotId = 1,
+            CreatorId = 1,
+        };
+        database.Slots.Add(slot);
+
+        ScoreEntity score = new()
+        {
+            ScoreId = 1,
+            SlotId = 1,
+            UserId = 1,
+            Points = 1,
+        };
+        database.Scores.Add(score);
+        await database.SaveChangesAsync();
+
+        eventHandler.OnEntityChanged(database, score, new ScoreEntity
+        {
+            ScoreId = 1,
+            SlotId = 1,
+            UserId = 1,
+            Points = 2,
+        });
+
+        Assert.NotNull(database.Activities.OfType<ScoreActivityEntity>()
+            .FirstOrDefault(a => a.Type == EventType.Score && a.ScoreId == 1 && a.Data == 2));
     }
 
     [Fact]
@@ -447,6 +490,63 @@ public class ActivityEventHandlerTests
     }
 
     [Fact]
+    public async Task VisitedLevel_Update_ShouldReplaceLevelActivity()
+    {
+        ActivityEntityEventHandler eventHandler = new();
+        DatabaseContext database = await MockHelper.GetTestDatabase(new List<UserEntity>
+        {
+            new()
+            {
+                Username = "test",
+                UserId = 1,
+            },
+        });
+
+        SlotEntity slot = new()
+        {
+            SlotId = 1,
+            CreatorId = 1,
+        };
+        database.Slots.Add(slot);
+
+        VisitedLevelEntity visitedLevel = new()
+        {
+            VisitedLevelId = 1,
+            UserId = 1,
+            SlotId = 1,
+            PlaysLBP2 = 1,
+        };
+        database.VisitedLevels.Add(visitedLevel);
+
+        LevelActivityEntity activity = new()
+        {
+            ActivityId = 1,
+            UserId = 1,
+            SlotId = 1,
+            Data = 1,
+            Type = EventType.PlayLevel,
+        };
+        database.Activities.Add(activity);
+
+        await database.SaveChangesAsync();
+
+        eventHandler.OnEntityChanged(database,
+            visitedLevel,
+            new VisitedLevelEntity
+            {
+                UserId = 1,
+                SlotId = 1,
+                VisitedLevelId = 1,
+                PlaysLBP2 = 2,
+            });
+
+        Assert.Null(database.Activities.OfType<LevelActivityEntity>().FirstOrDefault(a => a.Data == 1));
+
+        Assert.NotNull(database.Activities.OfType<LevelActivityEntity>()
+            .FirstOrDefault(a => a.Type == EventType.PlayLevel && a.SlotId == 1 && a.ActivityId != 1 && a.Data == 2));
+    }
+
+    [Fact]
     public async Task Review_Insert_ShouldCreateReviewActivity()
     {
         ActivityEntityEventHandler eventHandler = new();
@@ -577,6 +677,34 @@ public class ActivityEventHandlerTests
         Assert.NotNull(database.Activities.OfType<PlaylistActivityEntity>()
             .FirstOrDefault(a => a.Type == EventType.CreatePlaylist && a.PlaylistId == 1));
     }
+
+    [Fact]
+    public async Task WebsiteAnnouncement_Insert_ShouldCreateNewsActivity()
+    {
+        ActivityEntityEventHandler eventHandler = new();
+        DatabaseContext database = await MockHelper.GetTestDatabase(new List<UserEntity>
+        {
+            new()
+            {
+                Username = "test",
+                UserId = 1,
+            },
+        });
+
+        WebsiteAnnouncementEntity announcement = new()
+        {
+            AnnouncementId = 1,
+            Title = "Recent activity!",
+            PublisherId = 1,
+        };
+        database.WebsiteAnnouncements.Add(announcement);
+        await database.SaveChangesAsync();
+
+        eventHandler.OnEntityInserted(database, announcement);
+
+        Assert.NotNull(database.Activities.OfType<NewsActivityEntity>()
+            .FirstOrDefault(a => a.Type == EventType.NewsPost && a.NewsId == 1));
+    }
     #endregion
 
     #region Entity changes
@@ -689,6 +817,55 @@ public class ActivityEventHandlerTests
 
         Assert.NotNull(database.Activities.ToList().OfType<LevelActivityEntity>()
             .FirstOrDefault(a => a.Type == EventType.MMPickLevel && a.SlotId == 1));
+    }
+
+    [Fact]
+    public async Task Slot_WithTeamPickRemoval_ShouldRemoveLevelActivity()
+    {
+        ActivityEntityEventHandler eventHandler = new();
+        DatabaseContext database = await MockHelper.GetTestDatabase(new List<UserEntity>
+        {
+            new()
+            {
+                Username = "test",
+                UserId = 1,
+            },
+        });
+
+        SlotEntity oldSlot = new()
+        {
+            SlotId = 1,
+            CreatorId = 1,
+            TeamPickTime = 1,
+        };
+        database.Slots.Add(oldSlot);
+
+        LevelActivityEntity teamPickActivity = new()
+        {
+            SlotId = 1,
+            Type = EventType.MMPickLevel,
+            UserId = 1,
+        };
+        database.Activities.Add(teamPickActivity);
+
+        await database.SaveChangesAsync();
+
+        SlotEntity newSlot = new()
+        {
+            SlotId = 1,
+            CreatorId = 1,
+            TeamPickTime = 0,
+        };
+
+        eventHandler.OnEntityChanged(database, oldSlot, newSlot);
+
+        Assert.Null(database.Activities.ToList()
+            .OfType<LevelActivityEntity>()
+            .FirstOrDefault(a => a is
+            {
+                Type: EventType.MMPickLevel,
+                SlotId: 1,
+            }));
     }
 
     [Fact]
@@ -890,7 +1067,7 @@ public class ActivityEventHandlerTests
     }
 
     [Fact]
-    public async Task HeartedProfile_Delete_ShouldCreateLevelActivity()
+    public async Task HeartedProfile_Delete_ShouldCreateUserActivity()
     {
         ActivityEntityEventHandler eventHandler = new();
         DatabaseContext database = await MockHelper.GetTestDatabase(new List<UserEntity>
@@ -926,7 +1103,7 @@ public class ActivityEventHandlerTests
     }
 
     [Fact]
-    public async Task HeartedProfile_DeleteDuplicate_ShouldCreateLevelActivity()
+    public async Task HeartedProfile_DeleteDuplicate_ShouldCreateUserActivity()
     {
         ActivityEntityEventHandler eventHandler = new();
         DatabaseContext database = await MockHelper.GetTestDatabase(new List<UserEntity>
@@ -940,6 +1117,7 @@ public class ActivityEventHandlerTests
 
         UserActivityEntity userActivity = new()
         {
+            ActivityId = 1,
             UserId = 1,
             TargetUserId = 1,
             Type = EventType.UnheartUser,
@@ -957,13 +1135,12 @@ public class ActivityEventHandlerTests
         database.HeartedProfiles.Add(heartedProfile);
         await database.SaveChangesAsync();
 
-        Assert.NotNull(database.Activities.OfType<UserActivityEntity>()
-            .FirstOrDefault(a => a.Type == EventType.UnheartUser && a.UserId == 1 && a.Timestamp == DateTime.MinValue));
-
         eventHandler.OnEntityDeleted(database, heartedProfile);
 
         Assert.NotNull(database.Activities.OfType<UserActivityEntity>()
-            .FirstOrDefault(a => a.Type == EventType.UnheartUser && a.UserId == 1 && a.Timestamp != DateTime.MinValue));
+            .FirstOrDefault(a => a.Type == EventType.UnheartUser && a.UserId == 1));
+        Assert.Null(database.Activities.OfType<UserActivityEntity>()
+            .FirstOrDefault(a => a.Type == EventType.UnheartUser && a.UserId == 1 && a.ActivityId == 1));
     }
     #endregion
 }

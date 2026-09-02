@@ -15,8 +15,11 @@
         TimeSpan timeSpan = DateTime.UtcNow - time;
         <p style="margin: 5px 0 0 0"
            title="on @TimeZoneInfo.ConvertTime(time, timeZoneInfo).ToString("M/d/yyyy @ h:mm:ss tt")">
-
-            @if (timeSpan.TotalSeconds < 60)
+            @if (timeSpan.TotalSeconds < 5)
+            {
+                <i>just now.</i>
+            }
+            else if (timeSpan.TotalSeconds < 60)
             {
                 <i>@(Pluralize(Math.Round(timeSpan.TotalSeconds), "second")) ago.</i>
             }

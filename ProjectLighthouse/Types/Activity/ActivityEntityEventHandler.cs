@@ -333,7 +333,7 @@ public class ActivityEntityEventHandler : IEntityEventHandler
 
                 if (comment.Type != CommentType.Level) break;
 
-                activity = new CommentActivityEntity
+                activity = new LevelCommentActivityEntity
                 {
                     Type = EventType.DeleteLevelComment,
                     CommentId = comment.CommentId,
