@@ -95,6 +95,7 @@ public class GameEvent : ILbpSerializable, INeedsPreparationForSerialization
                 {
                     SlotId = targetId,
                 },
+                Count = (int)activity.Activity.Data,
             },
             EventType.HeartLevel or EventType.UnheartLevel => new GameHeartLevelEvent
             {
