@@ -43,7 +43,7 @@
 
             break;
         case LevelPhotoActivity levelPhoto:
-            <span>uploaded a photo on @await levelPhoto.Slot.ToLink(Html, ViewData, language)</span>
+            <span>uploaded a photo in @await levelPhoto.Slot.ToLink(Html, ViewData, language)</span>
             break;
         case LevelCommentActivityEntity levelComment:
             <span>left a comment on @await levelComment.Slot.ToLink(Html, ViewData, language)</span>
@@ -91,6 +91,7 @@
         case ScoreActivityEntity score:
             <span>completed @await score.Slot.ToLink(Html, ViewData, language) with @score.Score.Points points in @(score.Score.Type == 7 ? "versus" : score.Score.Type + "-player") mode</span>
             break;
+        case NewsActivityEntity: break;
         default:
             <span>Unhandled activity type: @Model.Activity.Type</span>
             break;
