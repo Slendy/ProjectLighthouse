@@ -168,9 +168,9 @@ public class GameEvent : ILbpSerializable, INeedsPreparationForSerialization
                 {
                     SlotId = targetId,
                 },
-                Count = (int)activity.Activity.Data,
+                Count = 1,
                 // 1 for republish, 0 for initial publish
-                IsRepublish = Convert.ToInt32(activity.Activity.Data > 1),
+                IsRepublish = Convert.ToInt32(activity.Activity.Data >= 1),
             },
             EventType.NewsPost => new GameNewsEvent
             {

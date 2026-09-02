@@ -30,7 +30,7 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                     Type = EventType.PublishLevel,
                     SlotId = slot.SlotId,
                     UserId = slot.CreatorId,
-                    Data = 1,
+                    Data = 0,
                 },
                 _ => null,
             },
@@ -308,7 +308,7 @@ public class ActivityEntityEventHandler : IEntityEventHandler
                                 Type = EventType.PublishLevel,
                                 SlotId = slotEntity.SlotId,
                                 UserId = slotEntity.CreatorId,
-                                Data = 2,
+                                Data = 1,
                             };
                         }
 
