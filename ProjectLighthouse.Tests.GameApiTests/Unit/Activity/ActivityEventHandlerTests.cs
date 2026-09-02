@@ -525,6 +525,7 @@ public class ActivityEventHandlerTests
             SlotId = 1,
             Data = 1,
             Type = EventType.PlayLevel,
+            Timestamp = DateTime.UtcNow.AddHours(-6),
         };
         database.Activities.Add(activity);
 

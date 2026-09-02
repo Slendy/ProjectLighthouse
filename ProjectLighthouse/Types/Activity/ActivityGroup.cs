@@ -5,7 +5,7 @@ using System.Xml.Serialization;
 
 namespace LBPUnion.ProjectLighthouse.Types.Activity;
 
-public struct ActivityGroup
+public record struct ActivityGroup
 {
     public DateTime Timestamp { get; set; }
     public int UserId { get; set; }
@@ -41,7 +41,7 @@ public struct ActivityGroup
         $@"{this.GroupType} Group: Timestamp: {this.Timestamp}, UserId: {this.UserId}, TargetId: {this.TargetId}";
 }
 
-public struct OuterActivityGroup
+public record struct OuterActivityGroup
 {
     public ActivityGroup Key { get; set; }
     public List<IGrouping<InnerActivityGroup, ActivityDto>> Groups { get; set; }

@@ -3,7 +3,7 @@ using LBPUnion.ProjectLighthouse.Types.Users;
 
 namespace LBPUnion.ProjectLighthouse.Types.Activity;
 
-public class ActivityDto
+public record ActivityDto
 {
     public required ActivityEntity Activity { get; set; }
     public int? TargetSlotId { get; set; }
