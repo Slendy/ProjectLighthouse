@@ -41,6 +41,6 @@ public class GamePhotoUploadEvent : GameEvent
         SlotEntity slot = await database.Slots.FindAsync(photo.SlotId);
         if (slot == null) return;
 
-        if (slot.Type == SlotType.User) this.Slot = ReviewSlot.CreateFromEntity(slot);
+        this.Slot = slot.Type == SlotType.User ? ReviewSlot.CreateFromEntity(slot) : null;
     }
 }
