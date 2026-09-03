@@ -39,8 +39,24 @@ public class GamePhotoUploadEvent : GameEvent
         if (photo.SlotId == null) return;
 
         SlotEntity slot = await database.Slots.FindAsync(photo.SlotId);
-        if (slot == null) return;
 
-        this.Slot = slot.Type == SlotType.User ? ReviewSlot.CreateFromEntity(slot) : null;
+        if (slot?.Type == SlotType.User)
+        {
+            this.Slot = ReviewSlot.CreateFromEntity(slot);
+        }
+        else
+        {
+            // For user photos to work a valid slot ID must be supplied even though the game doesn't use it for user photos.
+            // First, try to fetch a random user level and if none are found, fallback to a level from the 
+            // creator pack DLC which should be available in every mainline game.
+            slot = await database.Slots.FirstOrDefaultAsync(s => s.Type == SlotType.User);
+            const int creatorPackLevelId = 68199;
+            this.Slot = slot != null ? ReviewSlot.CreateFromEntity(slot) : new ReviewSlot
+            {
+                SlotId = creatorPackLevelId,
+                SlotType = SlotType.Developer,
+            };
+        }
+
     }
 }
